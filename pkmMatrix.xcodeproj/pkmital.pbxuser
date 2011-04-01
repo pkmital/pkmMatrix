@@ -1,0 +1,115 @@
+// !$*UTF8*$!
+{
+	08FB7793FE84155DC02AAC07 /* Project object */ = {
+		activeBuildConfigurationName = Debug;
+		activeExecutable = 891D7B0C1346446B008B6915 /* pkmMatrix */;
+		activeTarget = 8DD76F620486A84900D96B5E /* pkmMatrix */;
+		addToTargets = (
+			8DD76F620486A84900D96B5E /* pkmMatrix */,
+		);
+		codeSenseManager = 891D7B161346447A008B6915 /* Code sense */;
+		executables = (
+			891D7B0C1346446B008B6915 /* pkmMatrix */,
+		);
+		perUserDictionary = {
+			PBXConfiguration.PBXFileTableDataSource3.PBXFileTableDataSource = {
+				PBXFileTableDataSourceColumnSortingDirectionKey = "-1";
+				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
+				PBXFileTableDataSourceColumnWidthsKey = (
+					20,
+					364,
+					20,
+					48.16259765625,
+					43,
+					43,
+					20,
+				);
+				PBXFileTableDataSourceColumnsKey = (
+					PBXFileDataSource_FiletypeID,
+					PBXFileDataSource_Filename_ColumnID,
+					PBXFileDataSource_Built_ColumnID,
+					PBXFileDataSource_ObjectSize_ColumnID,
+					PBXFileDataSource_Errors_ColumnID,
+					PBXFileDataSource_Warnings_ColumnID,
+					PBXFileDataSource_Target_ColumnID,
+				);
+			};
+			PBXPerProjectTemplateStateSaveDate = 323372140;
+			PBXWorkspaceStateSaveDate = 323372140;
+		};
+		sourceControlManager = 891D7B151346447A008B6915 /* Source Control */;
+		userBuildSettings = {
+		};
+	};
+	08FB7796FE84155DC02AAC07 /* main.cpp */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {878, 1088}}";
+			sepNavSelRange = "{68, 0}";
+			sepNavVisRange = "{0, 1603}";
+		};
+	};
+	891D7B0C1346446B008B6915 /* pkmMatrix */ = {
+		isa = PBXExecutable;
+		activeArgIndices = (
+		);
+		argumentStrings = (
+		);
+		autoAttachOnCrash = 1;
+		breakpointsEnabled = 0;
+		configStateDict = {
+		};
+		customDataFormattersEnabled = 1;
+		dataTipCustomDataFormattersEnabled = 1;
+		dataTipShowTypeColumn = 1;
+		dataTipSortType = 0;
+		debuggerPlugin = GDBDebugging;
+		disassemblyDisplayState = 0;
+		dylibVariantSuffix = "";
+		enableDebugStr = 1;
+		environmentEntries = (
+		);
+		executableSystemSymbolLevel = 0;
+		executableUserSymbolLevel = 0;
+		libgmallocEnabled = 0;
+		name = pkmMatrix;
+		savedGlobals = {
+		};
+		showTypeColumn = 0;
+		sourceDirectories = (
+		);
+	};
+	891D7B121346447A008B6915 /* pkmMatrix.h */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {878, 7055}}";
+			sepNavSelRange = "{0, 810}";
+			sepNavVisRange = "{0, 1240}";
+		};
+	};
+	891D7B131346447A008B6915 /* pkmMatrix.cpp */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {878, 734}}";
+			sepNavSelRange = "{20, 0}";
+			sepNavVisRange = "{0, 838}";
+		};
+	};
+	891D7B151346447A008B6915 /* Source Control */ = {
+		isa = PBXSourceControlManager;
+		fallbackIsa = XCSourceControlManager;
+		isSCMEnabled = 0;
+		scmConfiguration = {
+			repositoryNamesForRoots = {
+				"" = "";
+			};
+		};
+	};
+	891D7B161346447A008B6915 /* Code sense */ = {
+		isa = PBXCodeSenseManager;
+		indexTemplatePath = "";
+	};
+	8DD76F620486A84900D96B5E /* pkmMatrix */ = {
+		activeExec = 0;
+		executables = (
+			891D7B0C1346446B008B6915 /* pkmMatrix */,
+		);
+	};
+}
