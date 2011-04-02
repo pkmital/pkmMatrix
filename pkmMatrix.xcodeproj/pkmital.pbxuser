@@ -8,7 +8,7 @@
 			8DD76F620486A84900D96B5E /* pkmMatrix */,
 		);
 		breakpoints = (
-			89182A8813471C66003E4548 /* pkmMatrix.h:311 */,
+			89182A8813471C66003E4548 /* pkmMatrix.h:95 */,
 			89182A98134721AD003E4548 /* pkmMatrix.cpp:54 */,
 		);
 		codeSenseManager = 891D7B161346447A008B6915 /* Code sense */;
@@ -52,11 +52,11 @@
 	08FB7796FE84155DC02AAC07 /* main.cpp */ = {
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {878, 1349}}";
-			sepNavSelRange = "{2210, 0}";
-			sepNavVisRange = "{1271, 1013}";
+			sepNavSelRange = "{504, 0}";
+			sepNavVisRange = "{0, 1603}";
 		};
 	};
-	89182A8813471C66003E4548 /* pkmMatrix.h:311 */ = {
+	89182A8813471C66003E4548 /* pkmMatrix.h:95 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -68,7 +68,7 @@
 		functionName = "getTranspose()";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 311;
+		lineNumber = 95;
 		modificationTime = 323433952.812089;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
@@ -96,7 +96,7 @@
 		fRef = 891D7B121346447A008B6915 /* pkmMatrix.h */;
 		name = "pkmMatrix.h: 205";
 		rLen = 0;
-		rLoc = 4548;
+		rLoc = 1981;
 		rType = 0;
 		vrLen = 269;
 		vrLoc = 4252;
@@ -106,7 +106,7 @@
 		fRef = 891D7B121346447A008B6915 /* pkmMatrix.h */;
 		name = "pkmMatrix.h: 206";
 		rLen = 0;
-		rLoc = 4548;
+		rLoc = 1981;
 		rType = 0;
 		vrLen = 206;
 		vrLoc = 3534;
@@ -145,16 +145,16 @@
 	};
 	891D7B121346447A008B6915 /* pkmMatrix.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {878, 4587}}";
-			sepNavSelRange = "{1844, 0}";
-			sepNavVisRange = "{0, 1252}";
+			sepNavIntBoundsRect = "{{0, 0}, {878, 1785}}";
+			sepNavSelRange = "{1693, 0}";
+			sepNavVisRange = "{946, 1202}";
 		};
 	};
 	891D7B131346447A008B6915 /* pkmMatrix.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1251, 3217}}";
-			sepNavSelRange = "{1674, 0}";
-			sepNavVisRange = "{963, 1423}";
+			sepNavIntBoundsRect = "{{0, 0}, {878, 6866}}";
+			sepNavSelRange = "{2710, 0}";
+			sepNavVisRange = "{2173, 1079}";
 		};
 	};
 	891D7B151346447A008B6915 /* Source Control */ = {

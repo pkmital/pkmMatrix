@@ -42,279 +42,61 @@ namespace pkm
 		/////////////////////////////////////////
 	public:
 		// default constructor
-		Mat()
-		{
-			rows = cols = 0;
-			data = temp_data = NULL;
-		}
+		Mat();
 		
 		// destructor
-		~Mat()
-		{
-			free(data);
-			free(temp_data);
-		}
+		~Mat();
 		
 		// allocate data
-		Mat(size_t r, size_t c, bool clear = false)
-		{
-			rows = r;
-			cols = c;
-			data = (float *)malloc(rows * cols * sizeof(float));
-			
-			// sacrifice memory w/ speed, by pre-allocating a temporary buffer
-			temp_data = (float *)malloc(rows * cols * sizeof(float));
-			
-			// set every element to 0
-			if(clear)
-			{
-				vDSP_vclr(data, 1, rows*cols);
-			}
-		}
+		Mat(size_t r, size_t c, bool clear = false);
 		
 		// pass in existing data
 		// non-destructive by default
-		Mat(size_t r, size_t c, float *existing_buffer, bool withCopy = true)
-		{
-			rows = r;
-			cols = c;
-			if(withCopy)
-			{
-				cblas_scopy(rows*cols, existing_buffer, 1, data, 1);
-				//memcpy(data, existing_buffer, sizeof(float)*r*c);
-			}
-			else {
-				data = existing_buffer;
-			}
-			
-		}
+		Mat(size_t r, size_t c, float *existing_buffer, bool withCopy = true);
 		
 		// set every element to a value
-		Mat(size_t r, size_t c, float val)
-		{
-			rows = r;
-			cols = c;
-			data = (float *)malloc(rows * cols * sizeof(float));
-			// sacrifice memory w/ speed, by pre-allocating a temporary buffer
-			temp_data = (float *)malloc(rows * cols * sizeof(float));
-			
-			// set every element to val
-			vDSP_vfill(&val, data, 1, rows * cols);
-			
-		}
+		Mat(size_t r, size_t c, float val);
 		
 		// copy-constructor, called during:
 		//		pkm::Mat a = rhs;
 		//		pkm::Mat a(rhs);
-		Mat(const Mat &rhs)
-		{
-			if(rhs.data != NULL)
-			{
-				rows = rhs.rows;
-				cols = rhs.cols;
-				
-				data = (float *)malloc(rows * cols * sizeof(float));
-				
-				// sacrifice memory w/ speed, by pre-allocating a temporary buffer
-				temp_data = (float *)malloc(rows * cols * sizeof(float));
-				
-				cblas_scopy(rows*cols, rhs.data, 1, data, 1);
-				//memcpy(data, rhs.data, sizeof(float)*rows*cols);
-			}
-			else {
-				rows = 0;
-				cols = 0;
-				data = NULL;
-				temp_data = NULL;
-			}
-		}
+		Mat(const Mat &rhs);
 		
-		
-		void setTo(float val)
-		{
-#ifndef DEBUG
-			assert(data != NULL);
-#endif	
-			vDSP_vfill(&val, data, 1, rows * cols);
-		}
-		
+		// set every element to a value
+		void setTo(float val);		
 		
 		/////////////////////////////////////////
 		
-		float *row(size_t r)
-		{
-#ifndef DEBUG
-			assert(data != NULL);
-#endif			
-			return (data + r*cols);
-		}
+		inline float *row(size_t r);
 		
 		/////////////////////////////////////////
-		
-		void multiply(Mat rhs, Mat &result)
-		{
-#ifndef DEBUG
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(result.data != NULL);
-			assert(rows == rhs.rows && 
-				   rhs.rows == result.rows &&
-				   cols == rhs.cols && 
-				   rhs.cols == result.cols);
-#endif
-			vDSP_vmul(data, 1, rhs.data, 1, result.data, 1, rows*cols);
-			
-		}
 		
 		// element-wise multiplication
-		// result stored in original matrix
-		void multiply(Mat rhs)
-		{
-#ifndef DEBUG
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(rows == rhs.rows && 
-				   cols == rhs.cols);
-#endif			
-			vDSP_vmul(data, 1, rhs.data, 1, temp_data, 1, rows*cols);
-			std::swap(data, temp_data);
-		}
+		void multiply(Mat rhs, Mat &result);		
+		void multiply(Mat rhs);		
+		void multiply(float scalar, Mat &result);		
+		void multiply(float scalar);
 		
+		void divide(Mat rhs, Mat &result);		
+		void divide(Mat rhs);		
+		void divide(float scalar, Mat &result);		
+		void divide(float scalar);
 		
-		void multiply(float scalar, Mat &result)
-		{
-#ifndef DEBUG
-			assert(data != NULL);
-			assert(result.data != NULL);
-			assert(rows == result.rows &&
-				   cols == result.cols);
-#endif			
-			vDSP_vsmul(data, 1, &scalar, result.data, 1, rows*cols);
-			
-		}
+		void add(Mat rhs, Mat &result);		
+		void add(Mat rhs);
 		
-		void multiply(float scalar)
-		{
-#ifndef DEBUG			
-			assert(data != NULL);
-#endif
-			vDSP_vsmul(data, 1, &scalar, data, 1, rows*cols);
-		}
-		
-		void divide(Mat rhs, Mat &result)
-		{
-#ifndef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(result.data != NULL);
-			assert(rows == rhs.rows && 
-				   rhs.rows == result.rows &&
-				   cols == rhs.cols && 
-				   rhs.cols == result.cols);
-#endif			
-			vDSP_vdiv(rhs.data, 1, data, 1, result.data, 1, rows*cols);
-			
-		}
-		
-		void divide(Mat rhs)
-		{
-#ifndef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(rows == rhs.rows &&
-				   cols == rhs.cols);
-#endif			
-			vDSP_vdiv(rhs.data, 1, data, 1, temp_data, 1, rows*cols);
-			std::swap(data, temp_data);
-		}
-		
-		void divide(float scalar, Mat &result)
-		{
-#ifndef DEBUG			
-			assert(data != NULL);
-			assert(result.data != NULL);
-			assert(rows == result.rows &&
-				   cols == result.cols);
-#endif	
-			
-			vDSP_vsdiv(data, 1, &scalar, result.data, 1, rows*cols);
-		}
-		
-		void divide(float scalar)
-		{
-#ifndef DEBUG			
-			assert(data != NULL);
-#endif
-			vDSP_vsdiv(data, 1, &scalar, data, 1, rows*cols);
-		}
-		
-		void add(Mat rhs, Mat &result)
-		{
-#ifndef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(result.data != NULL);
-			assert(rows == rhs.rows && 
-				   rhs.rows == result.rows &&
-				   cols == rhs.cols && 
-				   rhs.cols == result.cols);
-#endif			
-			vDSP_vadd(data, 1, rhs.data, 1, result.data, 1, rows*cols);
-		}
-		
-		void add(Mat rhs)
-		{
-#ifndef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(rows == rhs.rows &&
-				   cols == rhs.cols);
-#endif			
-			vDSP_vadd(data, 1, rhs.data, 1, temp_data, 1, rows*cols);
-			std::swap(data, temp_data);
-		}
-		
-		void subtract(Mat rhs, Mat &result)
-		{
-#ifndef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(result.data != NULL);
-			assert(rows == rhs.rows && 
-				   rhs.rows == result.rows &&
-				   cols == rhs.cols && 
-				   rhs.cols == result.cols);
-#endif			
-			vDSP_vsub(data, 1, rhs.data, 1, data, 1, rows*cols);
-			
-		}
-		
-		void subtract(Mat rhs)
-		{
-#ifndef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(rows == rhs.rows &&
-				   cols == rhs.cols);
-#endif			
-			vDSP_vsub(data, 1, rhs.data, 1, temp_data, 1, rows*cols);
-			std::swap(data, temp_data);
-		}
-		
-		
+		void subtract(Mat rhs, Mat &result);		
+		void subtract(Mat rhs);
 		
 		void GEMM(Mat rhs, Mat &result);
 		Mat GEMM(Mat rhs);
 		
-		void setTranspose();
-		
+		void setTranspose();		
 		Mat getTranspose();
 		
 		// diagonalize the vector into a square matrix with 
 		// the current data vector along the diagonal
 		void setDiag();
-		
-		// get a diagonalized version of the current vector (non-destructive)
 		Mat getDiag();
 		
 		// returns a new diagonalized matrix version of A
@@ -322,7 +104,6 @@ namespace pkm
 		
 		// get a new identity matrix of size dim x dim
 		static Mat identity(size_t dim);
-		
 		
 		// set every element to a random value between low and high
 		void setRand(float low, float high);
@@ -333,7 +114,7 @@ namespace pkm
 		// rescale the values in each row to their maximum
 		void setNormalize(bool row_major = true);
 		
-		// simple output
+		// simple print output (be careful with large matrices!)
 		void print(bool row_major = true);
 		
 		/////////////////////////////////////////
