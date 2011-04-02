@@ -115,209 +115,15 @@ Mat::Mat(const Mat &rhs)
 }
 
 
-void Mat::setTo(float val)
-{
-#ifndef DEBUG
-	assert(data != NULL);
-#endif	
-	vDSP_vfill(&val, data, 1, rows * cols);
-}
+
 
 
 /////////////////////////////////////////
 
-inline float * Mat::row(size_t r)
-{
-#ifndef DEBUG
-	assert(data != NULL);
-#endif			
-	return (data + r*cols);
-}
+
 
 /////////////////////////////////////////
 
-void Mat::multiply(Mat rhs, Mat &result)
-{
-#ifndef DEBUG
-	assert(data != NULL);
-	assert(rhs.data != NULL);
-	assert(result.data != NULL);
-	assert(rows == rhs.rows && 
-		   rhs.rows == result.rows &&
-		   cols == rhs.cols && 
-		   rhs.cols == result.cols);
-#endif
-	vDSP_vmul(data, 1, rhs.data, 1, result.data, 1, rows*cols);
-	
-}
-
-// element-wise multiplication
-// result stored in original matrix
-void Mat::multiply(Mat rhs)
-{
-#ifndef DEBUG
-	assert(data != NULL);
-	assert(rhs.data != NULL);
-	assert(rows == rhs.rows && 
-		   cols == rhs.cols);
-#endif			
-	vDSP_vmul(data, 1, rhs.data, 1, temp_data, 1, rows*cols);
-	std::swap(data, temp_data);
-}
-
-
-void Mat::multiply(float scalar, Mat &result)
-{
-#ifndef DEBUG
-	assert(data != NULL);
-	assert(result.data != NULL);
-	assert(rows == result.rows &&
-		   cols == result.cols);
-#endif			
-	vDSP_vsmul(data, 1, &scalar, result.data, 1, rows*cols);
-	
-}
-
-void Mat::multiply(float scalar)
-{
-#ifndef DEBUG			
-	assert(data != NULL);
-#endif
-	vDSP_vsmul(data, 1, &scalar, data, 1, rows*cols);
-}
-
-void Mat::divide(Mat rhs, Mat &result)
-{
-#ifndef DEBUG			
-	assert(data != NULL);
-	assert(rhs.data != NULL);
-	assert(result.data != NULL);
-	assert(rows == rhs.rows && 
-		   rhs.rows == result.rows &&
-		   cols == rhs.cols && 
-		   rhs.cols == result.cols);
-#endif			
-	vDSP_vdiv(rhs.data, 1, data, 1, result.data, 1, rows*cols);
-	
-}
-
-void Mat::divide(Mat rhs)
-{
-#ifndef DEBUG			
-	assert(data != NULL);
-	assert(rhs.data != NULL);
-	assert(rows == rhs.rows &&
-		   cols == rhs.cols);
-#endif			
-	vDSP_vdiv(rhs.data, 1, data, 1, temp_data, 1, rows*cols);
-	std::swap(data, temp_data);
-}
-
-void Mat::divide(float scalar, Mat &result)
-{
-#ifndef DEBUG			
-	assert(data != NULL);
-	assert(result.data != NULL);
-	assert(rows == result.rows &&
-		   cols == result.cols);
-#endif	
-	
-	vDSP_vsdiv(data, 1, &scalar, result.data, 1, rows*cols);
-}
-
-void Mat::divide(float scalar)
-{
-#ifndef DEBUG			
-	assert(data != NULL);
-#endif
-	vDSP_vsdiv(data, 1, &scalar, data, 1, rows*cols);
-}
-
-void Mat::add(Mat rhs, Mat &result)
-{
-#ifndef DEBUG			
-	assert(data != NULL);
-	assert(rhs.data != NULL);
-	assert(result.data != NULL);
-	assert(rows == rhs.rows && 
-		   rhs.rows == result.rows &&
-		   cols == rhs.cols && 
-		   rhs.cols == result.cols);
-#endif			
-	vDSP_vadd(data, 1, rhs.data, 1, result.data, 1, rows*cols);
-}
-
-void Mat::add(Mat rhs)
-{
-#ifndef DEBUG			
-	assert(data != NULL);
-	assert(rhs.data != NULL);
-	assert(rows == rhs.rows &&
-		   cols == rhs.cols);
-#endif			
-	vDSP_vadd(data, 1, rhs.data, 1, temp_data, 1, rows*cols);
-	std::swap(data, temp_data);
-}
-
-void Mat::subtract(Mat rhs, Mat &result)
-{
-#ifndef DEBUG			
-	assert(data != NULL);
-	assert(rhs.data != NULL);
-	assert(result.data != NULL);
-	assert(rows == rhs.rows && 
-		   rhs.rows == result.rows &&
-		   cols == rhs.cols && 
-		   rhs.cols == result.cols);
-#endif			
-	vDSP_vsub(data, 1, rhs.data, 1, data, 1, rows*cols);
-	
-}
-
-void Mat::subtract(Mat rhs)
-{
-#ifndef DEBUG			
-	assert(data != NULL);
-	assert(rhs.data != NULL);
-	assert(rows == rhs.rows &&
-		   cols == rhs.cols);
-#endif			
-	vDSP_vsub(data, 1, rhs.data, 1, temp_data, 1, rows*cols);
-	std::swap(data, temp_data);
-}
-
-
-void Mat::GEMM(Mat rhs, Mat &result)
-{
-#ifndef DEBUG
-	assert(data != NULL);
-	assert(rhs.data != NULL);
-	assert(result.data != NULL);
-	assert(rows == result.rows &&
-		   rhs.cols == result.cols &&
-		   cols == rhs.rows);
-#endif
-
-	cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, result.rows, result.cols, cols, 1.0f, data, rows, rhs.data, rhs.rows, 0.0f, result.data, result.cols);
-	//vDSP_mmul(data, 1, rhs.data, 1, result.data, 1, result.rows, result.cols, cols);
-	
-}
-
-Mat Mat::GEMM(Mat rhs)
-{
-#ifndef DEBUG
-	assert(data != NULL);
-	assert(rhs.data != NULL);
-	assert(cols == rhs.rows);
-#endif
-	
-	Mat gemmResult(rows, rhs.cols);
-	
-	cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, gemmResult.rows, gemmResult.cols, cols, 1.0f, data, cols, rhs.data, rhs.rows, 0.0f, gemmResult.data, gemmResult.cols);
-	//vDSP_mmul(data, 1, rhs.data, 1, gemmResult.data, 1, gemmResult.rows, gemmResult.cols, cols);
-	return gemmResult;
-	
-}
 
 Mat Mat::getTranspose()
 {
@@ -339,7 +145,7 @@ Mat Mat::getTranspose()
 
 // diagonalize the vector into a square matrix with 
 // the current data vector along the diagonal
-void Mat::setDiag()
+inline void Mat::setDiag()
 {
 #ifndef DEBUG
 	assert(data != NULL);
@@ -506,3 +312,6 @@ void Mat::print(bool row_major)
 	}
 	
 }
+
+
+

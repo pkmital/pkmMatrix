@@ -297,7 +297,7 @@
 							<real>185</real>
 						</array>
 						<key>RubberWindowFrame</key>
-						<string>478 35 1145 843 0 0 1440 878 </string>
+						<string>511 35 1145 843 0 0 1440 878 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXSmartGroupTreeModule</string>
@@ -313,13 +313,15 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>891D7B53134647EC008B6915</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>&lt;No Editor&gt;</string>
+								<string></string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
 									<dict>
 										<key>PBXProjectModuleGUID</key>
 										<string>891D7B54134647EC008B6915</string>
+										<key>PBXProjectModuleLabel</key>
+										<string></string>
 									</dict>
 									<key>SplitCount</key>
 									<string>1</string>
@@ -334,7 +336,7 @@
 								<key>Frame</key>
 								<string>{{0, 0}, {938, 0}}</string>
 								<key>RubberWindowFrame</key>
-								<string>478 35 1145 843 0 0 1440 878 </string>
+								<string>511 35 1145 843 0 0 1440 878 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
@@ -358,6 +360,8 @@
 									<dict>
 										<key>Frame</key>
 										<string>{{10, 27}, {938, 770}}</string>
+										<key>RubberWindowFrame</key>
+										<string>511 35 1145 843 0 0 1440 878 </string>
 									</dict>
 									<key>Module</key>
 									<string>XCDetailModule</string>
@@ -412,8 +416,6 @@
 									<dict>
 										<key>Frame</key>
 										<string>{{10, 27}, {938, 770}}</string>
-										<key>RubberWindowFrame</key>
-										<string>478 35 1145 843 0 0 1440 878 </string>
 									</dict>
 									<key>Module</key>
 									<string>PBXBuildResultsModule</string>
@@ -441,11 +443,11 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>89182AAB13472488003E4548</string>
+				<string>89182AFC13474BB2003E4548</string>
 				<string>1CA23ED40692098700951B8B</string>
-				<string>89182AAC13472488003E4548</string>
+				<string>89182AFD13474BB2003E4548</string>
 				<string>891D7B53134647EC008B6915</string>
-				<string>89182AAD13472488003E4548</string>
+				<string>89182AFE13474BB2003E4548</string>
 				<string>1CA23EDF0692099D00951B8B</string>
 				<string>1CA23EE00692099D00951B8B</string>
 				<string>1CA23EE10692099D00951B8B</string>
@@ -594,14 +596,14 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>89182AAE13472488003E4548</string>
+				<string>89182AFF13474BB2003E4548</string>
 				<string>1CCC7628064C1048000F2A68</string>
 				<string>1CCC7629064C1048000F2A68</string>
-				<string>89182AAF13472488003E4548</string>
-				<string>89182AB013472488003E4548</string>
-				<string>89182AB113472488003E4548</string>
-				<string>89182AB213472488003E4548</string>
-				<string>89182AB313472488003E4548</string>
+				<string>89182B0013474BB2003E4548</string>
+				<string>89182B0113474BB2003E4548</string>
+				<string>89182B0213474BB2003E4548</string>
+				<string>89182B0313474BB2003E4548</string>
+				<string>89182B0413474BB2003E4548</string>
 			</array>
 			<key>ToolbarConfigUserDefaultsMinorVersion</key>
 			<string>2</string>
@@ -635,14 +637,13 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>89182AB413472488003E4548</string>
-		<string>89182AB513472488003E4548</string>
-		<string>89182AC5134733DC003E4548</string>
+		<string>89182B1013474E8F003E4548</string>
+		<string>89182B1113474E8F003E4548</string>
 		<string>/Users/pkmital/Coding/pkmMatrix/pkmMatrix.xcodeproj</string>
-		<string>89182ACF13473B05003E4548</string>
+		<string>89182B0513474BB2003E4548</string>
 	</array>
 	<key>WindowString</key>
-	<string>478 35 1145 843 0 0 1440 878 </string>
+	<string>511 35 1145 843 0 0 1440 878 </string>
 	<key>WindowToolsV3</key>
 	<array>
 		<dict>
