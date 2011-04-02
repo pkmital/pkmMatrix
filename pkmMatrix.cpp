@@ -27,6 +27,266 @@
 
 using namespace pkm;
 
+Mat::Mat()
+{
+	rows = cols = 0;
+	data = temp_data = NULL;
+}
+
+// destructor
+Mat::~Mat()
+{
+	free(data);
+	free(temp_data);
+}
+
+// allocate data
+Mat::Mat(size_t r, size_t c, bool clear)
+{
+	rows = r;
+	cols = c;
+	data = (float *)malloc(rows * cols * sizeof(float));
+	
+	// sacrifice memory w/ speed, by pre-allocating a temporary buffer
+	temp_data = (float *)malloc(rows * cols * sizeof(float));
+	
+	// set every element to 0
+	if(clear)
+	{
+		vDSP_vclr(data, 1, rows*cols);
+	}
+}
+
+// pass in existing data
+// non-destructive by default
+Mat::Mat(size_t r, size_t c, float *existing_buffer, bool withCopy)
+{
+	rows = r;
+	cols = c;
+	if(withCopy)
+	{
+		cblas_scopy(rows*cols, existing_buffer, 1, data, 1);
+		//memcpy(data, existing_buffer, sizeof(float)*r*c);
+	}
+	else {
+		data = existing_buffer;
+	}
+	
+}
+
+// set every element to a value
+Mat::Mat(size_t r, size_t c, float val)
+{
+	rows = r;
+	cols = c;
+	data = (float *)malloc(rows * cols * sizeof(float));
+	// sacrifice memory w/ speed, by pre-allocating a temporary buffer
+	temp_data = (float *)malloc(rows * cols * sizeof(float));
+	
+	// set every element to val
+	vDSP_vfill(&val, data, 1, rows * cols);
+	
+}
+
+// copy-constructor, called during:
+//		pkm::Mat a = rhs;
+//		pkm::Mat a(rhs);
+Mat::Mat(const Mat &rhs)
+{
+	if(rhs.data != NULL)
+	{
+		rows = rhs.rows;
+		cols = rhs.cols;
+		
+		data = (float *)malloc(rows * cols * sizeof(float));
+		
+		// sacrifice memory w/ speed, by pre-allocating a temporary buffer
+		temp_data = (float *)malloc(rows * cols * sizeof(float));
+		
+		cblas_scopy(rows*cols, rhs.data, 1, data, 1);
+		//memcpy(data, rhs.data, sizeof(float)*rows*cols);
+	}
+	else {
+		rows = 0;
+		cols = 0;
+		data = NULL;
+		temp_data = NULL;
+	}
+}
+
+
+void Mat::setTo(float val)
+{
+#ifndef DEBUG
+	assert(data != NULL);
+#endif	
+	vDSP_vfill(&val, data, 1, rows * cols);
+}
+
+
+/////////////////////////////////////////
+
+inline float * Mat::row(size_t r)
+{
+#ifndef DEBUG
+	assert(data != NULL);
+#endif			
+	return (data + r*cols);
+}
+
+/////////////////////////////////////////
+
+void Mat::multiply(Mat rhs, Mat &result)
+{
+#ifndef DEBUG
+	assert(data != NULL);
+	assert(rhs.data != NULL);
+	assert(result.data != NULL);
+	assert(rows == rhs.rows && 
+		   rhs.rows == result.rows &&
+		   cols == rhs.cols && 
+		   rhs.cols == result.cols);
+#endif
+	vDSP_vmul(data, 1, rhs.data, 1, result.data, 1, rows*cols);
+	
+}
+
+// element-wise multiplication
+// result stored in original matrix
+void Mat::multiply(Mat rhs)
+{
+#ifndef DEBUG
+	assert(data != NULL);
+	assert(rhs.data != NULL);
+	assert(rows == rhs.rows && 
+		   cols == rhs.cols);
+#endif			
+	vDSP_vmul(data, 1, rhs.data, 1, temp_data, 1, rows*cols);
+	std::swap(data, temp_data);
+}
+
+
+void Mat::multiply(float scalar, Mat &result)
+{
+#ifndef DEBUG
+	assert(data != NULL);
+	assert(result.data != NULL);
+	assert(rows == result.rows &&
+		   cols == result.cols);
+#endif			
+	vDSP_vsmul(data, 1, &scalar, result.data, 1, rows*cols);
+	
+}
+
+void Mat::multiply(float scalar)
+{
+#ifndef DEBUG			
+	assert(data != NULL);
+#endif
+	vDSP_vsmul(data, 1, &scalar, data, 1, rows*cols);
+}
+
+void Mat::divide(Mat rhs, Mat &result)
+{
+#ifndef DEBUG			
+	assert(data != NULL);
+	assert(rhs.data != NULL);
+	assert(result.data != NULL);
+	assert(rows == rhs.rows && 
+		   rhs.rows == result.rows &&
+		   cols == rhs.cols && 
+		   rhs.cols == result.cols);
+#endif			
+	vDSP_vdiv(rhs.data, 1, data, 1, result.data, 1, rows*cols);
+	
+}
+
+void Mat::divide(Mat rhs)
+{
+#ifndef DEBUG			
+	assert(data != NULL);
+	assert(rhs.data != NULL);
+	assert(rows == rhs.rows &&
+		   cols == rhs.cols);
+#endif			
+	vDSP_vdiv(rhs.data, 1, data, 1, temp_data, 1, rows*cols);
+	std::swap(data, temp_data);
+}
+
+void Mat::divide(float scalar, Mat &result)
+{
+#ifndef DEBUG			
+	assert(data != NULL);
+	assert(result.data != NULL);
+	assert(rows == result.rows &&
+		   cols == result.cols);
+#endif	
+	
+	vDSP_vsdiv(data, 1, &scalar, result.data, 1, rows*cols);
+}
+
+void Mat::divide(float scalar)
+{
+#ifndef DEBUG			
+	assert(data != NULL);
+#endif
+	vDSP_vsdiv(data, 1, &scalar, data, 1, rows*cols);
+}
+
+void Mat::add(Mat rhs, Mat &result)
+{
+#ifndef DEBUG			
+	assert(data != NULL);
+	assert(rhs.data != NULL);
+	assert(result.data != NULL);
+	assert(rows == rhs.rows && 
+		   rhs.rows == result.rows &&
+		   cols == rhs.cols && 
+		   rhs.cols == result.cols);
+#endif			
+	vDSP_vadd(data, 1, rhs.data, 1, result.data, 1, rows*cols);
+}
+
+void Mat::add(Mat rhs)
+{
+#ifndef DEBUG			
+	assert(data != NULL);
+	assert(rhs.data != NULL);
+	assert(rows == rhs.rows &&
+		   cols == rhs.cols);
+#endif			
+	vDSP_vadd(data, 1, rhs.data, 1, temp_data, 1, rows*cols);
+	std::swap(data, temp_data);
+}
+
+void Mat::subtract(Mat rhs, Mat &result)
+{
+#ifndef DEBUG			
+	assert(data != NULL);
+	assert(rhs.data != NULL);
+	assert(result.data != NULL);
+	assert(rows == rhs.rows && 
+		   rhs.rows == result.rows &&
+		   cols == rhs.cols && 
+		   rhs.cols == result.cols);
+#endif			
+	vDSP_vsub(data, 1, rhs.data, 1, data, 1, rows*cols);
+	
+}
+
+void Mat::subtract(Mat rhs)
+{
+#ifndef DEBUG			
+	assert(data != NULL);
+	assert(rhs.data != NULL);
+	assert(rows == rhs.rows &&
+		   cols == rhs.cols);
+#endif			
+	vDSP_vsub(data, 1, rhs.data, 1, temp_data, 1, rows*cols);
+	std::swap(data, temp_data);
+}
+
+
 void Mat::GEMM(Mat rhs, Mat &result)
 {
 #ifndef DEBUG
