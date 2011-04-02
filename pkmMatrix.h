@@ -28,6 +28,7 @@
 #include <iostream>
 #include <assert.h>
 #include <Accelerate/Accelerate.h>
+//#include <Accelerate/cblas.h>
 
 #ifndef MAX
 #define MAX(a,b)  ((a) < (b) ? (b) : (a))
@@ -72,18 +73,23 @@ namespace pkm
 		}
 		
 		// pass in existing data
+		// non-destructive by default
 		Mat(size_t r, size_t c, float *existing_buffer, bool withCopy = true)
 		{
 			rows = r;
 			cols = c;
 			if(withCopy)
-				memcpy(data, existing_buffer, sizeof(float)*r*c);
+			{
+				cblas_scopy(rows*cols, existing_buffer, 1, data, 1);
+				//memcpy(data, existing_buffer, sizeof(float)*r*c);
+			}
 			else {
 				data = existing_buffer;
 			}
 			
 		}
 		
+		// set every element to a value
 		Mat(size_t r, size_t c, float val)
 		{
 			rows = r;
@@ -112,7 +118,8 @@ namespace pkm
 				// sacrifice memory w/ speed, by pre-allocating a temporary buffer
 				temp_data = (float *)malloc(rows * cols * sizeof(float));
 				
-				memcpy(data, rhs.data, sizeof(float)*rows*cols);
+				cblas_scopy(rows*cols, rhs.data, 1, data, 1);
+				//memcpy(data, rhs.data, sizeof(float)*rows*cols);
 			}
 			else {
 				rows = 0;
@@ -205,7 +212,7 @@ namespace pkm
 				   cols == rhs.cols && 
 				   rhs.cols == result.cols);
 #endif			
-			vDSP_vdiv(data, 1, rhs.data, 1, result.data, 1, rows*cols);
+			vDSP_vdiv(rhs.data, 1, data, 1, result.data, 1, rows*cols);
 			
 		}
 		
@@ -217,7 +224,7 @@ namespace pkm
 			assert(rows == rhs.rows &&
 				   cols == rhs.cols);
 #endif			
-			vDSP_vdiv(data, 1, rhs.data, 1, temp_data, 1, rows*cols);
+			vDSP_vdiv(rhs.data, 1, data, 1, temp_data, 1, rows*cols);
 			std::swap(data, temp_data);
 		}
 		
@@ -296,224 +303,38 @@ namespace pkm
 		
 		
 		
-		void GEMM(Mat rhs, Mat &result)
-		{
-#ifndef DEBUG
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(result.data != NULL);
-			assert(rows == result.rows &&
-				   rhs.cols == result.cols &&
-				   cols == rhs.rows);
-#endif
-			vDSP_mmul(data, 1, rhs.data, 1, result.data, 1, rows, rhs.cols, cols);
-			
-		}
+		void GEMM(Mat rhs, Mat &result);
+		Mat GEMM(Mat rhs);
 		
-		Mat GEMM(Mat rhs)
-		{
-#ifndef DEBUG
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(cols == rhs.rows);
-#endif
-			
-			Mat gemmResult(rows, rhs.cols);
-			
-			vDSP_mmul(data, 1, rhs.data, 1, gemmResult.data, 1, rows, rhs.cols, cols);
-			return gemmResult;
-			
-		}
+		void setTranspose();
 		
-		void setTranspose()
-		{
-#ifndef DEBUG			
-			assert(data != NULL);
-#endif			
-			vDSP_mtrans(data, 1, data, 1, cols, rows);
-			std::swap(rows, cols);
-		}
-		
-		Mat getTranspose()
-		{
-#ifndef DEBUG			
-			assert(data != NULL);
-#endif	
-			Mat transposedMatrix(cols, rows);
-			
-			vDSP_mtrans(data, 1, transposedMatrix.data, 1, cols, rows);
-			return transposedMatrix;
-		}
+		Mat getTranspose();
 		
 		// diagonalize the vector into a square matrix with 
 		// the current data vector along the diagonal
-		void setDiag()
-		{
-#ifndef DEBUG
-			assert(data != NULL);
-#endif	
-			if(rows == 1 && cols > 1 || cols == 1 && rows > 1)
-			{
-				int diagonal_elements = MAX(rows,cols);
-				
-				// create a square matrix
-				temp_data = (float *)realloc(temp_data, diagonal_elements*diagonal_elements*sizeof(float));
-				
-				// set values to 0
-				vDSP_vclr(temp_data, 1, diagonal_elements*diagonal_elements);
-				
-				// set diagonal elements to the current vector in data
-				for (int i = 0; i < diagonal_elements; i++) {
-					temp_data[i*diagonal_elements+i] = data[i];
-				}
-				
-				// store in data
-				std::swap(data, temp_data);
-				
-				// reallocate temp data for future processing
-				temp_data = (float *)realloc(temp_data, diagonal_elements*diagonal_elements*sizeof(float));
-				
-				// save dimensions
-				rows = cols = diagonal_elements;
-			}
-		}
+		void setDiag();
 		
 		// get a diagonalized version of the current vector (non-destructive)
-		Mat getDiag()
-		{
-#ifndef DEBUG
-			assert(data != NULL);
-#endif	
-			if(rows == 1 && cols > 1 || cols == 1 && rows > 1)
-			{
-				int diagonal_elements = MAX(rows,cols);
-				
-				// create a square matrix
-				Mat diagonalMatrix(diagonal_elements,diagonal_elements, true);
-				
-				// set diagonal elements to the current vector in data
-				for (int i = 0; i < diagonal_elements; i++) {
-					diagonalMatrix.data[i*diagonal_elements+i] = data[i];
-				}
-				return diagonalMatrix;
-			}
-			else {
-				printf("[ERROR]: Cannot diagonalize a matrix. Either rows or cols must be == 1.");
-				Mat A;
-				return A;
-			}
-		}
+		Mat getDiag();
 		
-		static Mat diag(Mat &A)
-		{
-			if(A.rows == 1 && A.cols > 1 || A.cols == 1 && A.rows > 1)
-			{
-				int diagonal_elements = MAX(A.rows,A.cols);
-				
-				// create a square matrix
-				Mat diagonalMatrix(diagonal_elements,diagonal_elements, true);
-				
-				// set diagonal elements to the current vector in data
-				for (int i = 0; i < diagonal_elements; i++) {
-					diagonalMatrix.data[i*diagonal_elements+i] = A.data[i];
-				}
-				return diagonalMatrix;
-			}
-			else {
-				printf("[ERROR]: Cannot diagonalize a matrix. Either rows or cols must be == 1.");
-				Mat A;
-				return A;
-			}
-		}
+		// returns a new diagonalized matrix version of A
+		static Mat diag(Mat &A);
 		
-		static Mat identity(size_t dim)
-		{
-			
-			// create a square matrix
-			Mat identityMatrix(dim,dim, true);
-			
-			// set diagonal elements to the current vector in data
-			for (size_t i = 0; i < dim; i++) {
-				identityMatrix.data[i*dim+i] = 1;
-			}
-				
-			return identityMatrix;
-		}
+		// get a new identity matrix of size dim x dim
+		static Mat identity(size_t dim);
 		
 		
 		// set every element to a random value between low and high
-		void setRand(float low, float high)
-		{
-			float width = (high-low);
-			float *ptr = data;
-			for (int i = 0; i < rows*cols; i++) {
-				*ptr = low + (float(::random())/float(RAND_MAX))*width;
-				++ptr;
-			}
-		}
+		void setRand(float low, float high);
 		
 		// create a random matrix
-		static Mat rand(size_t r, size_t c, float low = 0.0, float high = 1.0)
-		{
-			Mat randomMatrix(r, c);
-			randomMatrix.setRand(low, high);
-			return randomMatrix;
-		}
+		static Mat rand(size_t r, size_t c, float low = 0.0, float high = 1.0);
 		
 		// rescale the values in each row to their maximum
-		void setNormalize(bool row_major = true)
-		{
-			if (row_major) {
-				for (int r = 0; r < rows; r++) {
-					float min, max;
-					vDSP_minv(&(data[r*cols]), 1, &min, cols);
-					vDSP_maxv(&(data[r*cols]), 1, &max, cols);
-					float height = max-min;
-					min = -min;
-					vDSP_vsadd(&(data[r*cols]), 1, &min, &(data[r*cols]), 1, cols);
-					if (height != 0) {
-						vDSP_vsdiv(&(data[r*cols]), 1, &height, &(data[r*cols]), 1, cols);	
-					}
-				}			
-			}
-			else {
-				for (int c = 0; c < cols; c++) {
-					float min, max;
-					vDSP_minv(&(data[c]), cols, &min, rows);
-					vDSP_maxv(&(data[c]), cols, &max, rows);
-					float height = max-min;
-					min = -min;
-					vDSP_vsadd(&(data[c]), cols, &min, &(data[c]), cols, rows);
-					if (height != 0) {
-						vDSP_vsdiv(&(data[c]), cols, &height, &(data[c]), cols, rows);	
-					}
-				}
-			}
-		}
+		void setNormalize(bool row_major = true);
 		
-		void print(bool row_major = true)
-		{
-			if(row_major)
-			{
-				for (int r = 0; r < rows; r++) {
-					for (int c = 0; c < cols; c++) {
-						printf("%8.2f ", data[r*cols + c]);
-					}
-					printf("\n");
-				}
-				printf("\n");
-			}
-			else {
-				for (int r = 0; r < rows; r++) {
-					for (int c = 0; c < cols; c++) {
-						printf("%8.2f ", data[c*rows + r]);
-					}
-					printf("\n");
-				}
-				printf("\n");
-			}
-
-		}
+		// simple output
+		void print(bool row_major = true);
 		
 		/////////////////////////////////////////
 		

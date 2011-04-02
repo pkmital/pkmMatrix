@@ -7,6 +7,10 @@
 		addToTargets = (
 			8DD76F620486A84900D96B5E /* pkmMatrix */,
 		);
+		breakpoints = (
+			89182A8813471C66003E4548 /* pkmMatrix.h:311 */,
+			89182A98134721AD003E4548 /* pkmMatrix.cpp:54 */,
+		);
 		codeSenseManager = 891D7B161346447A008B6915 /* Code sense */;
 		executables = (
 			891D7B0C1346446B008B6915 /* pkmMatrix */,
@@ -17,9 +21,9 @@
 				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
 				PBXFileTableDataSourceColumnWidthsKey = (
 					20,
-					364,
+					699,
 					20,
-					48.16259765625,
+					48,
 					43,
 					43,
 					20,
@@ -34,8 +38,12 @@
 					PBXFileDataSource_Target_ColumnID,
 				);
 			};
-			PBXPerProjectTemplateStateSaveDate = 323372140;
-			PBXWorkspaceStateSaveDate = 323372140;
+			PBXPerProjectTemplateStateSaveDate = 323426262;
+			PBXWorkspaceStateSaveDate = 323426262;
+		};
+		perUserProjectItems = {
+			89182ABB134730BB003E4548 /* PBXTextBookmark */ = 89182ABB134730BB003E4548 /* PBXTextBookmark */;
+			89182ABC134730BB003E4548 /* PBXTextBookmark */ = 89182ABC134730BB003E4548 /* PBXTextBookmark */;
 		};
 		sourceControlManager = 891D7B151346447A008B6915 /* Source Control */;
 		userBuildSettings = {
@@ -43,10 +51,65 @@
 	};
 	08FB7796FE84155DC02AAC07 /* main.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {878, 1088}}";
-			sepNavSelRange = "{68, 0}";
-			sepNavVisRange = "{0, 1603}";
+			sepNavIntBoundsRect = "{{0, 0}, {878, 1349}}";
+			sepNavSelRange = "{2210, 0}";
+			sepNavVisRange = "{1271, 1013}";
 		};
+	};
+	89182A8813471C66003E4548 /* pkmMatrix.h:311 */ = {
+		isa = PBXFileBreakpoint;
+		actions = (
+		);
+		breakpointStyle = 0;
+		continueAfterActions = 0;
+		countType = 0;
+		delayBeforeContinue = 0;
+		fileReference = 891D7B121346447A008B6915 /* pkmMatrix.h */;
+		functionName = "getTranspose()";
+		hitCount = 0;
+		ignoreCount = 0;
+		lineNumber = 311;
+		modificationTime = 323433952.812089;
+		originalNumberOfMultipleMatches = 1;
+		state = 2;
+	};
+	89182A98134721AD003E4548 /* pkmMatrix.cpp:54 */ = {
+		isa = PBXFileBreakpoint;
+		actions = (
+		);
+		breakpointStyle = 0;
+		continueAfterActions = 0;
+		countType = 0;
+		delayBeforeContinue = 0;
+		fileReference = 891D7B131346447A008B6915 /* pkmMatrix.cpp */;
+		functionName = "Mat::GEMM(Mat rhs)";
+		hitCount = 0;
+		ignoreCount = 0;
+		lineNumber = 54;
+		location = pkmMatrix;
+		modificationTime = 323433952.812271;
+		originalNumberOfMultipleMatches = 1;
+		state = 2;
+	};
+	89182ABB134730BB003E4548 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 891D7B121346447A008B6915 /* pkmMatrix.h */;
+		name = "pkmMatrix.h: 205";
+		rLen = 0;
+		rLoc = 4548;
+		rType = 0;
+		vrLen = 269;
+		vrLoc = 4252;
+	};
+	89182ABC134730BB003E4548 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 891D7B121346447A008B6915 /* pkmMatrix.h */;
+		name = "pkmMatrix.h: 206";
+		rLen = 0;
+		rLoc = 4548;
+		rType = 0;
+		vrLen = 206;
+		vrLoc = 3534;
 	};
 	891D7B0C1346446B008B6915 /* pkmMatrix */ = {
 		isa = PBXExecutable;
@@ -55,7 +118,7 @@
 		argumentStrings = (
 		);
 		autoAttachOnCrash = 1;
-		breakpointsEnabled = 0;
+		breakpointsEnabled = 1;
 		configStateDict = {
 		};
 		customDataFormattersEnabled = 1;
@@ -77,19 +140,21 @@
 		showTypeColumn = 0;
 		sourceDirectories = (
 		);
+		variableFormatDictionary = {
+		};
 	};
 	891D7B121346447A008B6915 /* pkmMatrix.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {878, 7055}}";
-			sepNavSelRange = "{0, 810}";
-			sepNavVisRange = "{0, 1240}";
+			sepNavIntBoundsRect = "{{0, 0}, {878, 4587}}";
+			sepNavSelRange = "{1844, 0}";
+			sepNavVisRange = "{0, 1252}";
 		};
 	};
 	891D7B131346447A008B6915 /* pkmMatrix.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {878, 734}}";
-			sepNavSelRange = "{20, 0}";
-			sepNavVisRange = "{0, 838}";
+			sepNavIntBoundsRect = "{{0, 0}, {1251, 3217}}";
+			sepNavSelRange = "{1674, 0}";
+			sepNavVisRange = "{963, 1423}";
 		};
 	};
 	891D7B151346447A008B6915 /* Source Control */ = {

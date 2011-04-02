@@ -68,13 +68,32 @@ int main (int argc, char * const argv[]) {
 	a4.print();
 	
 	Mat a4T = a4.getTranspose();
+	printf("a4'\n");
+	a4T.print();
+	
+
 	Mat a5 = a3.GEMM(a4T);
 	printf("Mat a5 = a3.GEMM(a4T):\n");
 	a5.print();
 	
-	a4.setNormalize();
-	printf("a4.setNormalize():\n");
+	a4.data[0] = 10.0f;
+	a4.divide(5.0f);
+	printf("a4.divide(5.0f):\n");
 	a4.print();
+	
+	Mat a6(5,1);
+	a4T.divide(a5, a6);
+	printf("a6 = a4T / a5\n");
+	a6.print();
+	
+	a6.setNormalize(false);
+	printf("a6.setNormalize():\n");
+	a6.print();
+	
+	Mat a7 = a3.GEMM(idMatrix);
+	printf("a4*idMatrix\n");
+	a7.print();
+	
 	
 	
 	return 0;
