@@ -31,13 +31,16 @@ Mat::Mat()
 {
 	rows = cols = 0;
 	data = temp_data = NULL;
+	bAllocated = false;
 }
 
 // destructor
 Mat::~Mat()
 {
 	free(data);
-	free(temp_data);
+	free(temp_data);	
+	rows = cols = 0;
+	bAllocated = false;
 }
 
 // allocate data
@@ -49,6 +52,8 @@ Mat::Mat(size_t r, size_t c, bool clear)
 	
 	// sacrifice memory w/ speed, by pre-allocating a temporary buffer
 	temp_data = (float *)malloc(rows * cols * sizeof(float));
+
+	bAllocated = true;
 	
 	// set every element to 0
 	if(clear)
@@ -59,12 +64,20 @@ Mat::Mat(size_t r, size_t c, bool clear)
 
 // pass in existing data
 // non-destructive by default
+// this WILL destroy the passed in data when object leaves scope if
+// with copy is not true
 Mat::Mat(size_t r, size_t c, float *existing_buffer, bool withCopy)
 {
 	rows = r;
 	cols = c;
+	
+	// sacrifice memory w/ speed, by pre-allocating a temporary buffer
+	temp_data = (float *)malloc(rows * cols * sizeof(float));
+	
 	if(withCopy)
 	{
+		data = (float *)malloc(rows * cols * sizeof(float));
+		
 		cblas_scopy(rows*cols, existing_buffer, 1, data, 1);
 		//memcpy(data, existing_buffer, sizeof(float)*r*c);
 	}
@@ -72,6 +85,7 @@ Mat::Mat(size_t r, size_t c, float *existing_buffer, bool withCopy)
 		data = existing_buffer;
 	}
 	
+	bAllocated = true;
 }
 
 // set every element to a value
@@ -83,6 +97,8 @@ Mat::Mat(size_t r, size_t c, float val)
 	// sacrifice memory w/ speed, by pre-allocating a temporary buffer
 	temp_data = (float *)malloc(rows * cols * sizeof(float));
 	
+	bAllocated = true;
+	
 	// set every element to val
 	vDSP_vfill(&val, data, 1, rows * cols);
 	
@@ -93,6 +109,11 @@ Mat::Mat(size_t r, size_t c, float val)
 //		pkm::Mat a(rhs);
 Mat::Mat(const Mat &rhs)
 {
+	if (bAllocated) {
+		free(data);
+		free(temp_data);
+	}
+	
 	if(rhs.data != NULL)
 	{
 		rows = rhs.rows;
@@ -103,6 +124,8 @@ Mat::Mat(const Mat &rhs)
 		// sacrifice memory w/ speed, by pre-allocating a temporary buffer
 		temp_data = (float *)malloc(rows * cols * sizeof(float));
 		
+		bAllocated = true;
+		
 		cblas_scopy(rows*cols, rhs.data, 1, data, 1);
 		//memcpy(data, rhs.data, sizeof(float)*rows*cols);
 	}
@@ -111,10 +134,43 @@ Mat::Mat(const Mat &rhs)
 		cols = 0;
 		data = NULL;
 		temp_data = NULL;
+		
+		bAllocated = false;
 	}
 }
 
-
+Mat Mat::operator=(const Mat &rhs)
+{
+	if (bAllocated) {
+		free(data);
+		free(temp_data);
+	}
+	
+	if(rhs.data != NULL)
+	{
+		rows = rhs.rows;
+		cols = rhs.cols;
+		
+		data = (float *)malloc(rows * cols * sizeof(float));
+		
+		// sacrifice memory w/ speed, by pre-allocating a temporary buffer
+		temp_data = (float *)malloc(rows * cols * sizeof(float));
+		
+		bAllocated = true;
+		
+		cblas_scopy(rows*cols, rhs.data, 1, data, 1);
+		//memcpy(data, rhs.data, sizeof(float)*rows*cols);
+	}
+	else {
+		rows = 0;
+		cols = 0;
+		data = NULL;
+		temp_data = NULL;
+		
+		bAllocated = false;
+		return rhs;
+	}			
+}
 
 
 

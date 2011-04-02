@@ -91,10 +91,20 @@ int main (int argc, char * const argv[]) {
 	a6.print();
 	
 	Mat a7 = a3.GEMM(idMatrix);
-	printf("a4*idMatrix\n");
+	printf("a3*idMatrix\n");
 	a7.print();
 	
+	printf("a3'\n");
+	Mat a7T = a7.getTranspose();
+	a7T.print();
 	
+	Mat a7sub = a7.colRange(2, 4);
+	printf("a7.colRange(2,4)\n");	
+	a7sub.print();
+	
+	a7sub = a7.rowRange(2,4);
+	printf("a7.rowRange(2,4)\n");	
+	a7sub.print();
 	
 	return 0;
 }

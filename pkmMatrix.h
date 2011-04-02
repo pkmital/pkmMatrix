@@ -58,9 +58,9 @@ namespace pkm
 		Mat(size_t r, size_t c, float val);
 		
 		// copy-constructor, called during:
-		//		pkm::Mat a = rhs;
 		//		pkm::Mat a(rhs);
 		Mat(const Mat &rhs);
+		Mat operator=(const Mat &rhs);
 		
 		// set every element to a value
 		inline void setTo(float val)
@@ -78,19 +78,30 @@ namespace pkm
 #ifndef DEBUG
 			assert(data != NULL);
 #endif			
-			return (data + r*cols);
+			return (&(data[r*cols]));
 		}
 		
+		// inclusive of start, exclusive of end
 		inline Mat rowRange(size_t start, size_t end)
 		{
 			Mat submat(end-start, cols, row(start));
 			return submat;
 		}
 		
+		// this could be a really stupid way of doing this if you
+		// have a very large matrix
+		inline Mat colRange(size_t start, size_t end)
+		{
+			setTranspose();
+			Mat submat = rowRange(start, end);
+			setTranspose();
+			return submat.getTranspose();
+		}
+		
 		/////////////////////////////////////////
 		
 		// element-wise multiplication
-		inline void multiply(Mat rhs, Mat &result)
+		inline void multiply(const Mat &rhs, Mat &result) const 
 		{
 #ifndef DEBUG
 			assert(data != NULL);
@@ -106,7 +117,7 @@ namespace pkm
 		}		
 		// element-wise multiplication
 		// result stored in original matrix
-		inline void multiply(Mat rhs)
+		inline void multiply(const Mat &rhs)
 		{
 #ifndef DEBUG
 			assert(data != NULL);
@@ -118,7 +129,7 @@ namespace pkm
 			std::swap(data, temp_data);
 		}		
 		
-		inline void multiply(float scalar, Mat &result)
+		inline void multiply(float scalar, Mat &result) const 
 		{
 #ifndef DEBUG
 			assert(data != NULL);
@@ -138,7 +149,7 @@ namespace pkm
 			vDSP_vsmul(data, 1, &scalar, data, 1, rows*cols);
 		}
 		
-		inline void divide(Mat rhs, Mat &result)
+		inline void divide(const Mat &rhs, Mat &result) const 
 		{
 #ifndef DEBUG			
 			assert(data != NULL);
@@ -153,7 +164,7 @@ namespace pkm
 			
 		}
 		
-		inline void divide(Mat rhs)
+		inline void divide(const Mat &rhs)
 		{
 #ifndef DEBUG			
 			assert(data != NULL);
@@ -165,7 +176,7 @@ namespace pkm
 			std::swap(data, temp_data);
 		}
 		
-		inline void divide(float scalar, Mat &result)
+		inline void divide(float scalar, Mat &result) const 
 		{
 #ifndef DEBUG			
 			assert(data != NULL);
@@ -185,7 +196,7 @@ namespace pkm
 			vDSP_vsdiv(data, 1, &scalar, data, 1, rows*cols);
 		}
 		
-		inline void add(Mat rhs, Mat &result)
+		inline void add(const Mat &rhs, Mat &result) const 
 		{
 #ifndef DEBUG			
 			assert(data != NULL);
@@ -199,7 +210,7 @@ namespace pkm
 			vDSP_vadd(data, 1, rhs.data, 1, result.data, 1, rows*cols);
 		}
 		
-		inline void add(Mat rhs)
+		inline void add(const Mat &rhs)
 		{
 #ifndef DEBUG			
 			assert(data != NULL);
@@ -211,7 +222,7 @@ namespace pkm
 			std::swap(data, temp_data);
 		}
 		
-		inline void subtract(Mat rhs, Mat &result)
+		inline void subtract(const Mat &rhs, Mat &result) const 
 		{
 #ifndef DEBUG			
 			assert(data != NULL);
@@ -226,7 +237,7 @@ namespace pkm
 			
 		}
 		
-		inline void subtract(Mat rhs)
+		inline void subtract(const Mat &rhs)
 		{
 #ifndef DEBUG			
 			assert(data != NULL);
@@ -239,7 +250,7 @@ namespace pkm
 		}
 		
 		
-		inline void GEMM(Mat rhs, Mat &result)
+		inline void GEMM(const Mat &rhs, Mat &result) const 
 		{
 #ifndef DEBUG
 			assert(data != NULL);
@@ -255,7 +266,7 @@ namespace pkm
 			
 		}
 		
-		inline Mat GEMM(Mat rhs)
+		inline Mat GEMM(const Mat &rhs)
 		{
 #ifndef DEBUG
 			assert(data != NULL);
@@ -271,8 +282,16 @@ namespace pkm
 			
 		}
 		
+		inline void setTranspose()
+		{
+#ifndef DEBUG      
+			assert(data != NULL);
+#endif      
+			vDSP_mtrans(data, 1, temp_data, 1, cols, rows);
+			std::swap(data, temp_data);
+			std::swap(rows, cols);
+		}
 		
-		void setTranspose();		
 		Mat getTranspose();
 		
 		// diagonalize the vector into a square matrix with 
@@ -305,6 +324,8 @@ namespace pkm
 		
 		float *data;
 		float *temp_data;
+		
+		bool bAllocated;
 	};
 	
 };
