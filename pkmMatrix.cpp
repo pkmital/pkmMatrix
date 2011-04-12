@@ -29,23 +29,35 @@ using namespace pkm;
 
 Mat::Mat()
 {
+	bUserData = false;
 	rows = cols = 0;
 	data = temp_data = NULL;
 	bAllocated = false;
+	
 }
 
 // destructor
 Mat::~Mat()
 {
-	free(data);
-	free(temp_data);	
+	if(bAllocated && !bUserData && data != NULL)
+	{
+		free(data);
+	}
+	if(bAllocated && temp_data != NULL) 
+	{
+		free(temp_data);	
+	}
 	rows = cols = 0;
+	data = temp_data = NULL;
 	bAllocated = false;
 }
 
 // allocate data
 Mat::Mat(size_t r, size_t c, bool clear)
 {
+	data = temp_data = NULL;
+	
+	bUserData = false;
 	rows = r;
 	cols = c;
 	data = (float *)malloc(rows * cols * sizeof(float));
@@ -68,6 +80,9 @@ Mat::Mat(size_t r, size_t c, bool clear)
 // with copy is not true
 Mat::Mat(size_t r, size_t c, float *existing_buffer, bool withCopy)
 {
+	data = temp_data = NULL;
+	
+	bUserData = false;
 	rows = r;
 	cols = c;
 	
@@ -82,6 +97,8 @@ Mat::Mat(size_t r, size_t c, float *existing_buffer, bool withCopy)
 		//memcpy(data, existing_buffer, sizeof(float)*r*c);
 	}
 	else {
+		// user gave us data, don't free it.
+		bUserData = true;
 		data = existing_buffer;
 	}
 	
@@ -91,6 +108,9 @@ Mat::Mat(size_t r, size_t c, float *existing_buffer, bool withCopy)
 // set every element to a value
 Mat::Mat(size_t r, size_t c, float val)
 {
+	data = temp_data = NULL;
+	
+	bUserData = false;
 	rows = r;
 	cols = c;
 	data = (float *)malloc(rows * cols * sizeof(float));
@@ -108,14 +128,11 @@ Mat::Mat(size_t r, size_t c, float val)
 //		pkm::Mat a = rhs;
 //		pkm::Mat a(rhs);
 Mat::Mat(const Mat &rhs)
-{
-	if (bAllocated) {
-		free(data);
-		free(temp_data);
-	}
-	
+{		
 	if(rhs.data != NULL)
 	{
+		bUserData = false;
+		
 		rows = rhs.rows;
 		cols = rhs.cols;
 		
@@ -134,20 +151,25 @@ Mat::Mat(const Mat &rhs)
 		cols = 0;
 		data = NULL;
 		temp_data = NULL;
-		
+		bUserData = false;
 		bAllocated = false;
 	}
 }
 
 Mat Mat::operator=(const Mat &rhs)
 {
-	if (bAllocated) {
+	if(bAllocated && !bUserData && data != NULL)
+	{
 		free(data);
-		free(temp_data);
+	}
+	if(bAllocated && temp_data != NULL) 
+	{
+		free(temp_data);	
 	}
 	
 	if(rhs.data != NULL)
 	{
+		bUserData = false;
 		rows = rhs.rows;
 		cols = rhs.cols;
 		
@@ -158,17 +180,21 @@ Mat Mat::operator=(const Mat &rhs)
 		
 		bAllocated = true;
 		
-		cblas_scopy(rows*cols, rhs.data, 1, data, 1);
+		if (data != rhs.data) 
+			cblas_scopy(rows*cols, rhs.data, 1, data, 1);
 		//memcpy(data, rhs.data, sizeof(float)*rows*cols);
+		
+		return *this;
 	}
 	else {
+		bUserData = false;
 		rows = 0;
 		cols = 0;
 		data = NULL;
 		temp_data = NULL;
 		
 		bAllocated = false;
-		return rhs;
+		return *this;
 	}			
 }
 
@@ -199,38 +225,6 @@ Mat Mat::getTranspose()
 	return transposedMatrix;
 }
 
-// diagonalize the vector into a square matrix with 
-// the current data vector along the diagonal
-inline void Mat::setDiag()
-{
-#ifndef DEBUG
-	assert(data != NULL);
-#endif	
-	if(rows == 1 && cols > 1 || cols == 1 && rows > 1)
-	{
-		int diagonal_elements = MAX(rows,cols);
-		
-		// create a square matrix
-		temp_data = (float *)realloc(temp_data, diagonal_elements*diagonal_elements*sizeof(float));
-		
-		// set values to 0
-		vDSP_vclr(temp_data, 1, diagonal_elements*diagonal_elements);
-		
-		// set diagonal elements to the current vector in data
-		for (int i = 0; i < diagonal_elements; i++) {
-			temp_data[i*diagonal_elements+i] = data[i];
-		}
-		
-		// store in data
-		std::swap(data, temp_data);
-		
-		// reallocate temp data for future processing
-		temp_data = (float *)realloc(temp_data, diagonal_elements*diagonal_elements*sizeof(float));
-		
-		// save dimensions
-		rows = cols = diagonal_elements;
-	}
-}
 
 // get a diagonalized version of the current vector (non-destructive)
 Mat Mat::getDiag()
@@ -314,6 +308,30 @@ Mat Mat::rand(size_t r, size_t c, float low, float high)
 	return randomMatrix;
 }
 
+Mat Mat::sum(bool across_rows)
+{
+	// sum across rows
+	if(across_rows)
+	{
+		Mat result(1, cols);
+		for (int i = 0; i < cols; i++) {
+			vDSP_sve(data+i, cols, result.data+i, rows);
+		}				
+		return result;
+	}
+	// cols
+	else
+	{
+		Mat result(rows, 1);
+		for (int i = 0; i < rows; i++) {
+			vDSP_sve(data+(i*cols), 1, result.data+i, cols);
+		}
+		return result;
+	}
+	
+}
+
+// normalize the values for each row-vector
 void Mat::setNormalize(bool row_major)
 {
 	if (row_major) {

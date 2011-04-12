@@ -37,74 +37,26 @@ int main (int argc, char * const argv[]) {
 	printf("Mat idMatrix = pkm::Mat::identity(5):\n");
 	idMatrix.print();
 	
-	// create a row-vector, and fill with the value 1.0f
-	Mat a1 = Mat(1, 5, 1.0f);
-	printf("Mat a1 = Mat(1, 5, 1.0f):\n");
-	a1.print();
 	
-	// diagonalize a1, and put in a2
-	Mat a2 = pkm::Mat::diag(a1);
-	printf("Mat a2 = pkm::Mat::diag(a1):\n");
-	a2.print();
+	size_t data_size = 15;
+	size_t init_components = 5;
+	size_t components = 10;
 	
-	// create a 5x5 matrix and clear to 0;
-	Mat a3(5, 5, true);
-	printf("Mat a3(5, 5, true):\n");
-	a3.print();
+	Mat M_initpw = Mat(data_size, init_components, 1.0f);
+	printf("M_initpw:\n");
+	M_initpw.print();
 	
-	// create random values between 0-1
-	a3.setRand(0.0f, 1.0f);
-	printf("a3.setRand(0.0f, 1.0f):\n");
-	a3.print();
+	Mat M_pw(4,3, 5.0f);
 	
-	// normalize each row-vector so the values scale 0-1
-	a3.setNormalize();
-	printf("a3.setNormalize():\n");
-	a3.print();
-	
-	Mat a4 = Mat(1,5);
-	a4.setTo(2.0);
-	printf("a4.setTo(2.0):\n");
-	a4.print();
-	
-	Mat a4T = a4.getTranspose();
-	printf("a4'\n");
-	a4T.print();
-	
-
-	Mat a5 = a3.GEMM(a4T);
-	printf("Mat a5 = a3.GEMM(a4T):\n");
-	a5.print();
-	
-	a4.data[0] = 10.0f;
-	a4.divide(5.0f);
-	printf("a4.divide(5.0f):\n");
-	a4.print();
-	
-	Mat a6(5,1);
-	a4T.divide(a5, a6);
-	printf("a6 = a4T / a5\n");
-	a6.print();
-	
-	a6.setNormalize(false);
-	printf("a6.setNormalize():\n");
-	a6.print();
-	
-	Mat a7 = a3.GEMM(idMatrix);
-	printf("a3*idMatrix\n");
-	a7.print();
-	
-	printf("a3'\n");
-	Mat a7T = a7.getTranspose();
-	a7T.print();
-	
-	Mat a7sub = a7.colRange(2, 4);
-	printf("a7.colRange(2,4)\n");	
-	a7sub.print();
-	
-	a7sub = a7.rowRange(2,4);
-	printf("a7.rowRange(2,4)\n");	
-	a7sub.print();
+	M_pw.reset(data_size, components, true);
+	M_pw.setTranspose();
+	Mat M_pw1 = M_pw.rowRange(0, M_initpw.cols, false);
+	M_pw1.copy(M_initpw.getTranspose());
+	M_pw.print();
+	printf("Resizing w: %d x %d to %d x %d\n", M_initpw.rows, M_initpw.cols, M_pw.rows, M_pw.cols);
+	M_pw.rowRange(M_initpw.cols, components, false).setRand();
+	M_pw.setTranspose();
+	M_pw.print();
 	
 	return 0;
 }
