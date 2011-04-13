@@ -28,7 +28,6 @@
 #include <iostream>
 #include <assert.h>
 #include <Accelerate/Accelerate.h>
-//#include <Accelerate/cblas.h>
 
 #ifndef DEBUG
 #define DEBUG 1
@@ -68,7 +67,6 @@ namespace pkm
 		
 		void reset(size_t r, size_t c, bool clear = false)
 		{
-			
 			rows = r;
 			cols = c;
 			
@@ -140,13 +138,14 @@ namespace pkm
 		}
 		
 		// copy data into the matrix
-		inline void copy(Mat rhs)
+		void copy(Mat rhs)
 		{
 #ifdef DEBUG
 			assert(rhs.rows == rows);
 			assert(rhs.cols == cols);
 #endif
 			cblas_scopy(rows*cols, rhs.data, 1, data, 1);
+			
 		}
 		
 		/////////////////////////////////////////
@@ -213,7 +212,6 @@ namespace pkm
 			Mat result(rows, cols);
 			vDSP_vdiv(rhs.data, 1, data, 1, result.data, 1, rows*cols);
 			return result;
-			
 		}
 		
 		inline Mat operator/(float scalar)
@@ -252,6 +250,7 @@ namespace pkm
 				   cols == rhs.cols);
 #endif			
 			vDSP_vdiv(rhs.data, 1, data, 1, temp_data, 1, rows*cols);
+			//cblas_scopy(rows*cols, temp_data, 1, data, 1);
 			std::swap(data, temp_data);
 		}
 		
@@ -298,6 +297,7 @@ namespace pkm
 				   cols == rhs.cols);
 #endif			
 			vDSP_vadd(data, 1, rhs.data, 1, temp_data, 1, rows*cols);
+			//cblas_scopy(rows*cols, temp_data, 1, data, 1);
 			std::swap(data, temp_data);
 		}
 		
@@ -325,6 +325,7 @@ namespace pkm
 				   cols == rhs.cols);
 #endif			
 			vDSP_vsub(data, 1, rhs.data, 1, temp_data, 1, rows*cols);
+			//cblas_scopy(rows*cols, temp_data, 1, data, 1);
 			std::swap(data, temp_data);
 		}
 		
@@ -426,13 +427,16 @@ namespace pkm
 				}
 				
 				// store in data
+				rows = cols = diagonal_elements;
+				//free(data);
+				//data = (float *)malloc(rows*cols*sizeof(float));
+				//cblas_scopy(rows*cols, temp_data, 1, data, 1);
 				std::swap(data, temp_data);
 				
 				// reallocate temp data for future processing
 				temp_data = (float *)realloc(temp_data, diagonal_elements*diagonal_elements*sizeof(float));
 				
 				// save dimensions
-				rows = cols = diagonal_elements;
 			}
 		}
 		Mat getDiag();
@@ -516,6 +520,9 @@ namespace pkm
 		
 		// rescale the values in each row to their maximum
 		void setNormalize(bool row_major = true);
+		
+		void divideEachVecByMaxVecElement(bool row_major);
+		void divideEachVecBySum(bool row_major);
 		
 		// simple print output (be careful with large matrices!)
 		void print(bool row_major = true);

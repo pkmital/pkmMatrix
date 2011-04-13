@@ -27,6 +27,10 @@
 
 using namespace pkm;
 
+#ifndef MIN(x,y)
+#define MIN(x,y) ((x) < (y) ? (x) : (y))
+#endif
+
 Mat::Mat()
 {
 	bUserData = false;
@@ -39,6 +43,7 @@ Mat::Mat()
 // destructor
 Mat::~Mat()
 {
+	//printf("destruction\n");
 	if(bAllocated && !bUserData && data != NULL)
 	{
 		free(data);
@@ -158,6 +163,7 @@ Mat::Mat(const Mat &rhs)
 
 Mat Mat::operator=(const Mat &rhs)
 {
+	/*
 	if(bAllocated && !bUserData && data != NULL)
 	{
 		free(data);
@@ -166,27 +172,35 @@ Mat Mat::operator=(const Mat &rhs)
 	{
 		free(temp_data);	
 	}
+	*/
+	
+	if(data == rhs.data)
+		return *this;
 	
 	if(rhs.data != NULL)
 	{
 		bUserData = false;
-		rows = rhs.rows;
-		cols = rhs.cols;
 		
-		data = (float *)malloc(rows * cols * sizeof(float));
+		if (rows != rhs.rows || cols != rhs.cols) {
+
+			rows = rhs.rows;
+			cols = rhs.cols;
+			
+			data = (float *)realloc(data, rows * cols * sizeof(float));
+			
+			// sacrifice memory w/ speed, by pre-allocating a temporary buffer
+			temp_data = (float *)realloc(temp_data, rows * cols * sizeof(float));
+			
+			bAllocated = true;
+		}
 		
-		// sacrifice memory w/ speed, by pre-allocating a temporary buffer
-		temp_data = (float *)malloc(rows * cols * sizeof(float));
-		
-		bAllocated = true;
-		
-		if (data != rhs.data) 
-			cblas_scopy(rows*cols, rhs.data, 1, data, 1);
+		cblas_scopy(rows*cols, rhs.data, 1, data, 1);
 		//memcpy(data, rhs.data, sizeof(float)*rows*cols);
 		
 		return *this;
 	}
-	else {
+	else 
+	{
 		bUserData = false;
 		rows = 0;
 		cols = 0;
@@ -237,7 +251,7 @@ Mat Mat::getDiag()
 		int diagonal_elements = MAX(rows,cols);
 		
 		// create a square matrix
-		Mat diagonalMatrix(diagonal_elements,diagonal_elements, true);
+		Mat diagonalMatrix(diagonal_elements, diagonal_elements, true);
 		
 		// set diagonal elements to the current vector in data
 		for (int i = 0; i < diagonal_elements; i++) {
@@ -363,12 +377,57 @@ void Mat::setNormalize(bool row_major)
 	}
 }
 
+void Mat::divideEachVecByMaxVecElement(bool row_major)
+{
+	if (row_major) {
+		for (int r = 0; r < rows; r++) {
+			int idx = cblas_isamax(cols, data+r*cols, 1);
+			float val = *(data+r*cols+idx);
+			if (val != 0.0f) {
+				vDSP_vsdiv(&(data[r*cols]), 1, &val, &(data[r*cols]), 1, cols);	
+			}
+		}
+	}
+	else {
+		for (int c = 0; c < cols; c++) {
+			int idx = cblas_isamax(rows, data+c, cols);
+			float val = *(data+c+idx);
+			if (val != 0.0f) {
+				vDSP_vsdiv(&(data[c]), cols, &val, &(data[c]), cols, rows);	
+			}
+		}
+	}
+}
+
+void Mat::divideEachVecBySum(bool row_major)
+{
+	if (row_major) {
+		for (int r = 0; r < rows; r++) {
+			float val;
+			vDSP_sve(data+r*cols, 1, &val, cols);
+			if (val != 0.0f) {
+				vDSP_vsdiv(data+r*cols, 1, &val, data+r*cols, 1, cols);	
+			}
+		}
+	}
+	else {
+		for (int c = 0; c < cols; c++) {
+			float val;
+			vDSP_sve(data+c, cols, &val, rows);
+			if (val != 0.0f) {
+				vDSP_vsdiv(data+c, cols, &val, data+c, cols, rows);	
+			}
+		}
+	}
+}
+
 void Mat::print(bool row_major)
 {
+	printf("r: %d, c: %d\n", rows, cols);
 	if(row_major)
 	{
-		for (int r = 0; r < rows; r++) {
-			for (int c = 0; c < cols; c++) {
+		for (int r = 0; r < MIN(rows,5); r++) {
+			for (int c = 0; c < MIN(cols,5); c++) {
 				printf("%8.2f ", data[r*cols + c]);
 			}
 			printf("\n");
@@ -376,8 +435,8 @@ void Mat::print(bool row_major)
 		printf("\n");
 	}
 	else {
-		for (int r = 0; r < rows; r++) {
-			for (int c = 0; c < cols; c++) {
+		for (int r = 0; r < MIN(rows,5); r++) {
+			for (int c = 0; c < MIN(cols,5); c++) {
 				printf("%8.2f ", data[c*rows + r]);
 			}
 			printf("\n");

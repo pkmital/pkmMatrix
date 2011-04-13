@@ -34,29 +34,48 @@ int main (int argc, char * const argv[]) {
     
 	// constructing identity matrix
 	Mat idMatrix = pkm::Mat::identity(5);
-	printf("Mat idMatrix = pkm::Mat::identity(5):\n");
 	idMatrix.print();
+	if(1)
+	{
+		int rows = 3;
+		int cols = 4;
+		Mat B(rows, cols, 5.0f);
+		Mat B2(cols, rows, 10.0f);
+		B2.print();
+		
+		for (int i = 0; i < rows*cols; i++) {
+			B.data[i] = i+1;
+		}
+		B.print();
+		
+		// Setting a column to random elements:
+		B.setTranspose();
+		B.print();
+		for (int i = 0; i < 3; i++) {
+			printf("%f, ", B.row(3)[i]);
+		}
+		printf("\n");
+		Mat B_range = B.rowRange(2,3,false);
+		printf("B_range:\n");
+		B_range.print();
+		B_range.setRand();
+		B.setTranspose();
+		B.print();
+
+		// creating a diagonal matrix
+		B.print();
+		B.setTranspose();
+		Mat B3_range = B.rowRange(2,3,false);
+		Mat B2_range = B2.rowRange(2,3,false);
+		B3_range.print();
+		B2_range.setNormalize();
+		B2_range.print();
+		B3_range.copy(B2_range);
+		B.setTranspose();
+		B.print();
+	}
 	
-	
-	size_t data_size = 15;
-	size_t init_components = 5;
-	size_t components = 10;
-	
-	Mat M_initpw = Mat(data_size, init_components, 1.0f);
-	printf("M_initpw:\n");
-	M_initpw.print();
-	
-	Mat M_pw(4,3, 5.0f);
-	
-	M_pw.reset(data_size, components, true);
-	M_pw.setTranspose();
-	Mat M_pw1 = M_pw.rowRange(0, M_initpw.cols, false);
-	M_pw1.copy(M_initpw.getTranspose());
-	M_pw.print();
-	printf("Resizing w: %d x %d to %d x %d\n", M_initpw.rows, M_initpw.cols, M_pw.rows, M_pw.cols);
-	M_pw.rowRange(M_initpw.cols, components, false).setRand();
-	M_pw.setTranspose();
-	M_pw.print();
+	Mat C(5,5);
 	
 	return 0;
 }

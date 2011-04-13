@@ -8,13 +8,14 @@
 			8DD76F620486A84900D96B5E /* pkmMatrix */,
 		);
 		breakpoints = (
-			89182A8813471C66003E4548 /* pkmMatrix.h:317 */,
-			89182A98134721AD003E4548 /* pkmMatrix.cpp:398 */,
-			89182B3B13475A9C003E4548 /* pkmMatrix.cpp:117 */,
-			89182B6913475EF8003E4548 /* pkmMatrix.cpp:112 */,
-			89182B6E13475F12003E4548 /* main.cpp:59 */,
-			8987FDAB134F283800DB7F8A /* main.cpp:59 */,
-			8987FE7E134F4DDE00DB7F8A /* main.cpp:54 */,
+			89182A8813471C66003E4548 /* pkmMatrix.h:318 */,
+			89182A98134721AD003E4548 /* pkmMatrix.cpp:402 */,
+			89182B3B13475A9C003E4548 /* pkmMatrix.cpp:118 */,
+			89182B6913475EF8003E4548 /* pkmMatrix.cpp:113 */,
+			89182B6E13475F12003E4548 /* main.cpp:76 */,
+			8987FDAB134F283800DB7F8A /* main.cpp:76 */,
+			8987FE7E134F4DDE00DB7F8A /* main.cpp:36 */,
+			893777B61354B3A400815214 /* pkmMatrix.cpp:46 */,
 		);
 		codeSenseManager = 891D7B161346447A008B6915 /* Code sense */;
 		executables = (
@@ -43,13 +44,12 @@
 					PBXFileDataSource_Target_ColumnID,
 				);
 			};
-			PBXPerProjectTemplateStateSaveDate = 324299478;
-			PBXWorkspaceStateSaveDate = 324299478;
+			PBXPerProjectTemplateStateSaveDate = 324340855;
+			PBXWorkspaceStateSaveDate = 324340855;
 		};
 		perUserProjectItems = {
-			893775A013546AD900815214 /* PBXTextBookmark */ = 893775A013546AD900815214 /* PBXTextBookmark */;
-			893775A713546B3800815214 /* PBXTextBookmark */ = 893775A713546B3800815214 /* PBXTextBookmark */;
-			8987FE9B134F505500DB7F8A /* PBXTextBookmark */ = 8987FE9B134F505500DB7F8A /* PBXTextBookmark */;
+			893779061354C3DD00815214 /* PBXTextBookmark */ = 893779061354C3DD00815214 /* PBXTextBookmark */;
+			893779F713550FAE00815214 /* PBXTextBookmark */ = 893779F713550FAE00815214 /* PBXTextBookmark */;
 		};
 		sourceControlManager = 891D7B151346447A008B6915 /* Source Control */;
 		userBuildSettings = {
@@ -57,12 +57,12 @@
 	};
 	08FB7796FE84155DC02AAC07 /* main.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {768, 853}}";
-			sepNavSelRange = "{1493, 0}";
-			sepNavVisRange = "{182, 1538}";
+			sepNavIntBoundsRect = "{{0, 0}, {877, 1120}}";
+			sepNavSelRange = "{1081, 0}";
+			sepNavVisRange = "{0, 0}";
 		};
 	};
-	89182A8813471C66003E4548 /* pkmMatrix.h:317 */ = {
+	89182A8813471C66003E4548 /* pkmMatrix.h:318 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -74,12 +74,12 @@
 		functionName = "getTranspose()";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 317;
-		modificationTime = 324299512.143113;
+		lineNumber = 318;
+		modificationTime = 324340893.095006;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	89182A98134721AD003E4548 /* pkmMatrix.cpp:398 */ = {
+	89182A98134721AD003E4548 /* pkmMatrix.cpp:402 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -91,13 +91,13 @@
 		functionName = "Mat::GEMM(Mat rhs)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 398;
+		lineNumber = 402;
 		location = pkmMatrix;
-		modificationTime = 324299512.145995;
+		modificationTime = 324340893.095818;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	89182B3B13475A9C003E4548 /* pkmMatrix.cpp:117 */ = {
+	89182B3B13475A9C003E4548 /* pkmMatrix.cpp:118 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -109,13 +109,13 @@
 		functionName = "Mat::Mat(const Mat &rhs)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 117;
+		lineNumber = 118;
 		location = pkmMatrix;
-		modificationTime = 324299512.146257;
+		modificationTime = 324340893.096007;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	89182B6913475EF8003E4548 /* pkmMatrix.cpp:112 */ = {
+	89182B6913475EF8003E4548 /* pkmMatrix.cpp:113 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -127,13 +127,13 @@
 		functionName = "Mat::Mat(const Mat &rhs)";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 112;
+		lineNumber = 113;
 		location = pkmMatrix;
-		modificationTime = 324299512.146467;
+		modificationTime = 324340893.096105;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	89182B6E13475F12003E4548 /* main.cpp:59 */ = {
+	89182B6E13475F12003E4548 /* main.cpp:76 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -145,9 +145,9 @@
 		functionName = "main (int argc, char * const argv[])";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 59;
+		lineNumber = 76;
 		location = pkmMatrix;
-		modificationTime = 324299512.146716;
+		modificationTime = 324340893.096221;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
@@ -185,16 +185,16 @@
 	};
 	891D7B121346447A008B6915 /* pkmMatrix.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1084, 6924}}";
-			sepNavSelRange = "{2886, 0}";
-			sepNavVisRange = "{0, 802}";
+			sepNavIntBoundsRect = "{{0, 0}, {1097, 7018}}";
+			sepNavSelRange = "{13230, 0}";
+			sepNavVisRange = "{12133, 1314}";
 		};
 	};
 	891D7B131346447A008B6915 /* pkmMatrix.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {768, 4961}}";
-			sepNavSelRange = "{6482, 0}";
-			sepNavVisRange = "{5919, 1100}";
+			sepNavIntBoundsRect = "{{0, 0}, {768, 5293}}";
+			sepNavSelRange = "{7032, 0}";
+			sepNavVisRange = "{6751, 1260}";
 		};
 	};
 	891D7B151346447A008B6915 /* Source Control */ = {
@@ -211,27 +211,7 @@
 		isa = PBXCodeSenseManager;
 		indexTemplatePath = "";
 	};
-	893775A013546AD900815214 /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = 891D7B121346447A008B6915 /* pkmMatrix.h */;
-		name = "pkmMatrix.h: 123";
-		rLen = 0;
-		rLoc = 2886;
-		rType = 0;
-		vrLen = 802;
-		vrLoc = 0;
-	};
-	893775A713546B3800815214 /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = 891D7B121346447A008B6915 /* pkmMatrix.h */;
-		name = "pkmMatrix.h: 123";
-		rLen = 0;
-		rLoc = 2886;
-		rType = 0;
-		vrLen = 0;
-		vrLoc = 0;
-	};
-	8987FDAB134F283800DB7F8A /* main.cpp:59 */ = {
+	893777B61354B3A400815214 /* pkmMatrix.cpp:46 */ = {
 		isa = PBXFileBreakpoint;
 		actions = (
 		);
@@ -239,43 +219,71 @@
 		continueAfterActions = 0;
 		countType = 0;
 		delayBeforeContinue = 0;
-		fileReference = 08FB7796FE84155DC02AAC07 /* main.cpp */;
-		functionName = "main (int argc, char * const argv[])";
+		fileReference = 891D7B131346447A008B6915 /* pkmMatrix.cpp */;
+		functionName = "Mat::~Mat()";
 		hitCount = 0;
 		ignoreCount = 0;
-		lineNumber = 59;
+		lineNumber = 46;
 		location = pkmMatrix;
-		modificationTime = 324299512.147302;
+		modificationTime = 324340893.096672;
 		originalNumberOfMultipleMatches = 1;
 		state = 2;
 	};
-	8987FE7E134F4DDE00DB7F8A /* main.cpp:54 */ = {
-		isa = PBXFileBreakpoint;
-		actions = (
-		);
-		breakpointStyle = 0;
-		continueAfterActions = 0;
-		countType = 0;
-		delayBeforeContinue = 0;
-		fileReference = 08FB7796FE84155DC02AAC07 /* main.cpp */;
-		functionName = "main (int argc, char * const argv[])";
-		hitCount = 0;
-		ignoreCount = 0;
-		lineNumber = 54;
-		location = pkmMatrix;
-		modificationTime = 324299512.147476;
-		originalNumberOfMultipleMatches = 1;
-		state = 2;
-	};
-	8987FE9B134F505500DB7F8A /* PBXTextBookmark */ = {
+	893779061354C3DD00815214 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
 		fRef = 08FB7796FE84155DC02AAC07 /* main.cpp */;
-		name = "main.cpp: 39";
+		name = "main.cpp: 38";
 		rLen = 0;
-		rLoc = 1134;
+		rLoc = 1081;
 		rType = 0;
 		vrLen = 0;
 		vrLoc = 0;
+	};
+	893779F713550FAE00815214 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 08FB7796FE84155DC02AAC07 /* main.cpp */;
+		name = "main.cpp: 38";
+		rLen = 0;
+		rLoc = 1081;
+		rType = 0;
+		vrLen = 0;
+		vrLoc = 0;
+	};
+	8987FDAB134F283800DB7F8A /* main.cpp:76 */ = {
+		isa = PBXFileBreakpoint;
+		actions = (
+		);
+		breakpointStyle = 0;
+		continueAfterActions = 0;
+		countType = 0;
+		delayBeforeContinue = 0;
+		fileReference = 08FB7796FE84155DC02AAC07 /* main.cpp */;
+		functionName = "main (int argc, char * const argv[])";
+		hitCount = 0;
+		ignoreCount = 0;
+		lineNumber = 76;
+		location = pkmMatrix;
+		modificationTime = 324340893.096414;
+		originalNumberOfMultipleMatches = 1;
+		state = 2;
+	};
+	8987FE7E134F4DDE00DB7F8A /* main.cpp:36 */ = {
+		isa = PBXFileBreakpoint;
+		actions = (
+		);
+		breakpointStyle = 0;
+		continueAfterActions = 0;
+		countType = 0;
+		delayBeforeContinue = 0;
+		fileReference = 08FB7796FE84155DC02AAC07 /* main.cpp */;
+		functionName = "main (int argc, char * const argv[])";
+		hitCount = 0;
+		ignoreCount = 0;
+		lineNumber = 36;
+		location = pkmMatrix;
+		modificationTime = 324340893.096546;
+		originalNumberOfMultipleMatches = 1;
+		state = 2;
 	};
 	8DD76F620486A84900D96B5E /* pkmMatrix */ = {
 		activeExec = 0;
