@@ -37,7 +37,8 @@ Mat::Mat()
 	rows = cols = 0;
 	data = temp_data = NULL;
 	bAllocated = false;
-	
+	current_row = 0;
+	bCircularInsertionFull = false;
 }
 
 // destructor
@@ -53,18 +54,22 @@ Mat::~Mat()
 		free(temp_data);	
 	}
 	rows = cols = 0;
+	current_row = 0;
+	bCircularInsertionFull = false;
 	data = temp_data = NULL;
 	bAllocated = false;
 }
 
 // allocate data
-Mat::Mat(size_t r, size_t c, bool clear)
+Mat::Mat(int r, int c, bool clear)
 {
 	data = temp_data = NULL;
 	
 	bUserData = false;
 	rows = r;
 	cols = c;
+	current_row = 0;
+	bCircularInsertionFull = false;
 	data = (float *)malloc(rows * cols * sizeof(float));
 	
 	// sacrifice memory w/ speed, by pre-allocating a temporary buffer
@@ -83,13 +88,15 @@ Mat::Mat(size_t r, size_t c, bool clear)
 // non-destructive by default
 // this WILL destroy the passed in data when object leaves scope if
 // with copy is not true
-Mat::Mat(size_t r, size_t c, float *existing_buffer, bool withCopy)
+Mat::Mat(int r, int c, float *existing_buffer, bool withCopy)
 {
 	data = temp_data = NULL;
 	
 	bUserData = false;
 	rows = r;
 	cols = c;
+	current_row = 0;
+	bCircularInsertionFull = false;
 	
 	// sacrifice memory w/ speed, by pre-allocating a temporary buffer
 	temp_data = (float *)malloc(rows * cols * sizeof(float));
@@ -111,13 +118,16 @@ Mat::Mat(size_t r, size_t c, float *existing_buffer, bool withCopy)
 }
 
 // set every element to a value
-Mat::Mat(size_t r, size_t c, float val)
+Mat::Mat(int r, int c, float val)
 {
 	data = temp_data = NULL;
 	
 	bUserData = false;
 	rows = r;
 	cols = c;
+	current_row = 0;
+	bCircularInsertionFull = false;
+	
 	data = (float *)malloc(rows * cols * sizeof(float));
 	// sacrifice memory w/ speed, by pre-allocating a temporary buffer
 	temp_data = (float *)malloc(rows * cols * sizeof(float));
@@ -140,6 +150,8 @@ Mat::Mat(const Mat &rhs)
 		
 		rows = rhs.rows;
 		cols = rhs.cols;
+		current_row = rhs.current_row;
+		bCircularInsertionFull = rhs.bCircularInsertionFull;
 		
 		data = (float *)malloc(rows * cols * sizeof(float));
 		
@@ -154,6 +166,9 @@ Mat::Mat(const Mat &rhs)
 	else {
 		rows = 0;
 		cols = 0;
+		current_row = 0;
+		bCircularInsertionFull = false;
+		
 		data = NULL;
 		temp_data = NULL;
 		bUserData = false;
@@ -162,18 +177,7 @@ Mat::Mat(const Mat &rhs)
 }
 
 Mat Mat::operator=(const Mat &rhs)
-{
-	/*
-	if(bAllocated && !bUserData && data != NULL)
-	{
-		free(data);
-	}
-	if(bAllocated && temp_data != NULL) 
-	{
-		free(temp_data);	
-	}
-	*/
-	
+{	
 	if(data == rhs.data)
 		return *this;
 	
@@ -185,6 +189,8 @@ Mat Mat::operator=(const Mat &rhs)
 
 			rows = rhs.rows;
 			cols = rhs.cols;
+			current_row = rhs.current_row;
+			bCircularInsertionFull = rhs.bCircularInsertionFull;
 			
 			data = (float *)realloc(data, rows * cols * sizeof(float));
 			
@@ -204,6 +210,8 @@ Mat Mat::operator=(const Mat &rhs)
 		bUserData = false;
 		rows = 0;
 		cols = 0;
+		current_row = 0;
+		bCircularInsertionFull = false;
 		data = NULL;
 		temp_data = NULL;
 		
@@ -288,14 +296,14 @@ Mat Mat::diag(Mat &A)
 	}
 }
 
-Mat Mat::identity(size_t dim)
+Mat Mat::identity(int dim)
 {
 	
 	// create a square matrix
 	Mat identityMatrix(dim,dim, true);
 	
 	// set diagonal elements to the current vector in data
-	for (size_t i = 0; i < dim; i++) {
+	for (int i = 0; i < dim; i++) {
 		identityMatrix.data[i*dim+i] = 1;
 	}
 	
@@ -315,7 +323,7 @@ void Mat::setRand(float low, float high)
 }
 
 // create a random matrix
-Mat Mat::rand(size_t r, size_t c, float low, float high)
+Mat Mat::rand(int r, int c, float low, float high)
 {
 	Mat randomMatrix(r, c);
 	randomMatrix.setRand(low, high);
@@ -423,7 +431,9 @@ void Mat::divideEachVecBySum(bool row_major)
 
 void Mat::print(bool row_major)
 {
+	/*
 	printf("r: %d, c: %d\n", rows, cols);
+	
 	if(row_major)
 	{
 		for (int r = 0; r < MIN(rows,5); r++) {
@@ -443,7 +453,7 @@ void Mat::print(bool row_major)
 		}
 		printf("\n");
 	}
-	
+	*/
 }
 
 

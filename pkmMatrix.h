@@ -51,24 +51,26 @@ namespace pkm
 		~Mat();
 		
 		// allocate data
-		Mat(size_t r, size_t c, bool clear = false);
+		Mat(int r, int c, bool clear = false);
 		
 		// pass in existing data
 		// non-destructive by default
-		Mat(size_t r, size_t c, float *existing_buffer, bool withCopy = true);
+		Mat(int r, int c, float *existing_buffer, bool withCopy = true);
 		
 		// set every element to a value
-		Mat(size_t r, size_t c, float val);
+		Mat(int r, int c, float val);
 		
 		// copy-constructor, called during:
 		//		pkm::Mat a(rhs);
 		Mat(const Mat &rhs);
 		Mat operator=(const Mat &rhs);
 		
-		void reset(size_t r, size_t c, bool clear = false)
+		void reset(int r, int c, bool clear = false)
 		{
 			rows = r;
 			cols = c;
+			current_row = 0;
+			bCircularInsertionFull = false;
 			
 			if (bUserData) {
 				data = (float *)malloc(rows * cols * sizeof(float));
@@ -104,7 +106,7 @@ namespace pkm
 		
 		/////////////////////////////////////////
 		
-		inline float * row(size_t r)
+		inline float * row(int r)
 		{
 #ifdef DEBUG
 			assert(data != NULL);
@@ -112,10 +114,25 @@ namespace pkm
 			return (data + r*cols);
 		}
 		
+		inline void insertRow(float *buf, int row_idx)
+		{
+			float * rowData = row(row_idx);
+			cblas_scopy(cols, buf, 1, rowData, 1);
+		}
+		
+		inline void insertRowCircularly(float *buf)
+		{
+			insertRow(buf, current_row);
+			current_row = (current_row + 1) % rows;
+			if (current_row == 0) {
+				bCircularInsertionFull = true;
+			}
+		}
+		
 		// inclusive of start, exclusive of end
 		// can be a copy of the original matrix, or a way of editing the original
 		// one by not copying the values (default)
-		inline Mat rowRange(size_t start, size_t end, bool withCopy = true)
+		inline Mat rowRange(int start, int end, bool withCopy = true)
 		{
 #ifdef DEBUG
 			assert(rows >= end);
@@ -125,7 +142,7 @@ namespace pkm
 		}
 		
 		
-		inline Mat colRange(size_t start, size_t end, bool withCopy = true)
+		inline Mat colRange(int start, int end, bool withCopy = true)
 		{
 #ifdef DEBUG
 			assert(cols >= end);
@@ -301,6 +318,14 @@ namespace pkm
 			std::swap(data, temp_data);
 		}
 		
+		inline void add(float scalar)
+		{
+#ifdef DEBUG			
+			assert(data != NULL);
+#endif			
+			vDSP_vsadd(data, 1, &scalar, data, 1, rows*cols);
+		}
+		
 		inline void subtract(const Mat &rhs, Mat &result) const 
 		{
 #ifdef DEBUG			
@@ -445,9 +470,9 @@ namespace pkm
 		static Mat diag(Mat &A);
 		
 		// get a new identity matrix of size dim x dim
-		static Mat identity(size_t dim);
+		static Mat identity(int dim);
 		
-		static Mat zeros(size_t rows, size_t cols)
+		static Mat zeros(int rows, int cols)
 		{
 			return Mat(rows, cols, true);
 		}
@@ -456,13 +481,13 @@ namespace pkm
 		void setRand(float low = 0.0, float high = 1.0);
 		
 		// create a random matrix
-		static Mat rand(size_t r, size_t c, float low = 0.0, float high = 1.0);
+		static Mat rand(int r, int c, float low = 0.0, float high = 1.0);
 		
 		// sum across rows or columns creating a vector from a matrix, or a scalar from a vector
 		Mat sum(bool across_rows = true);
 		
 		// repeat a vector for size times
-		static Mat repeat(Mat &m, size_t size)
+		static Mat repeat(Mat &m, int size)
 		{
 			// repeat a column vector across cols
 			if(m.rows > 1 && m.cols == 1 && size > 1)
@@ -492,7 +517,7 @@ namespace pkm
 		}
 		
 		// repeat a vector for size times
-		static void repeat(Mat &dst, const Mat &m, size_t size)
+		static void repeat(Mat &dst, const Mat &m, int size)
 		{
 			// repeat a column vector across cols
 			if(m.rows > 1 && m.cols == 1 && size > 1)
@@ -518,6 +543,54 @@ namespace pkm
 			
 		}
 		
+		static float meanMagnitude(float *buf, int size)
+		{
+			float mean;
+			vDSP_meamgv(buf, 1, &mean, size);
+			return mean;
+		}
+		
+		static float sumOfAbsoluteDifferences(float *buf1, float *buf2, int size)
+		{
+			int a = size;
+			float diff = 0;
+			float *p1 = buf1, *p2 = buf2;
+			while (a) {
+				diff += fabs(*p1++ - *p2++);
+				a--;
+			}
+			return diff/(float)size;
+		}
+		
+		static float mean(float *buf, int size)
+		{
+			float val;
+			vDSP_meanv(buf, 1, &val, size);
+			return val;
+		}
+		
+		static float var(float *buf, int size)
+		{
+			float m = mean(buf, size);
+			float v = 0;
+			float sqr = 0;
+			float *p = buf;
+			int a = size;
+			while (a) {
+				sqr = (*p++ - m);
+				v += sqr*sqr;
+				a--;
+			}
+			return v/(float)size;
+		}
+		
+		static float rms(float *buf, int size)
+		{
+			float val;
+			vDSP_rmsqv(buf, 1, &val, size);
+			return val;
+		}
+		
 		// rescale the values in each row to their maximum
 		void setNormalize(bool row_major = true);
 		
@@ -529,8 +602,10 @@ namespace pkm
 		
 		/////////////////////////////////////////
 		
-		size_t rows;
-		size_t cols;
+		int current_row;	// for circular insertion
+		bool bCircularInsertionFull;
+		int rows;
+		int cols;
 		
 		float *data;
 		float *temp_data;
