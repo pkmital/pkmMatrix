@@ -24,6 +24,7 @@
  */
 
 #include "pkmMatrix.h"
+#include <math.h>
 
 using namespace pkm;
 
@@ -178,6 +179,7 @@ Mat::Mat(const Mat &rhs)
 
 Mat Mat::operator=(const Mat &rhs)
 {	
+	
 	if(data == rhs.data)
 		return *this;
 	
@@ -267,6 +269,10 @@ Mat Mat::getDiag()
 		}
 		return diagonalMatrix;
 	}
+	else if(rows == 1 && cols == 1)
+	{
+		return *this;
+	}
 	else {
 		printf("[ERROR]: Cannot diagonalize a matrix. Either rows or cols must be == 1.");
 		Mat A;
@@ -294,6 +300,28 @@ Mat Mat::diag(Mat &A)
 		Mat A;
 		return A;
 	}
+}
+
+Mat Mat::log(Mat &A)
+{
+	Mat newMat(A.rows, A.cols);
+	for(int i = 0; i < A.rows*A.cols; i++)
+	{
+		float v = logf(A.data[i]);
+		newMat.data[i] = std::isnan(v) ? 0.0f : v;
+	}
+	return newMat;
+}
+
+Mat Mat::exp(Mat &A)
+{
+	Mat newMat(A.rows, A.cols);
+	for(int i = 0; i < A.rows*A.cols; i++)
+	{
+		float v = expf(A.data[i]);
+		newMat.data[i] = std::isnan(v) ? 0.0f : v;
+	}
+	return newMat;
 }
 
 Mat Mat::identity(int dim)
@@ -429,9 +457,9 @@ void Mat::divideEachVecBySum(bool row_major)
 	}
 }
 
-void Mat::print(bool row_major)
+void Mat::printAbbrev(bool row_major)
 {
-	/*
+	
 	printf("r: %d, c: %d\n", rows, cols);
 	
 	if(row_major)
@@ -453,8 +481,36 @@ void Mat::print(bool row_major)
 		}
 		printf("\n");
 	}
-	*/
+	
 }
+
+void Mat::print(bool row_major)
+{
+	
+	printf("r: %d, c: %d\n", rows, cols);
+	
+	if(row_major)
+	{
+		for (int r = 0; r < rows; r++) {
+			for (int c = 0; c < cols; c++) {
+				printf("%8.2f ", data[r*cols + c]);
+			}
+			printf("\n");
+		}
+		printf("\n");
+	}
+	else {
+		for (int r = 0; r < rows; r++) {
+			for (int c = 0; c < cols; c++) {
+				printf("%8.2f ", data[c*rows + r]);
+			}
+			printf("\n");
+		}
+		printf("\n");
+	}
+	
+}
+
 
 
 
