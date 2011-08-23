@@ -308,7 +308,7 @@ Mat Mat::log(Mat &A)
 	for(int i = 0; i < A.rows*A.cols; i++)
 	{
 		float v = logf(A.data[i]);
-		newMat.data[i] = std::isnan(v) ? 0.0f : v;
+		newMat.data[i] = std::isnan(v) ? -34.5f : v;
 	}
 	return newMat;
 }
@@ -319,7 +319,7 @@ Mat Mat::exp(Mat &A)
 	for(int i = 0; i < A.rows*A.cols; i++)
 	{
 		float v = expf(A.data[i]);
-		newMat.data[i] = std::isnan(v) ? 0.0f : v;
+		newMat.data[i] = std::isnan(v) ? 1.0f : v;
 	}
 	return newMat;
 }

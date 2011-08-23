@@ -28,7 +28,7 @@
 #include <iostream>
 #include <assert.h>
 #include <Accelerate/Accelerate.h>
-
+#include <vector>
 #ifndef DEBUG
 #define DEBUG 1
 #endif
@@ -84,6 +84,7 @@ namespace pkm
 			return newMat;
 		}
 		
+		
 		inline Mat operator+(float rhs)
 		{	
 #ifdef DEBUG			
@@ -107,6 +108,8 @@ namespace pkm
 			//cblas_scopy(rows*cols, temp_data, 1, data, 1);
 			return newMat;
 		}
+		
+
 		
 		inline Mat operator-(const float scalar)
 		{
@@ -134,6 +137,8 @@ namespace pkm
 			//vDSP_mmul(data, 1, rhs.data, 1, gemmResult.data, 1, gemmResult.rows, gemmResult.cols, cols);
 			return gemmResult;
 		}
+		
+
 		
 		inline Mat operator*(float scalar)
 		{
@@ -330,6 +335,71 @@ namespace pkm
 #endif	
 			return data[idx];
 		}
+		
+		// return a vector composed on non-zero indices of logicalMat
+		inline Mat operator[](Mat rhs)
+		{
+#ifdef DEBUG			
+			assert(data != NULL);
+			assert(rhs.data != NULL);
+			assert(rows == rhs.rows && 
+				   cols == rhs.cols);
+#endif	
+			std::vector<float> newMat;
+			int count = 0;
+			for(int i = 0; i < rows*cols; i++)
+			{
+				if (rhs.data[i] > 0) {
+					newMat.push_back(data[i]);
+				}
+			}
+			if (newMat.size() > 0) {
+				Mat result(1,newMat.size());
+				for(int i = 0; i < newMat.size(); i++)
+				{
+					result.data[i] = newMat[i];
+				}
+				return result;
+			}
+			else {
+				Mat empty;
+				return empty;
+			}
+		}
+		
+		friend Mat operator-(float lhs, const Mat &rhs)
+		{
+#ifdef DEBUG			
+			assert(rhs.data != NULL);
+#endif			
+			Mat newMat(rhs.rows, rhs.cols);
+			float scalar = -lhs;
+			vDSP_vsadd(rhs.data, 1, &scalar, newMat.data, 1, rhs.rows*rhs.cols);
+			return newMat;
+		}
+		
+		friend Mat operator*(float lhs, const Mat &rhs)
+		{
+#ifdef DEBUG
+			assert(rhs.data != NULL);
+#endif
+			
+			Mat gemmResult(rhs.rows, rhs.cols);
+			vDSP_vsmul(rhs.data, 1, &lhs, gemmResult.data, 1, rhs.rows*rhs.cols);
+			
+			return gemmResult;
+		}
+		friend Mat operator+(float lhs, const Mat &rhs)
+		{
+#ifdef DEBUG			
+			assert(rhs.data != NULL);
+#endif			
+			Mat newMat(rhs.rows, rhs.cols);
+			vDSP_vsadd(rhs.data, 1, &lhs, newMat.data, 1, rhs.rows*rhs.cols);
+			//cblas_scopy(rows*cols, temp_data, 1, data, 1);
+			return newMat;
+		}
+		
 		
 		// can be used to create an already declared matrix without a copy constructor
 		void reset(int r, int c, bool clear = false)

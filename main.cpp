@@ -35,7 +35,15 @@ int main (int argc, char * const argv[]) {
 	// constructing identity matrix
 	Mat idMatrix = pkm::Mat::identity(5);
 	idMatrix.print();
-	if(1)
+	
+	Mat A = pkm::Mat(5,5);
+	A.setRand(0.0, 1.0);
+	A.print();
+	
+	Mat B = A[idMatrix];
+	B.print();
+	
+	if(0)
 	{
 		int rows = 3;
 		int cols = 4;
