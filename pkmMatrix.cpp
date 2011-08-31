@@ -61,6 +61,22 @@ Mat::~Mat()
 	bAllocated = false;
 }
 
+Mat::Mat(vector<float> m)
+{
+    rows = 1;
+    cols = m.size();
+    data = (float *)malloc(sizeof(float)*cols);
+	
+    // sacrifice memory w/ speed, by pre-allocating a temporary buffer
+	temp_data = (float *)malloc(rows * cols * sizeof(float));
+    
+    cblas_scopy(cols, &m[0], 1, data, 1);
+	current_row = 0;
+	bCircularInsertionFull = false;
+	bUserData = false;
+	bAllocated = true;
+}
+
 // allocate data
 Mat::Mat(int r, int c, bool clear)
 {
@@ -177,7 +193,7 @@ Mat::Mat(const Mat &rhs)
 	}
 }
 
-Mat Mat::operator=(const Mat &rhs)
+Mat & Mat::operator=(const Mat &rhs)
 {	
 	
 	if(data == rhs.data)
@@ -194,10 +210,11 @@ Mat Mat::operator=(const Mat &rhs)
 			current_row = rhs.current_row;
 			bCircularInsertionFull = rhs.bCircularInsertionFull;
 			
-			data = (float *)realloc(data, rows * cols * sizeof(float));
+			free(data);
+			free(temp_data);
 			
-			// sacrifice memory w/ speed, by pre-allocating a temporary buffer
-			temp_data = (float *)realloc(temp_data, rows * cols * sizeof(float));
+			data = (float *)malloc(rows * cols * sizeof(float));
+			temp_data = (float *)malloc(rows * cols * sizeof(float));
 			
 			bAllocated = true;
 		}
@@ -222,6 +239,52 @@ Mat Mat::operator=(const Mat &rhs)
 	}			
 }
 
+
+Mat & Mat::operator=(const vector<float> &rhs)
+{	
+	
+	if(rhs.size() != 0)
+	{
+		bUserData = false;
+		
+		if (rows != 1 || cols != rhs.size()) {
+            
+			rows = 1;
+			cols = rhs.size();
+			current_row = 0;
+			bCircularInsertionFull = false;
+			
+            if(bAllocated)
+            {
+                free(data);
+                free(temp_data);
+            }
+			
+			data = (float *)malloc(rows * cols * sizeof(float));
+			temp_data = (float *)malloc(rows * cols * sizeof(float));
+			
+			bAllocated = true;
+		}
+		
+		cblas_scopy(rows*cols, &(rhs[0]), 1, data, 1);
+		//memcpy(data, rhs.data, sizeof(float)*rows*cols);
+		
+		return *this;
+	}
+	else 
+	{
+		bUserData = false;
+		rows = 0;
+		cols = 0;
+		current_row = 0;
+		bCircularInsertionFull = false;
+		data = NULL;
+		temp_data = NULL;
+		
+		bAllocated = false;
+		return *this;
+	}			
+}
 
 
 /////////////////////////////////////////
@@ -307,8 +370,7 @@ Mat Mat::log(Mat &A)
 	Mat newMat(A.rows, A.cols);
 	for(int i = 0; i < A.rows*A.cols; i++)
 	{
-		float v = logf(A.data[i]);
-		newMat.data[i] = std::isnan(v) ? -34.5f : v;
+		newMat.data[i] = logf(A.data[i]);
 	}
 	return newMat;
 }
@@ -318,8 +380,7 @@ Mat Mat::exp(Mat &A)
 	Mat newMat(A.rows, A.cols);
 	for(int i = 0; i < A.rows*A.cols; i++)
 	{
-		float v = expf(A.data[i]);
-		newMat.data[i] = std::isnan(v) ? 1.0f : v;
+		newMat.data[i] = expf(A.data[i]);
 	}
 	return newMat;
 }

@@ -29,6 +29,7 @@
 #include <assert.h>
 #include <Accelerate/Accelerate.h>
 #include <vector>
+using namespace std;
 #ifndef DEBUG
 #define DEBUG 1
 #endif
@@ -54,6 +55,8 @@ namespace pkm
 		// destructor
 		~Mat();
 		
+        Mat(vector<float> m);
+        
 		// allocate data
 		Mat(int r, int c, bool clear = false);
 		
@@ -67,7 +70,8 @@ namespace pkm
 		// copy-constructor, called during:
 		//		pkm::Mat a(rhs);
 		Mat(const Mat &rhs);
-		Mat operator=(const Mat &rhs);
+		Mat & operator=(const Mat &rhs);
+		Mat & operator=(const vector<float> &rhs);
 		
 		
 		inline Mat operator+(const Mat &rhs)
@@ -327,7 +331,7 @@ namespace pkm
 			return result;
 		}
 		
-		inline float operator[](int idx)
+		inline float & operator[](int idx)
 		{
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -366,6 +370,8 @@ namespace pkm
 				return empty;
 			}
 		}
+		
+
 		
 		friend Mat operator-(float lhs, const Mat &rhs)
 		{
@@ -466,6 +472,46 @@ namespace pkm
 			cblas_scopy(cols, buf, 1, rowData, 1);
 		}
 		
+        inline void push_back(Mat m)
+        {
+            if (rows > 0 && cols > 0) {
+                if (m.cols != cols) {
+                    printf("[ERROR]: pkm::Mat push_back(Mat m) requires same number of columns!\n");
+                    return;
+                }
+                cblas_scopy(rows*cols, data, 1, temp_data, 1);
+                data = (float *)realloc(data, (rows+m.rows)*cols*sizeof(float));
+                cblas_scopy(rows*cols, temp_data, 1, data, 1);
+                cblas_scopy(m.rows*cols, m.data, 1, data + (rows*cols), 1);
+                rows+=m.rows;
+                temp_data = (float *)realloc(temp_data, rows*cols*sizeof(float));
+            }
+            else {
+                *this = m;
+            }
+
+        }
+        
+        inline void push_back(vector<float> m)
+        {
+            if (rows > 0 && cols > 0) {
+                if (m.size() != cols) {
+                    printf("[ERROR]: pkm::Mat push_back(vector<float> m) requires same number of columns in Mat as length of vector!\n");
+                    return;
+                }
+                cblas_scopy(rows*cols, data, 1, temp_data, 1);
+                data = (float *)realloc(data, (rows+1)*cols*sizeof(float));
+                cblas_scopy(rows*cols, temp_data, 1, data, 1);
+                cblas_scopy(cols, &(m[0]), 1, data + (rows*cols), 1);
+                rows++;
+                temp_data = (float *)realloc(temp_data, rows*cols*sizeof(float));
+            }
+            else {
+                *this = m;
+            }
+            
+        }
+        
 		inline void insertRowCircularly(float *buf)
 		{
 			insertRow(buf, current_row);
@@ -509,6 +555,26 @@ namespace pkm
 #endif
 			cblas_scopy(rows*cols, rhs.data, 1, data, 1);
 			
+		}
+		
+		void copy(Mat &rhs, Mat &indx)
+		{
+#ifdef DEBUG
+			assert(indx.rows == rows);
+			assert(indx.cols == cols);
+#endif
+			int idx = 0;
+			for(int i = 0; i < rows; i++)
+			{
+				for(int j = 0; j < cols; j++)
+				{
+					if (indx.data[i*cols + j]) {
+						data[i*cols + j] = rhs[idx];
+						idx++;
+					}
+				}
+				
+			}
 		}
 		
 		/////////////////////////////////////////
@@ -943,6 +1009,46 @@ namespace pkm
 		
 		void divideEachVecByMaxVecElement(bool row_major);
 		void divideEachVecBySum(bool row_major);
+        
+        
+        bool save(string filename)
+        {
+            FILE *fp;
+            fp = fopen(filename.c_str(), "w");
+            fprintf(fp, "%d %d\n", rows, cols);
+            for(int i = 0; i < rows; i++)
+            {
+                for(int j = 0; j < cols; j++)
+                {
+                    fprintf(fp, "%f, ", data[i*cols + j]);
+                }
+            }
+            fclose(fp);
+            return true;
+        }
+        
+        bool load(string filename)
+        {
+            if (bAllocated) {
+                free(data);
+                free(temp_data);
+                rows = cols = 0;
+            }
+            FILE *fp;
+            fp = fopen(filename.c_str(), "r");
+            fscanf(fp, "%d %d\n", &rows, &cols);
+            data = (float *)malloc(sizeof(float) * rows * cols);
+            temp_data = (float *)malloc(sizeof(float) * rows * cols);
+            for(int i = 0; i < rows; i++)
+            {
+                for(int j = 0; j < cols; j++)
+                {
+                    fscanf(fp, "%f, ", &(data[i*cols + j]));
+                }
+            }
+            fclose(fp);
+            return true;
+        }
 		
 		// simple print output (be careful with large matrices!)
 		void print(bool row_major = true);

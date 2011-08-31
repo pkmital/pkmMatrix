@@ -26,22 +26,39 @@
 
 #include <iostream>
 #include "pkmMatrix.h"
+#include <vector>
 
 using namespace pkm;
 using namespace std;
 
 int main (int argc, char * const argv[]) {
     
-	// constructing identity matrix
-	Mat idMatrix = pkm::Mat::identity(5);
-	idMatrix.print();
+    vector<float> a;
+    for (int i = 0; i < 15; i++) {
+        float f = (rand() % 100) / 100.0;
+        a.push_back(f);
+    }
+    
+    Mat A;
+    A.push_back(a);
+    A.push_back(a);
+    A.push_back(a);
+    A.print();
+    
+    A.save("A.mat");
+    
+    Mat B;
+    B.load("A.mat");
+    B.print();
+    
+	/*
+	Mat C = A[B];
+	C.print();
 	
-	Mat A = pkm::Mat(5,5);
-	A.setRand(0.0, 1.0);
+	C.setRand(10.0, 20.0);
+	A.copy(C, B);
 	A.print();
 	
-	Mat B = A[idMatrix];
-	B.print();
 	
 	if(0)
 	{
@@ -82,8 +99,6 @@ int main (int argc, char * const argv[]) {
 		B.setTranspose();
 		B.print();
 	}
-	
-	Mat C(5,5);
-	
+	*/
 	return 0;
 }
