@@ -77,6 +77,41 @@ Mat::Mat(vector<float> m)
 	bAllocated = true;
 }
 
+Mat::Mat(vector<vector<float> > m)
+{
+    rows = m.size();
+    cols = m[0].size();
+    data = (float *)malloc(sizeof(float)*rows*cols);
+    // sacrifice memory w/ speed, by pre-allocating a temporary buffer
+	temp_data = (float *)malloc(rows * cols * sizeof(float));
+    
+    for(int i = 0; i < rows; i++)
+        cblas_scopy(cols, &(m[i][0]), 1, data+i*cols, 1);
+    
+	current_row = 0;
+	bCircularInsertionFull = false;
+	bUserData = false;
+	bAllocated = true;
+}
+
+#ifdef HAVE_OPENCV
+Mat::Mat(cv::Mat m)
+{
+    rows = m.rows;
+    cols = m.cols;
+    data = (float *)malloc(sizeof(float)*rows*cols);
+    // sacrifice memory w/ speed, by pre-allocating a temporary buffer
+	temp_data = (float *)malloc(rows * cols * sizeof(float));
+    
+    for(int i = 0; i < rows; i++)
+        cblas_scopy(cols, m.ptr<float>(i), 1, data+i*cols, 1);
+    
+	current_row = 0;
+	bCircularInsertionFull = false;
+	bUserData = false;
+	bAllocated = true;
+}
+#endif
 // allocate data
 Mat::Mat(int r, int c, bool clear)
 {
@@ -213,10 +248,11 @@ Mat & Mat::operator=(const Mat &rhs)
 			free(data);
 			free(temp_data);
 			
-			data = (float *)malloc(rows * cols * sizeof(float));
-			temp_data = (float *)malloc(rows * cols * sizeof(float));
-			
-			bAllocated = true;
+            data = (float *)malloc(rows * cols * sizeof(float));
+            temp_data = (float *)malloc(rows * cols * sizeof(float));
+                
+            bAllocated = true;
+            
 		}
 		
 		cblas_scopy(rows*cols, rhs.data, 1, data, 1);
@@ -286,6 +322,112 @@ Mat & Mat::operator=(const vector<float> &rhs)
 	}			
 }
 
+
+Mat & Mat::operator=(const vector<vector<float> > &rhs)
+{	
+	
+	if(rhs.size() != 0)
+	{
+		bUserData = false;
+		
+		if (rows != rhs.size() || cols != rhs[0].size()) {
+            
+			rows = rhs.size();
+			cols = rhs[0].size();
+			current_row = 0;
+			bCircularInsertionFull = false;
+			
+            if(bAllocated)
+            {
+                free(data);
+                free(temp_data);
+            }
+			
+			data = (float *)malloc(rows * cols * sizeof(float));
+			temp_data = (float *)malloc(rows * cols * sizeof(float));
+			
+			bAllocated = true;
+		}
+		
+        for(int i = 0; i < rows; i++)
+            cblas_scopy(cols, &(rhs[i][0]), 1, data+i*cols, 1);
+
+		//memcpy(data, rhs.data, sizeof(float)*rows*cols);
+		
+		return *this;
+	}
+	else 
+	{
+		bUserData = false;
+		rows = 0;
+		cols = 0;
+		current_row = 0;
+		bCircularInsertionFull = false;
+		data = NULL;
+		temp_data = NULL;
+		
+		bAllocated = false;
+		return *this;
+	}			
+}
+
+#ifdef HAVE_OPENCV
+Mat & Mat::operator=(const cv::Mat &rhs)
+{	
+	
+	if(rhs.cols != 0 && rhs.rows != 0)
+	{
+		bUserData = false;
+		
+		if (rows != rhs.rows || cols != rhs.cols) {
+            
+			rows = rhs.rows;
+			cols = rhs.cols;
+			current_row = 0;
+			bCircularInsertionFull = false;
+			
+            if(bAllocated)
+            {
+                free(data);
+                free(temp_data);
+            }
+			
+			data = (float *)malloc(rows * cols * sizeof(float));
+			temp_data = (float *)malloc(rows * cols * sizeof(float));
+			
+			bAllocated = true;
+		}
+		
+        for(int i = 0; i < rows; i++)
+            cblas_scopy(cols, rhs.ptr<float>(i), 1, data+i*cols, 1);
+        
+		//memcpy(data, rhs.data, sizeof(float)*rows*cols);
+		
+		return *this;
+	}
+	else 
+	{
+		bUserData = false;
+		rows = 0;
+		cols = 0;
+		current_row = 0;
+		bCircularInsertionFull = false;
+		data = NULL;
+		temp_data = NULL;
+		
+		bAllocated = false;
+		return *this;
+	}			
+}
+
+
+cv::Mat Mat::cvMat()
+{
+    cv::Mat cvm(rows, cols, CV_32FC1, data);
+    return cvm;
+}
+
+#endif
 
 /////////////////////////////////////////
 
@@ -365,8 +507,26 @@ Mat Mat::diag(Mat &A)
 	}
 }
 
+Mat Mat::abs(Mat &A)
+{
+#ifdef DEBUG			
+    assert(A.data != NULL);
+    assert(A.rows >0 &&
+           A.cols >0);
+#endif	
+	Mat newMat(A.rows, A.cols);
+    vDSP_vabs(A.data, 1, newMat.data, 1, A.rows * A.cols);
+    return newMat;
+}
+
+
 Mat Mat::log(Mat &A)
 {
+#ifdef DEBUG			
+    assert(A.data != NULL);
+    assert(A.rows >0 &&
+           A.cols >0);
+#endif	
 	Mat newMat(A.rows, A.cols);
 	for(int i = 0; i < A.rows*A.cols; i++)
 	{
@@ -377,6 +537,11 @@ Mat Mat::log(Mat &A)
 
 Mat Mat::exp(Mat &A)
 {
+#ifdef DEBUG			
+    assert(A.data != NULL);
+    assert(A.rows >0 &&
+           A.cols >0);
+#endif	
 	Mat newMat(A.rows, A.cols);
 	for(int i = 0; i < A.rows*A.cols; i++)
 	{

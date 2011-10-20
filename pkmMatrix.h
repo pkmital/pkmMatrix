@@ -25,10 +25,17 @@
 
 #pragma once
 
+//#define HAVE_OPENCV
+
 #include <iostream>
 #include <assert.h>
 #include <Accelerate/Accelerate.h>
 #include <vector>
+
+#ifdef HAVE_OPENCV
+#include <opencv2/opencv.hpp>
+#endif
+
 using namespace std;
 #ifndef DEBUG
 #define DEBUG 1
@@ -41,6 +48,8 @@ using namespace std;
 #ifndef MIN
 #define MIN(a,b)  ((a) > (b) ? (b) : (a))
 #endif
+
+//typedef pkm::Mat pkmMatrix;
 
 namespace pkm
 {	
@@ -57,6 +66,10 @@ namespace pkm
 		
         Mat(vector<float> m);
         
+        Mat(vector<vector<float> > m);
+#ifdef HAVE_OPENCV
+        Mat(cv::Mat m);
+#endif
 		// allocate data
 		Mat(int r, int c, bool clear = false);
 		
@@ -72,7 +85,11 @@ namespace pkm
 		Mat(const Mat &rhs);
 		Mat & operator=(const Mat &rhs);
 		Mat & operator=(const vector<float> &rhs);
-		
+		Mat & operator=(const vector<vector<float> > &rhs);
+#ifdef HAVE_OPENCV
+        Mat & operator=(const cv::Mat &rhs);
+        cv::Mat cvMat();
+#endif
 		
 		inline Mat operator+(const Mat &rhs)
 		{
@@ -405,7 +422,52 @@ namespace pkm
 			//cblas_scopy(rows*cols, temp_data, 1, data, 1);
 			return newMat;
 		}
+        
+        bool isNaN()
+        {
+            for(int i = 0; i < rows*cols; i++)
+            {
+                if (isnan(data[i])) {
+                    return true;
+                }
+            }
+            return false;
+        }
 		
+        void resize(int r, int c, bool clear = false)
+        {
+            cblas_scopy(rows*cols, data, 1, temp_data, 1);
+            
+            if (r >= rows && c >= cols) {
+                if (bUserData) {
+                    data = (float *)malloc(r * c * sizeof(float));
+                    temp_data = (float *)realloc(temp_data, r * c * sizeof(float));
+                }
+                else
+                {
+                    data = (float *)realloc(data, r * c * sizeof(float));
+                    cblas_scopy(rows*cols, temp_data, 1, data, 1);
+                    temp_data = (float *)realloc(temp_data, r * c * sizeof(float));
+                }
+                
+                if(clear)
+                {
+                    vDSP_vclr(data + rows*cols, 1, r*c - rows*cols);
+                }
+                
+                rows = r;
+                cols = c;
+                
+                bAllocated = true;
+                bUserData = false;
+            }
+            else {
+                printf("[ERROR: pkmMatrix::resize()] Cannot resize to a smaller matrix (yet).\n");
+                return;
+            }
+
+            
+        }
 		
 		// can be used to create an already declared matrix without a copy constructor
 		void reset(int r, int c, bool clear = false)
@@ -479,12 +541,22 @@ namespace pkm
                     printf("[ERROR]: pkm::Mat push_back(Mat m) requires same number of columns!\n");
                     return;
                 }
-                cblas_scopy(rows*cols, data, 1, temp_data, 1);
-                data = (float *)realloc(data, (rows+m.rows)*cols*sizeof(float));
-                cblas_scopy(rows*cols, temp_data, 1, data, 1);
-                cblas_scopy(m.rows*cols, m.data, 1, data + (rows*cols), 1);
-                rows+=m.rows;
-                temp_data = (float *)realloc(temp_data, rows*cols*sizeof(float));
+                if (m.cols > 0 && m.rows > 0) {
+                    cblas_scopy(rows*cols, data, 1, temp_data, 1);
+                    free(data);
+                    data = (float *)malloc(sizeof(float) * (rows + m.rows) * cols);
+                    //data = (float *)realloc(data, (rows+m.rows)*cols*sizeof(float));
+                    cblas_scopy(rows*cols, temp_data, 1, data, 1);
+                    cblas_scopy(m.rows*cols, m.data, 1, data + (rows*cols), 1);
+                    rows+=m.rows;
+                    free(temp_data);
+                    temp_data = (float *)malloc(sizeof(float) * rows * cols);
+                    //temp_data = (float *)realloc(temp_data, rows*cols*sizeof(float));
+                }
+                else {
+                    printf("[ERROR]: pkm::Mat push_back(Mat m), matrix m is empty!\n");
+                    return;
+                }
             }
             else {
                 *this = m;
@@ -504,6 +576,28 @@ namespace pkm
                 cblas_scopy(rows*cols, temp_data, 1, data, 1);
                 cblas_scopy(cols, &(m[0]), 1, data + (rows*cols), 1);
                 rows++;
+                temp_data = (float *)realloc(temp_data, rows*cols*sizeof(float));
+            }
+            else {
+                *this = m;
+            }
+            
+        }
+        
+        inline void push_back(vector<vector<float> > m)
+        {
+            if (rows > 0 && cols > 0) {
+                if (m[0].size() != cols) {
+                    printf("[ERROR]: pkm::Mat push_back(vector<vector<float> > m) requires same number of cols in Mat as length of each vector!\n");
+                    return;
+                }
+                cblas_scopy(rows*cols, data, 1, temp_data, 1);
+                data = (float *)realloc(data, (rows+m.size())*cols*sizeof(float));
+                cblas_scopy(rows*cols, temp_data, 1, data, 1);
+                for (int i = 0; i < m.size(); i++) {
+                    cblas_scopy(cols, &(m[i][0]), 1, data + ((rows+i)*cols), 1);
+                }
+                rows+=m.size();
                 temp_data = (float *)realloc(temp_data, rows*cols*sizeof(float));
             }
             else {
@@ -838,7 +932,10 @@ namespace pkm
 		}
 		Mat getDiag();
 		
-		// returns a new matrix with each el the log(el)
+        // returns a new matrix with each el the abs(el)
+        static Mat abs(Mat &A);
+		
+        // returns a new matrix with each el the log(el)
 		static Mat log(Mat &A);
 		
 		// returns a new matrix with each el the exp(el)
@@ -940,10 +1037,10 @@ namespace pkm
 			return diff/(float)size;
 		}
 		
-		static float mean(float *buf, int size)
+		static float mean(float *buf, int size, int stride = 1)
 		{
 			float val;
-			vDSP_meanv(buf, 1, &val, size);
+			vDSP_meanv(buf, stride, &val, size);
 			return val;
 		}
 		
@@ -975,6 +1072,14 @@ namespace pkm
 			vDSP_minv(A.data, 1, &minval, A.rows*A.cols);
 			return minval;
 		}
+        
+        static unsigned long minIndex(Mat &A)
+        {
+            float maxval;
+            unsigned long maxidx;
+            vDSP_minvi(A.data, 1, &maxval, &maxidx, A.rows*A.cols);
+            return maxidx;
+        }
 		
 		static float max(Mat &A)
 		{
@@ -982,6 +1087,14 @@ namespace pkm
 			vDSP_maxv(A.data, 1, &maxval, A.rows*A.cols);
 			return maxval;
 		}
+        
+        static unsigned long maxIndex(Mat &A)
+        {
+            float maxval;
+            unsigned long maxidx;
+            vDSP_maxvi(A.data, 1, &maxval, &maxidx, A.rows*A.cols);
+            return maxidx;
+        }
 		
 		static float sum(Mat &A)
 		{
@@ -989,7 +1102,39 @@ namespace pkm
 			vDSP_sve(A.data, 1, &sumval, A.rows*A.cols);
 			return sumval;
 		}
-		
+        
+        Mat mean(bool row_major = true)
+        {
+#ifdef DEBUG			
+            assert(data != NULL);
+            assert(rows >0 &&
+                   cols >0);
+#endif	
+            if (row_major) {
+                if (rows == 1) {
+                    return *this;
+                }
+                Mat newMat(1, cols);
+                
+                for(int i = 0; i < cols; i++)
+                {
+                    newMat.data[i] = mean(data + i, rows, cols);
+                }
+                return newMat;
+            }
+            else {
+                if (cols == 1) {
+                    return *this;
+                }
+                Mat newMat(rows, 1);
+                for(int i = 0; i < rows; i++)
+                {
+                    newMat.data[i] = mean(data + i*cols, cols, 1);
+                }
+                return newMat;
+            }
+
+        }
 		
 		// rescale the values in each row to their maximum
 		void setNormalize(bool row_major = true);
@@ -1022,6 +1167,7 @@ namespace pkm
                 {
                     fprintf(fp, "%f, ", data[i*cols + j]);
                 }
+                fprintf(fp,"\n");
             }
             fclose(fp);
             return true;
@@ -1045,6 +1191,7 @@ namespace pkm
                 {
                     fscanf(fp, "%f, ", &(data[i*cols + j]));
                 }
+                fscanf(fp, "\n");
             }
             fclose(fp);
             return true;

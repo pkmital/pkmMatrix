@@ -39,10 +39,23 @@ int main (int argc, char * const argv[]) {
         a.push_back(f);
     }
     
+    vector<vector<float> > b;
+    b.push_back(a);
+    b.push_back(a);
+    b.push_back(a);
+    
     Mat A;
     A.push_back(a);
+    A.resize(A.rows + 5, A.cols, true);
     A.push_back(a);
+    A.resize(A.rows + 5, A.cols, true);
     A.push_back(a);
+    A.print();
+    A.push_back(b);
+    A.print();
+    A.clear();
+    A.push_back(b);
+    A.push_back(b);
     A.print();
     
     A.save("A.mat");
@@ -50,6 +63,11 @@ int main (int argc, char * const argv[]) {
     Mat B;
     B.load("A.mat");
     B.print();
+    
+    A = b;
+    A.print();
+    
+    
     
 	/*
 	Mat C = A[B];
