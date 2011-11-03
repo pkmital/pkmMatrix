@@ -32,41 +32,25 @@ using namespace pkm;
 using namespace std;
 
 int main (int argc, char * const argv[]) {
-    
-    vector<float> a;
-    for (int i = 0; i < 15; i++) {
-        float f = (rand() % 100) / 100.0;
-        a.push_back(f);
+    Mat a;
+    int size = 1024;
+    for (int i = 0; i < 10000000000; i++) {
+        float *f = (float *)malloc(sizeof(float) * size);
+        memset(f, 0, sizeof(float)*size);
+        if (a.rows > 44) 
+        {
+            a.insertRowCircularly(f);
+        }
+        else
+        {
+            a.push_back(f, size);
+        }
+        free(f);
+        
+            //if (rand() > 0.5) {
+            //a = Mat();
+            //}
     }
-    
-    vector<vector<float> > b;
-    b.push_back(a);
-    b.push_back(a);
-    b.push_back(a);
-    
-    Mat A;
-    A.push_back(a);
-    A.resize(A.rows + 5, A.cols, true);
-    A.push_back(a);
-    A.resize(A.rows + 5, A.cols, true);
-    A.push_back(a);
-    A.print();
-    A.push_back(b);
-    A.print();
-    A.clear();
-    A.push_back(b);
-    A.push_back(b);
-    A.print();
-    
-    A.save("A.mat");
-    
-    Mat B;
-    B.load("A.mat");
-    B.print();
-    
-    A = b;
-    A.print();
-    
     
     
 	/*

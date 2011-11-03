@@ -7,25 +7,79 @@
  
  Copyright (C) 2011 Parag K. Mital
  
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
+ The Software is and remains the property of Parag K Mital
+ ("pkmital") The Licensee will ensure that the Copyright Notice set
+ out above appears prominently wherever the Software is used.
  
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+ The Software is distributed under this Licence: 
  
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ - on a non-exclusive basis, 
+ 
+ - solely for non-commercial use in the hope that it will be useful, 
+ 
+ - "AS-IS" and in order for the benefit of its educational and research
+ purposes, pkmital makes clear that no condition is made or to be
+ implied, nor is any representation or warranty given or to be
+ implied, as to (i) the quality, accuracy or reliability of the
+ Software; (ii) the suitability of the Software for any particular
+ use or for use under any specific conditions; and (iii) whether use
+ of the Software will infringe third-party rights.
+ 
+ pkmital disclaims: 
+ 
+ - all responsibility for the use which is made of the Software; and
+ 
+ - any liability for the outcomes arising from using the Software.
+ 
+ The Licensee may make public, results or data obtained from, dependent
+ on or arising out of the use of the Software provided that any such
+ publication includes a prominent statement identifying the Software as
+ the source of the results or the data, including the Copyright Notice
+ and stating that the Software has been made available for use by the
+ Licensee under licence from pkmital and the Licensee provides a copy of
+ any such publication to pkmital.
+ 
+ The Licensee agrees to indemnify pkmital and hold them
+ harmless from and against any and all claims, damages and liabilities
+ asserted by third parties (including claims for negligence) which
+ arise directly or indirectly from the use of the Software or any
+ derivative of it or the sale of any products based on the
+ Software. The Licensee undertakes to make no liability claim against
+ any employee, student, agent or appointee of pkmital, in connection 
+ with this Licence or the Software.
+ 
+ 
+ No part of the Software may be reproduced, modified, transmitted or
+ transferred in any form or by any means, electronic or mechanical,
+ without the express permission of pkmital. pkmital's permission is not
+ required if the said reproduction, modification, transmission or
+ transference is done without financial return, the conditions of this
+ Licence are imposed upon the receiver of the product, and all original
+ and amended source code is included in any transmitted product. You
+ may be held legally responsible for any copyright infringement that is
+ caused or encouraged by your failure to abide by these terms and
+ conditions.
+ 
+ You are not permitted under this Licence to use this Software
+ commercially. Use for which any financial return is received shall be
+ defined as commercial use, and includes (1) integration of all or part
+ of the source code or the Software into a product for sale or license
+ by or on behalf of Licensee to third parties or (2) use of the
+ Software or any derivative of it for research with the final aim of
+ developing software products for sale or license to a third party or
+ (3) use of the Software or any derivative of it for research with the
+ final aim of developing non-software products for sale or license to a
+ third party, or (4) use of the Software to provide any service to an
+ external organisation for which payment is received. If you are
+ interested in using the Software commercially, please contact pkmital to
+ negotiate a licence. Contact details are: parag@pkmital.com
  
  *
  */
 
 #pragma once
 
-//#define HAVE_OPENCV
+#define HAVE_OPENCV
 
 #include <iostream>
 #include <assert.h>
@@ -367,7 +421,6 @@ namespace pkm
 				   cols == rhs.cols);
 #endif	
 			std::vector<float> newMat;
-			int count = 0;
 			for(int i = 0; i < rows*cols; i++)
 			{
 				if (rhs.data[i] > 0) {
@@ -477,19 +530,12 @@ namespace pkm
 			current_row = 0;
 			bCircularInsertionFull = false;
 			
-			if (bUserData) {
-				data = (float *)malloc(rows * cols * sizeof(float));
-				
-				// sacrifice memory w/ speed, by pre-allocating a temporary buffer
-				temp_data = (float *)malloc(rows * cols * sizeof(float));
-			}
-			else {
-				
-				data = (float *)realloc(data, rows * cols * sizeof(float));
-				
-				// sacrifice memory w/ speed, by pre-allocating a temporary buffer
-				temp_data = (float *)realloc(temp_data, rows * cols * sizeof(float));
-			}
+            releaseMemory();
+            
+            data = (float *)malloc(rows * cols * sizeof(float));
+            // sacrifice memory w/ speed, by pre-allocating a temporary buffer
+            temp_data = (float *)malloc(rows * cols * sizeof(float));
+        
 			bAllocated = true;
 			bUserData = false;
 			
@@ -534,22 +580,24 @@ namespace pkm
 			cblas_scopy(cols, buf, 1, rowData, 1);
 		}
 		
-        inline void push_back(Mat m)
+        void push_back(Mat m)
         {
-            if (rows > 0 && cols > 0) {
+            if (bAllocated && (rows > 0) && (cols > 0)) {
                 if (m.cols != cols) {
                     printf("[ERROR]: pkm::Mat push_back(Mat m) requires same number of columns!\n");
                     return;
                 }
-                if (m.cols > 0 && m.rows > 0) {
+                if (m.bAllocated && (m.cols > 0) && (m.rows > 0)) {
                     cblas_scopy(rows*cols, data, 1, temp_data, 1);
-                    free(data);
+                    assert(data != 0);
+                    free(data); data = NULL;
                     data = (float *)malloc(sizeof(float) * (rows + m.rows) * cols);
                     //data = (float *)realloc(data, (rows+m.rows)*cols*sizeof(float));
                     cblas_scopy(rows*cols, temp_data, 1, data, 1);
                     cblas_scopy(m.rows*cols, m.data, 1, data + (rows*cols), 1);
                     rows+=m.rows;
-                    free(temp_data);
+                    assert(temp_data != 0);
+                    free(temp_data); temp_data = NULL;
                     temp_data = (float *)malloc(sizeof(float) * rows * cols);
                     //temp_data = (float *)realloc(temp_data, rows*cols*sizeof(float));
                 }
@@ -564,19 +612,56 @@ namespace pkm
 
         }
         
-        inline void push_back(vector<float> m)
+        void push_back(float *m, int size)
         {
-            if (rows > 0 && cols > 0) {
+            if(size > 0)
+            {
+                if (bAllocated && (rows > 0) && (cols > 0)) {
+                    if (size != cols) {
+                        printf("[ERROR]: pkm::Mat push_back(float *m) requires same number of columns in Mat as length of vector!\n");
+                        return;
+                    }
+                    cblas_scopy(rows*cols, data, 1, temp_data, 1);
+                    assert(data != 0);
+                    free(data);
+                    data = NULL;
+                    data = (float *)malloc((rows+1)*cols*sizeof(float));
+                    cblas_scopy(rows*cols, temp_data, 1, data, 1);
+                    cblas_scopy(cols, m, 1, data + (rows*cols), 1);
+                    rows++;
+                    assert(temp_data != 0);
+                    free(temp_data);
+                    temp_data = NULL;
+                    temp_data = (float *)malloc(rows*cols*sizeof(float));
+                }
+                else {
+                    cols = size;
+                    data = (float *)malloc(sizeof(float) * cols);
+                    cblas_scopy(cols, m, 1, data, 1);
+                    temp_data = (float *)malloc(sizeof(float) * cols);
+                    rows = 1;
+                    bAllocated = true;
+                }
+            }
+        }
+        
+        inline void push_back(vector<float> &m)
+        {
+            if (bAllocated && rows > 0 && cols > 0) {
                 if (m.size() != cols) {
                     printf("[ERROR]: pkm::Mat push_back(vector<float> m) requires same number of columns in Mat as length of vector!\n");
                     return;
                 }
                 cblas_scopy(rows*cols, data, 1, temp_data, 1);
-                data = (float *)realloc(data, (rows+1)*cols*sizeof(float));
+                assert(data != 0);
+                free(data); data = NULL;
+                data = (float *)malloc((rows+1)*cols*sizeof(float));
                 cblas_scopy(rows*cols, temp_data, 1, data, 1);
                 cblas_scopy(cols, &(m[0]), 1, data + (rows*cols), 1);
                 rows++;
-                temp_data = (float *)realloc(temp_data, rows*cols*sizeof(float));
+                assert(temp_data != 0);
+                free(temp_data); temp_data = NULL;
+                temp_data = (float *)malloc(rows*cols*sizeof(float));
             }
             else {
                 *this = m;
@@ -584,7 +669,7 @@ namespace pkm
             
         }
         
-        inline void push_back(vector<vector<float> > m)
+        inline void push_back(vector<vector<float> > &m)
         {
             if (rows > 0 && cols > 0) {
                 if (m[0].size() != cols) {
@@ -592,13 +677,17 @@ namespace pkm
                     return;
                 }
                 cblas_scopy(rows*cols, data, 1, temp_data, 1);
-                data = (float *)realloc(data, (rows+m.size())*cols*sizeof(float));
+                assert(data != 0);
+                free(data); data = NULL;
+                data = (float *)malloc((rows+m.size())*cols*sizeof(float));
                 cblas_scopy(rows*cols, temp_data, 1, data, 1);
                 for (int i = 0; i < m.size(); i++) {
                     cblas_scopy(cols, &(m[i][0]), 1, data + ((rows+i)*cols), 1);
                 }
                 rows+=m.size();
-                temp_data = (float *)realloc(temp_data, rows*cols*sizeof(float));
+                assert(temp_data != 0);
+                free(temp_data); temp_data = NULL;
+                temp_data = (float *)malloc(rows*cols*sizeof(float));
             }
             else {
                 *this = m;
@@ -902,7 +991,7 @@ namespace pkm
 #ifdef DEBUG
 			assert(data != NULL);
 #endif	
-			if(rows == 1 && cols > 1 || cols == 1 && rows > 1)
+			if((rows == 1 && cols > 1) || (cols == 1 && rows > 1))
 			{
 				int diagonal_elements = MAX(rows,cols);
 				
@@ -1176,8 +1265,8 @@ namespace pkm
         bool load(string filename)
         {
             if (bAllocated) {
-                free(data);
-                free(temp_data);
+                free(data); data = NULL;
+                free(temp_data); temp_data = NULL;
                 rows = cols = 0;
             }
             FILE *fp;
@@ -1214,6 +1303,24 @@ namespace pkm
 		
 		bool bAllocated;
 		bool bUserData;
+        
+    protected:
+        void releaseMemory()
+        {
+            if(bAllocated)
+            {
+                if (!bUserData) {
+                    assert(data != 0);
+                    free(data);
+                    data = NULL;
+                }
+                assert(temp_data != 0);
+                free(temp_data);
+                temp_data = NULL;
+            }
+        }
+        
 	};
+    
 	
 };
