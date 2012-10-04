@@ -82,9 +82,6 @@
 
 using namespace pkm;
 
-#ifndef MIN
-#define MIN(x,y) ((x) < (y) ? (x) : (y))
-#endif
 
 Mat::Mat()
 {
@@ -112,10 +109,10 @@ Mat::Mat(vector<float> m)
 {
     rows = 1;
     cols = m.size();
-    data = (float *)malloc(sizeof(float)*cols);
+    data = (float *)malloc(sizeof(float)*MULTIPLE_OF_4(cols));
 	
     // sacrifice memory w/ speed, by pre-allocating a temporary buffer
-	temp_data = (float *)malloc(rows * cols * sizeof(float));
+	temp_data = (float *)malloc(MULTIPLE_OF_4(cols) * sizeof(float));
     
     cblas_scopy(cols, &m[0], 1, data, 1);
 	current_row = 0;
@@ -128,9 +125,9 @@ Mat::Mat(vector<vector<float> > m)
 {
     rows = m.size();
     cols = m[0].size();
-    data = (float *)malloc(sizeof(float)*rows*cols);
+    data = (float *)malloc(sizeof(float)*MULTIPLE_OF_4(rows*cols));
     // sacrifice memory w/ speed, by pre-allocating a temporary buffer
-	temp_data = (float *)malloc(rows * cols * sizeof(float));
+	temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
     
     for(int i = 0; i < rows; i++)
         cblas_scopy(cols, &(m[i][0]), 1, data+i*cols, 1);
@@ -146,9 +143,9 @@ Mat::Mat(cv::Mat m)
 {
     rows = m.rows;
     cols = m.cols;
-    data = (float *)malloc(sizeof(float)*rows*cols);
+    data = (float *)malloc(sizeof(float)*MULTIPLE_OF_4(rows*cols));
     // sacrifice memory w/ speed, by pre-allocating a temporary buffer
-	temp_data = (float *)malloc(rows * cols * sizeof(float));
+	temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
     
     for(int i = 0; i < rows; i++)
         cblas_scopy(cols, m.ptr<float>(i), 1, data+i*cols, 1);
@@ -169,17 +166,17 @@ Mat::Mat(int r, int c, bool clear)
 	cols = c;
 	current_row = 0;
 	bCircularInsertionFull = false;
-	data = (float *)malloc(rows * cols * sizeof(float));
+	data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
 	
 	// sacrifice memory w/ speed, by pre-allocating a temporary buffer
-	temp_data = (float *)malloc(rows * cols * sizeof(float));
+	temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
 
 	bAllocated = true;
 	
 	// set every element to 0
 	if(clear)
 	{
-		vDSP_vclr(data, 1, rows*cols);
+		vDSP_vclr(data, 1, MULTIPLE_OF_4(rows*cols));
 	}
 }
 
@@ -198,11 +195,11 @@ Mat::Mat(int r, int c, float *existing_buffer, bool withCopy)
 	bCircularInsertionFull = false;
 	
 	// sacrifice memory w/ speed, by pre-allocating a temporary buffer
-	temp_data = (float *)malloc(rows * cols * sizeof(float));
+	temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
 	
 	if(withCopy)
 	{
-		data = (float *)malloc(rows * cols * sizeof(float));
+		data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
 		
 		cblas_scopy(rows*cols, existing_buffer, 1, data, 1);
 		//memcpy(data, existing_buffer, sizeof(float)*r*c);
@@ -227,14 +224,14 @@ Mat::Mat(int r, int c, float val)
 	current_row = 0;
 	bCircularInsertionFull = false;
 	
-	data = (float *)malloc(rows * cols * sizeof(float));
+	data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
 	// sacrifice memory w/ speed, by pre-allocating a temporary buffer
-	temp_data = (float *)malloc(rows * cols * sizeof(float));
+	temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
 	
 	bAllocated = true;
 	
 	// set every element to val
-	vDSP_vfill(&val, data, 1, rows * cols);
+	vDSP_vfill(&val, data, 1, MULTIPLE_OF_4(rows * cols));
 	
 }
 
@@ -252,10 +249,10 @@ Mat::Mat(const Mat &rhs)
 		current_row = rhs.current_row;
 		bCircularInsertionFull = rhs.bCircularInsertionFull;
 		
-		data = (float *)malloc(rows * cols * sizeof(float));
+		data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
 		
 		// sacrifice memory w/ speed, by pre-allocating a temporary buffer
-		temp_data = (float *)malloc(rows * cols * sizeof(float));
+		temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
 		
 		bAllocated = true;
 		
@@ -295,8 +292,8 @@ Mat & Mat::operator=(const Mat &rhs)
             releaseMemory();
 			
             
-            data = (float *)malloc(rows * cols * sizeof(float));
-            temp_data = (float *)malloc(rows * cols * sizeof(float));
+            data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
+            temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
             bAllocated = true;
         
 		}
@@ -340,8 +337,8 @@ Mat & Mat::operator=(const vector<float> &rhs)
 			
             releaseMemory();
 			
-			data = (float *)malloc(rows * cols * sizeof(float));
-			temp_data = (float *)malloc(rows * cols * sizeof(float));
+			data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
+			temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
 			
 			bAllocated = true;
 		}
@@ -385,8 +382,8 @@ Mat & Mat::operator=(const vector<vector<float> > &rhs)
 			
             releaseMemory();
 			
-			data = (float *)malloc(rows * cols * sizeof(float));
-			temp_data = (float *)malloc(rows * cols * sizeof(float));
+			data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
+			temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
 			
 			bAllocated = true;
 		}
@@ -432,8 +429,8 @@ Mat & Mat::operator=(const cv::Mat &rhs)
 			
             releaseMemory();
 			
-			data = (float *)malloc(rows * cols * sizeof(float));
-			temp_data = (float *)malloc(rows * cols * sizeof(float));
+			data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
+			temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
 			
 			bAllocated = true;
 		}
@@ -561,6 +558,17 @@ Mat Mat::abs(Mat &A)
     return newMat;
 }
 
+void Mat::abs()
+{
+#ifdef DEBUG			
+    assert(data != NULL);
+    assert(rows >0 &&
+           cols >0);
+#endif	
+    vDSP_vabs(data, 1, data, 1, rows * cols);
+}
+
+/*
 
 Mat Mat::log(Mat &A)
 {
@@ -591,6 +599,8 @@ Mat Mat::exp(Mat &A)
 	}
 	return newMat;
 }
+*/
+
 
 Mat Mat::identity(int dim)
 {
@@ -734,7 +744,7 @@ void Mat::printAbbrev(bool row_major)
 	{
 		for (int r = 0; r < MIN(rows,5); r++) {
 			for (int c = 0; c < MIN(cols,5); c++) {
-				printf("%8.2f ", data[r*cols + c]);
+				printf("%8.4f ", data[r*cols + c]);
 			}
 			printf("\n");
 		}
@@ -743,7 +753,7 @@ void Mat::printAbbrev(bool row_major)
 	else {
 		for (int r = 0; r < MIN(rows,5); r++) {
 			for (int c = 0; c < MIN(cols,5); c++) {
-				printf("%8.2f ", data[c*rows + r]);
+				printf("%8.4f ", data[c*rows + r]);
 			}
 			printf("\n");
 		}
@@ -761,7 +771,7 @@ void Mat::print(bool row_major)
 	{
 		for (int r = 0; r < rows; r++) {
 			for (int c = 0; c < cols; c++) {
-				printf("%8.2f ", data[r*cols + c]);
+				printf("%8.4f ", data[r*cols + c]);
 			}
 			printf("\n");
 		}
@@ -770,7 +780,7 @@ void Mat::print(bool row_major)
 	else {
 		for (int r = 0; r < rows; r++) {
 			for (int c = 0; c < cols; c++) {
-				printf("%8.2f ", data[c*rows + r]);
+				printf("%8.4f ", data[c*rows + r]);
 			}
 			printf("\n");
 		}

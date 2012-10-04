@@ -32,25 +32,115 @@ using namespace pkm;
 using namespace std;
 
 int main (int argc, char * const argv[]) {
-    Mat a;
-    int size = 1024;
-    for (int i = 0; i < 10000000000; i++) {
-        float *f = (float *)malloc(sizeof(float) * size);
-        memset(f, 0, sizeof(float)*size);
-        if (a.rows > 44) 
-        {
-            a.insertRowCircularly(f);
-        }
-        else
-        {
-            a.push_back(f, size);
-        }
-        free(f);
-        
-            //if (rand() > 0.5) {
-            //a = Mat();
-            //}
+    /*
+    Mat a(10,10);
+    a.setRand(-5,5);
+    a.print();
+    
+    Mat b = pkm::Mat::sgn(a);
+    b.print();
+    
+    float data[] = {1,1,7,1,2,1,1,1,3};
+    Mat c(3,3,data,false);
+    c.print();
+    c.inv();
+    c.print();
+    */
+    int t = clock();
+    for (int i = 0; i < 100000; i++) {
+        float f = sqrtf(i);
     }
+    t = clock() - t;
+    cout << "ticks: " << t << endl;
+    
+    Mat a(1,100000,false);
+    
+    for (int i = 0; i < 100000; i++) {
+        a[i] = i;
+    }
+    a.sqrt();
+    t = clock() - t;
+    cout << "ticks: " << t << endl;
+    
+    
+//    int i, j , c1, c2, pivot[size], ok;
+//    float A[size][size], b[size], AT[size*size];	/* single precision!!! */
+//    
+//    
+//    A[0][0]=3.1;  A[0][1]=1.3;  A[0][2]=-5.7;	/* matrix A */
+//    A[1][0]=1.0;  A[1][1]=-6.9; A[1][2]=5.8;	
+//    A[2][0]=3.4;  A[2][1]=7.2;  A[2][2]=-8.8;	
+//    
+//    b[0]=-1.3;			/* if you define b as a matrix then you */
+//    b[1]=-0.1;			/* can solve multiple equations with */
+//    b[2]=1.8;			/* the same A but different b */ 	
+//    
+//    for (i=0; i<size; i++)		/* to call a Fortran routine from C we */
+//    {				/* have to transform the matrix */
+//        for(j=0; j<size; j++) AT[j+size*i]=A[j][i];		
+//    }						
+//    
+//    c1=size;			/* and put all numbers we want to pass */
+//    c2=1;    			/* to the routine in variables */
+//    
+//    /* find solution using LAPACK routine SGESV, all the arguments have to */
+//    /* be pointers and you have to add an underscore to the routine name */
+//    sgesv_(&c1, &c2, AT, &c1, pivot, b, &c1, &ok);      
+//    
+//    /*
+//     parameters in the order as they appear in the function call
+//     order of matrix A, number of right hand sides (b), matrix A,
+//     leading dimension of A, array that records pivoting, 
+//     result vector b on entry, x on exit, leading dimension of b
+//     return value */ 
+//    
+//    for (j=0; j<size; j++) printf("%e\n", b[j]);	/* print vector x */
+
+
+    /*
+    Mat a(1,8,5.0f);
+    a.print();
+    
+    Mat b;
+    b = a.getDiag();
+    b.print();
+    
+    b.removeRow(3);
+    b.print();
+    b.removeRow(6);
+    b.print();
+    b.removeRow(1);
+    b.print();
+    
+    Mat c = Mat::sqrt(b);
+    c.print();
+    */
+     
+     
+    
+    
+    /*
+    float means[] = {0.5, 0.5};
+    float sigma[] = {0.15915, 0.0, 0.0, 0.15915};
+    float input[] = {0.5, 0.5};
+    
+    Mat m(1,2,means,true);
+    m.print();
+    Mat s(2,2,sigma,true);
+    s.print();
+    Mat i(1,2,input,true);
+    i.print();
+    
+    float size = 10;
+    for (int x = 0; x < size; x++) {
+        i[0] = x / size;
+        for (int y = 0; y < size; y++) {
+            i[1] = y / size;
+            cout << Mat::gaussianPosterior(i, m, s) << " ";
+        }
+        cout << endl;
+    }
+    */
     
     
 	/*

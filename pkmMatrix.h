@@ -74,17 +74,43 @@
  interested in using the Software commercially, please contact pkmital to
  negotiate a licence. Contact details are: parag@pkmital.com
  
+ int matrix_invert(int N, double *matrix) {
+ 
+ int error=0;
+ int *pivot = malloc(N*N*sizeof(int));
+ double *workspace = malloc(N*sizeof(double));
+ 
+ dgetrf_(&N, &N, matrix, &N, pivot, &error);
+ 
+ if (error != 0) {
+ NSLog(@"Error 1");
+ return error;
+ }
+ 
+ dgetri_(&N, matrix, &N, pivot, workspace, &N, &error);
+ 
+ if (error != 0) {
+ NSLog(@"Error 2");
+ return error;
+ }
+ 
+ free(pivot);
+ free(workspace);
+ return error;
+ }
+ 
+ 
  *
  */
 
 #pragma once
 
-#define HAVE_OPENCV
-
 #include <iostream>
 #include <assert.h>
 #include <Accelerate/Accelerate.h>
 #include <vector>
+
+//#define HAVE_OPENCV
 
 #ifdef HAVE_OPENCV
 #include <opencv2/opencv.hpp>
@@ -102,6 +128,12 @@ using namespace std;
 #ifndef MIN
 #define MIN(a,b)  ((a) > (b) ? (b) : (a))
 #endif
+
+#define MULTIPLE_OF_4(x) ((x | 0x03) + 1)
+
+template <typename T> int signum(T val) {
+    return (T(0) < val) - (val < T(0));
+}
 
 //typedef pkm::Mat pkmMatrix;
 
@@ -493,14 +525,14 @@ namespace pkm
             
             if (r >= rows && c >= cols) {
                 if (bUserData) {
-                    data = (float *)malloc(r * c * sizeof(float));
-                    temp_data = (float *)realloc(temp_data, r * c * sizeof(float));
+                    data = (float *)malloc(MULTIPLE_OF_4(r * c) * sizeof(float));
+                    temp_data = (float *)realloc(temp_data, MULTIPLE_OF_4(r * c) * sizeof(float));
                 }
                 else
                 {
-                    data = (float *)realloc(data, r * c * sizeof(float));
+                    data = (float *)realloc(data, MULTIPLE_OF_4(r * c) * sizeof(float));
                     cblas_scopy(rows*cols, temp_data, 1, data, 1);
-                    temp_data = (float *)realloc(temp_data, r * c * sizeof(float));
+                    temp_data = (float *)realloc(temp_data, MULTIPLE_OF_4(r * c) * sizeof(float));
                 }
                 
                 if(clear)
@@ -532,9 +564,9 @@ namespace pkm
 			
             releaseMemory();
             
-            data = (float *)malloc(rows * cols * sizeof(float));
+            data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
             // sacrifice memory w/ speed, by pre-allocating a temporary buffer
-            temp_data = (float *)malloc(rows * cols * sizeof(float));
+            temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
         
 			bAllocated = true;
 			bUserData = false;
@@ -542,7 +574,7 @@ namespace pkm
 			// set every element to 0
 			if(clear)
 			{
-				vDSP_vclr(data, 1, rows*cols);
+				vDSP_vclr(data, 1, MULTIPLE_OF_4(rows*cols));
 			}
 		}
 		
@@ -591,14 +623,14 @@ namespace pkm
                     cblas_scopy(rows*cols, data, 1, temp_data, 1);
                     assert(data != 0);
                     free(data); data = NULL;
-                    data = (float *)malloc(sizeof(float) * (rows + m.rows) * cols);
+                    data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4((rows + m.rows) * cols));
                     //data = (float *)realloc(data, (rows+m.rows)*cols*sizeof(float));
                     cblas_scopy(rows*cols, temp_data, 1, data, 1);
                     cblas_scopy(m.rows*cols, m.data, 1, data + (rows*cols), 1);
                     rows+=m.rows;
                     assert(temp_data != 0);
                     free(temp_data); temp_data = NULL;
-                    temp_data = (float *)malloc(sizeof(float) * rows * cols);
+                    temp_data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4(rows * cols));
                     //temp_data = (float *)realloc(temp_data, rows*cols*sizeof(float));
                 }
                 else {
@@ -623,22 +655,18 @@ namespace pkm
                     }
                     cblas_scopy(rows*cols, data, 1, temp_data, 1);
                     assert(data != 0);
-                    free(data);
-                    data = NULL;
-                    data = (float *)malloc((rows+1)*cols*sizeof(float));
-                    cblas_scopy(rows*cols, temp_data, 1, data, 1);
+                    data = (float *)realloc(data, MULTIPLE_OF_4((rows+1)*cols)*sizeof(float));
+                    //cblas_scopy(rows*cols, temp_data, 1, data, 1);
                     cblas_scopy(cols, m, 1, data + (rows*cols), 1);
                     rows++;
                     assert(temp_data != 0);
-                    free(temp_data);
-                    temp_data = NULL;
-                    temp_data = (float *)malloc(rows*cols*sizeof(float));
+                    temp_data = (float *)realloc(temp_data, MULTIPLE_OF_4(rows*cols)*sizeof(float));
                 }
                 else {
                     cols = size;
-                    data = (float *)malloc(sizeof(float) * cols);
+                    data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4(cols));
                     cblas_scopy(cols, m, 1, data, 1);
-                    temp_data = (float *)malloc(sizeof(float) * cols);
+                    temp_data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4(cols));
                     rows = 1;
                     bAllocated = true;
                 }
@@ -655,13 +683,13 @@ namespace pkm
                 cblas_scopy(rows*cols, data, 1, temp_data, 1);
                 assert(data != 0);
                 free(data); data = NULL;
-                data = (float *)malloc((rows+1)*cols*sizeof(float));
+                data = (float *)malloc(MULTIPLE_OF_4((rows+1)*cols)*sizeof(float));
                 cblas_scopy(rows*cols, temp_data, 1, data, 1);
                 cblas_scopy(cols, &(m[0]), 1, data + (rows*cols), 1);
                 rows++;
                 assert(temp_data != 0);
                 free(temp_data); temp_data = NULL;
-                temp_data = (float *)malloc(rows*cols*sizeof(float));
+                temp_data = (float *)malloc(MULTIPLE_OF_4(rows*cols)*sizeof(float));
             }
             else {
                 *this = m;
@@ -679,7 +707,7 @@ namespace pkm
                 cblas_scopy(rows*cols, data, 1, temp_data, 1);
                 assert(data != 0);
                 free(data); data = NULL;
-                data = (float *)malloc((rows+m.size())*cols*sizeof(float));
+                data = (float *)malloc(MULTIPLE_OF_4((rows+m.size())*cols)*sizeof(float));
                 cblas_scopy(rows*cols, temp_data, 1, data, 1);
                 for (int i = 0; i < m.size(); i++) {
                     cblas_scopy(cols, &(m[i][0]), 1, data + ((rows+i)*cols), 1);
@@ -687,7 +715,7 @@ namespace pkm
                 rows+=m.size();
                 assert(temp_data != 0);
                 free(temp_data); temp_data = NULL;
-                temp_data = (float *)malloc(rows*cols*sizeof(float));
+                temp_data = (float *)malloc(MULTIPLE_OF_4(rows*cols)*sizeof(float));
             }
             else {
                 *this = m;
@@ -703,6 +731,53 @@ namespace pkm
 				bCircularInsertionFull = true;
 			}
 		}
+        
+        float * getLastCircularRow()
+        {
+            unsigned int lastRow;
+            if (bCircularInsertionFull) {
+                lastRow = (current_row - 1) >= 0 ? current_row - 1 : rows - 1;
+            }
+            else {
+                lastRow = (current_row - 1) >= 0 ? current_row - 1 : 0;
+            }
+            return row(lastRow);
+        }
+        
+        inline void resetCircularRowCounter()
+        {
+            current_row = 0;
+            bCircularInsertionFull = false;
+        }
+        
+        bool isCircularInsertionFull()
+        {
+            return bCircularInsertionFull;
+        }
+        
+        void removeRow(int i)
+        {
+#ifdef DEBUG
+            assert(i < rows);
+            assert(i >= 0);
+#endif
+            // are we removing the last row (or only row)?
+            if(i == (rows - 1))
+            {
+                rows--;
+                realloc(data, sizeof(float)*MULTIPLE_OF_4(rows*cols));                
+                realloc(temp_data, sizeof(float)*MULTIPLE_OF_4(rows*cols));
+            }
+            // we have to preserve the memory after the deleted row
+            else {
+                int numRowsToCopy = rows - i - 1;
+                cblas_scopy(numRowsToCopy * cols, row(i+1), 1, temp_data, 1);
+                rows--;
+                realloc(data, sizeof(float)*MULTIPLE_OF_4(rows*cols));
+                cblas_scopy(cols * numRowsToCopy, temp_data, 1, row(i), 1);
+                realloc(temp_data, sizeof(float)*MULTIPLE_OF_4(rows*cols));
+            }  
+        }
 		
 		// inclusive of start, exclusive of end
 		// can be a copy of the original matrix, or a way of editing the original
@@ -863,6 +938,26 @@ namespace pkm
 #endif
 			vDSP_vsdiv(data, 1, &scalar, data, 1, rows*cols);
 		}
+        
+        inline void divideUnder(float scalar, Mat &result) const 
+		{
+#ifdef DEBUG			
+			assert(data != NULL);
+			assert(result.data != NULL);
+			assert(rows == result.rows &&
+				   cols == result.cols);
+#endif	
+			
+			vDSP_svdiv(&scalar, data, 1, result.data, 1, rows*cols);
+		}
+		
+		inline void divideUnder(float scalar)
+		{
+#ifdef DEBUG			
+			assert(data != NULL);
+#endif
+			vDSP_svdiv(&scalar, data, 1, data, 1, rows*cols);
+		}
 		
 		inline void add(const Mat &rhs, Mat &result) const 
 		{
@@ -963,7 +1058,7 @@ namespace pkm
 			
 			Mat gemmResult(rows, rhs.cols);
 			
-			printf("lda: %d\nldb: %d\nldc: %d\n", rows, rhs.rows, gemmResult.rows); 
+			//printf("lda: %d\nldb: %d\nldc: %d\n", rows, rhs.rows, gemmResult.rows); 
 			cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, gemmResult.rows, gemmResult.cols, cols, 1.0f, data, cols, rhs.data, rhs.cols, 0.0f, gemmResult.data, gemmResult.cols);
 			//vDSP_mmul(data, 1, rhs.data, 1, gemmResult.data, 1, gemmResult.rows, gemmResult.cols, cols);
 			return gemmResult;
@@ -976,9 +1071,12 @@ namespace pkm
 			assert(data != NULL);
 #endif      
 			vDSP_mtrans(data, 1, temp_data, 1, cols, rows);
-			//cblas_scopy(rows*cols, temp_data, 1, data, 1);
-			std::swap(data, temp_data);					// swap will break certain operations for col/row range as their pointers will have changed. :(
-			std::swap(rows, cols);
+			cblas_scopy(rows*cols, temp_data, 1, data, 1);
+                //std::swap(data, temp_data);					// swap will break certain operations for col/row range as their pointers will have changed. :(
+                //std::swap(rows, cols);
+            int tempvar = cols;
+            cols = rows;
+            rows = tempvar;
 		}
 		
 		Mat getTranspose();
@@ -996,7 +1094,7 @@ namespace pkm
 				int diagonal_elements = MAX(rows,cols);
 				
 				// create a square matrix
-				temp_data = (float *)realloc(temp_data, diagonal_elements*diagonal_elements*sizeof(float));
+				temp_data = (float *)realloc(temp_data, MULTIPLE_OF_4(diagonal_elements*diagonal_elements)*sizeof(float));
 				
 				// set values to 0
 				vDSP_vclr(temp_data, 1, diagonal_elements*diagonal_elements);
@@ -1014,22 +1112,26 @@ namespace pkm
 				std::swap(data, temp_data);
 				
 				// reallocate temp data for future processing
-				temp_data = (float *)realloc(temp_data, diagonal_elements*diagonal_elements*sizeof(float));
+				temp_data = (float *)realloc(temp_data, MULTIPLE_OF_4(diagonal_elements*diagonal_elements)*sizeof(float));
 				
 				// save dimensions
 			}
 		}
 		Mat getDiag();
 		
+        void abs();
+        
         // returns a new matrix with each el the abs(el)
         static Mat abs(Mat &A);
 		
+        /*
         // returns a new matrix with each el the log(el)
 		static Mat log(Mat &A);
 		
 		// returns a new matrix with each el the exp(el)
 		static Mat exp(Mat &A);
-		
+		*/
+        
 		// returns a new diagonalized matrix version of A
 		static Mat diag(Mat &A);
 		
@@ -1133,19 +1235,36 @@ namespace pkm
 			return val;
 		}
 		
-		static float var(float *buf, int size)
+		static float var(float *buf, int size, int stride = 1)
 		{
-			float m = mean(buf, size);
+			float m = mean(buf, size, stride);
 			float v = 0;
 			float sqr = 0;
 			float *p = buf;
 			int a = size;
 			while (a) {
-				sqr = (*p++ - m);
+				sqr = (*p - m);
+				p += stride;
 				v += sqr*sqr;
 				a--;
 			}
 			return v/(float)size;
+		}
+        
+        static float stddev(float *buf, int size, int stride = 1)
+		{
+			float m = mean(buf, size, stride);
+			float v = 0;
+			float sqr = 0;
+			float *p = buf;
+			int a = size;
+			while (a) {
+				sqr = (*p - m);
+				p += stride;
+				v += sqr*sqr;
+				a--;
+			}
+			return sqrtf(v/(float)size);
 		}
 		
 		static float rms(float *buf, int size)
@@ -1191,6 +1310,71 @@ namespace pkm
 			vDSP_sve(A.data, 1, &sumval, A.rows*A.cols);
 			return sumval;
 		}
+		
+		Mat var(bool row_major = true)
+		{
+#ifdef DEBUG			
+            assert(data != NULL);
+            assert(rows >0 &&
+                   cols >0);
+#endif	
+            if (row_major) {
+                if (rows == 1) {
+                    return *this;
+                }
+                Mat newMat(1, cols);
+                
+                for(int i = 0; i < cols; i++)
+                {
+                    newMat.data[i] = var(data + i, rows, cols);
+                }
+                return newMat;
+            }
+            else {
+                if (cols == 1) {
+                    return *this;
+                }
+                Mat newMat(rows, 1);
+                for(int i = 0; i < rows; i++)
+                {
+                    newMat.data[i] = var(data + i*cols, cols, 1);
+                }
+                return newMat;
+            }	
+		}
+		
+        Mat stddev(bool row_major = true)
+		{
+#ifdef DEBUG			
+            assert(data != NULL);
+            assert(rows >0 &&
+                   cols >0);
+#endif	
+            if (row_major) {
+                if (rows == 1) {
+                    return *this;
+                }
+                Mat newMat(1, cols);
+                
+                for(int i = 0; i < cols; i++)
+                {
+                    newMat.data[i] = stddev(data + i, rows, cols);
+                }
+                return newMat;
+            }
+            else {
+                if (cols == 1) {
+                    return *this;
+                }
+                Mat newMat(rows, 1);
+                for(int i = 0; i < rows; i++)
+                {
+                    newMat.data[i] = stddev(data + i*cols, cols, 1);
+                }
+                return newMat;
+            }	
+		}
+        
         
         Mat mean(bool row_major = true)
         {
@@ -1244,22 +1428,214 @@ namespace pkm
 		void divideEachVecByMaxVecElement(bool row_major);
 		void divideEachVecBySum(bool row_major);
         
+        void inv2x2()
+        {
+#ifdef DEBUG
+            assert(rows == 2);
+            assert(cols == 2);
+#endif
+            float det = 1.0 / (data[0]*data[3] - data[2]*data[1]);
+            float a = data[0];
+            float b = data[1];
+            float c = data[2];
+            float d = data[3];
+            data[0] = d * det;
+            data[1] = -b * det;
+            data[2] = -c * det;
+            data[3] = a * det;
+        }
+        
+        void inv()
+        {
+#ifdef DEBUG
+            assert(rows == cols); // must be square
+#endif
+            int error=0;
+            float *workspace = (float *)malloc(MULTIPLE_OF_4(rows)*sizeof(float));
+            int *pivot = (int *)malloc(MULTIPLE_OF_4(rows*rows)*sizeof(int));
+            
+            sgetrf_(&rows, &rows, data, &rows, pivot, &error);
+            
+#ifdef DEBUG
+            if (error != 0) {
+                cerr << "[pkmMatrix]: Error 1";
+            }
+#endif
+            sgetri_(&rows, data, &rows, pivot, workspace, &rows, &error);
+#ifdef DEBUG
+            if (error != 0) {
+                cerr << "[pkmMatrix]: Error 2";
+            }
+#endif
+            free(workspace);
+            free(pivot);
+        }
+        
+        // input is 1 x d dimensional vector
+        // mean is 1 x d dimensional vector
+        // sigma is d x d dimensional matrix
+        static float gaussianPosterior(Mat input, Mat mean, Mat sigma)
+        {
+#ifdef DEBUG
+            assert(input.cols == mean.cols);
+            assert(input.cols == sigma.rows);
+            assert(input.cols == sigma.cols);
+#endif
+            float A = 1.0 / (powf(M_PI * 2.0, input.cols / 2.0) * sqrtf(sigma[0]*sigma[3] - sigma[2]*sigma[1]));
+            input.subtract(mean);
+            sigma.inv2x2();
+            Mat a = input.GEMM(sigma);
+            Mat l = input;
+            l.setTranspose();
+            Mat b = a.GEMM(l);
+            return (A * expf(-0.5 * b[0]));
+        }
+        
+        void sqrt()
+        {
+            int size = rows*cols;
+            vvsqrtf(data, data, &size);
+        }
+        
+        static Mat sqrt(Mat &b)
+        {
+            Mat newMat(b.rows, b.cols);
+            int size = b.rows*b.cols;
+            vvsqrtf(newMat.data, b.data, &size);
+            return newMat;
+        }
+        
+        void sin()
+        {
+            int size = rows*cols;
+            vvsinf(data, data, &size);
+        }
+        
+        static Mat sin(Mat &b)
+        {
+            Mat newMat(b.rows, b.cols);
+            int size = b.rows*b.cols;
+            vvsinf(newMat.data, b.data, &size);
+            return newMat;
+        }
+        
+        void cos()
+        {
+            int size = rows*cols;
+            vvcosf(data, data, &size);
+        }
+        
+        static Mat cos(Mat &b)
+        {
+            Mat newMat(b.rows, b.cols);
+            int size = b.rows*b.cols;
+            vvcosf(newMat.data, b.data, &size);
+            return newMat;
+        }
+        
+        void log()
+        {
+            int size = rows*cols;
+            vvlogf(data, data, &size);
+        }
+        
+        static Mat log(Mat &b)
+        {
+            Mat newMat(b.rows, b.cols);
+            int size = b.rows*b.cols;
+            vvlogf(newMat.data, b.data, &size);
+            return newMat;
+        }
+        
+        void log10()
+        {
+            int size = rows*cols;
+            vvlog10f(data, data, &size);
+        }
+        
+        static Mat log10(Mat &b)
+        {
+            Mat newMat(b.rows, b.cols);
+            int size = b.rows*b.cols;
+            vvlog10f(newMat.data, b.data, &size);
+            return newMat;
+        }
+        
+        void exp()
+        {
+            int size = rows*cols;
+            vvexpf(data, data, &size);
+        }
+        
+        static Mat exp(Mat &b)
+        {
+            Mat newMat(b.rows, b.cols);
+            int size = b.rows*b.cols;
+            vvexpf(newMat.data, b.data, &size);
+            return newMat;
+        }
+        
+        void floor()
+        {
+            int size = rows*cols;
+            vvfloorf(data, data, &size);
+        }
+        
+        static Mat floor(Mat &b)
+        {
+            Mat newMat(b.rows, b.cols);
+            int size = b.rows*b.cols;
+            vvfloorf(newMat.data, b.data, &size);
+            return newMat;
+        }
+        
+        void ceil()
+        {
+            int size = rows*cols;
+            vvceilf(data, data, &size);
+        }
+        
+        static Mat ceil(Mat &b)
+        {
+            Mat newMat(b.rows, b.cols);
+            int size = b.rows*b.cols;
+            vvceilf(newMat.data, b.data, &size);
+            return newMat;
+        }
+        
+        static Mat sgn(Mat &b)
+        {
+            Mat newMat(b.rows, b.cols);
+            float *p = b.data;
+            float *p2 = newMat.data;
+            for (int i = 0; i < b.rows*b.cols; i++) {
+                *p2++ = signum<float>(*p++);
+            }
+            return newMat;
+        }
         
         bool save(string filename)
         {
             FILE *fp;
             fp = fopen(filename.c_str(), "w");
-            fprintf(fp, "%d %d\n", rows, cols);
-            for(int i = 0; i < rows; i++)
+            if(fp)
             {
-                for(int j = 0; j < cols; j++)
+                fprintf(fp, "%d %d\n", rows, cols);
+                for(int i = 0; i < rows; i++)
                 {
-                    fprintf(fp, "%f, ", data[i*cols + j]);
+                    for(int j = 0; j < cols; j++)
+                    {
+                        fprintf(fp, "%f, ", data[i*cols + j]);
+                    }
+                    fprintf(fp,"\n");
                 }
-                fprintf(fp,"\n");
+                fclose(fp);
+                return true;
             }
-            fclose(fp);
-            return true;
+            else
+            {
+                return false;
+            }
         }
         
         bool load(string filename)
@@ -1271,19 +1647,25 @@ namespace pkm
             }
             FILE *fp;
             fp = fopen(filename.c_str(), "r");
-            fscanf(fp, "%d %d\n", &rows, &cols);
-            data = (float *)malloc(sizeof(float) * rows * cols);
-            temp_data = (float *)malloc(sizeof(float) * rows * cols);
-            for(int i = 0; i < rows; i++)
-            {
-                for(int j = 0; j < cols; j++)
+            if (fp) {
+                fscanf(fp, "%d %d\n", &rows, &cols);
+                data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4(rows * cols));
+                temp_data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4(rows * cols));
+                for(int i = 0; i < rows; i++)
                 {
-                    fscanf(fp, "%f, ", &(data[i*cols + j]));
+                    for(int j = 0; j < cols; j++)
+                    {
+                        fscanf(fp, "%f, ", &(data[i*cols + j]));
+                    }
+                    fscanf(fp, "\n");
                 }
-                fscanf(fp, "\n");
+                fclose(fp);
+                bAllocated = true;
+                return true;
             }
-            fclose(fp);
-            return true;
+            else {
+                return false;
+            }
         }
 		
 		// simple print output (be careful with large matrices!)
