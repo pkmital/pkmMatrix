@@ -111,15 +111,15 @@
 #include <vector>
 
 //#define HAVE_OPENCV
+//#define DEBUG
+
 
 #ifdef HAVE_OPENCV
 #include <opencv2/opencv.hpp>
 #endif
 
 using namespace std;
-#ifndef DEBUG
-#define DEBUG 1
-#endif
+
 
 #ifndef MAX
 #define MAX(a,b)  ((a) < (b) ? (b) : (a))
@@ -187,7 +187,6 @@ namespace pkm
 #endif			
 			Mat newMat(rows, cols);
 			vDSP_vadd(data, 1, rhs.data, 1, newMat.data, 1, rows*cols);
-			//cblas_scopy(rows*cols, temp_data, 1, data, 1);
 			return newMat;
 		}
 		
@@ -212,7 +211,6 @@ namespace pkm
 #endif			
 			Mat newMat(rows, cols);
 			vDSP_vsub(data, 1, rhs.data, 1, newMat.data, 1, rows*cols);
-			//cblas_scopy(rows*cols, temp_data, 1, data, 1);
 			return newMat;
 		}
 		
@@ -504,7 +502,6 @@ namespace pkm
 #endif			
 			Mat newMat(rhs.rows, rhs.cols);
 			vDSP_vsadd(rhs.data, 1, &lhs, newMat.data, 1, rhs.rows*rhs.cols);
-			//cblas_scopy(rows*cols, temp_data, 1, data, 1);
 			return newMat;
 		}
         
@@ -521,18 +518,22 @@ namespace pkm
 		
         void resize(int r, int c, bool clear = false)
         {
+#ifdef DEBUG
+            if (bUserData) {
+                cout << "[WARNING]: Pointer to user data will be lost/leaked.  Up to user to free this memory!" << endl;
+            }
+#endif
+            float *temp_data = (float *)malloc(sizeof(float)*MULTIPLE_OF_4(rows*cols));
             cblas_scopy(rows*cols, data, 1, temp_data, 1);
             
             if (r >= rows && c >= cols) {
                 if (bUserData) {
                     data = (float *)malloc(MULTIPLE_OF_4(r * c) * sizeof(float));
-                    temp_data = (float *)realloc(temp_data, MULTIPLE_OF_4(r * c) * sizeof(float));
                 }
                 else
                 {
                     data = (float *)realloc(data, MULTIPLE_OF_4(r * c) * sizeof(float));
                     cblas_scopy(rows*cols, temp_data, 1, data, 1);
-                    temp_data = (float *)realloc(temp_data, MULTIPLE_OF_4(r * c) * sizeof(float));
                 }
                 
                 if(clear)
@@ -548,10 +549,10 @@ namespace pkm
             }
             else {
                 printf("[ERROR: pkmMatrix::resize()] Cannot resize to a smaller matrix (yet).\n");
-                return;
             }
 
-            
+            free(temp_data);
+            return;
         }
 		
 		// can be used to create an already declared matrix without a copy constructor
@@ -565,8 +566,6 @@ namespace pkm
             releaseMemory();
             
             data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
-            // sacrifice memory w/ speed, by pre-allocating a temporary buffer
-            temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
         
 			bAllocated = true;
 			bUserData = false;
@@ -614,24 +613,21 @@ namespace pkm
 		
         void push_back(Mat m)
         {
+#ifdef DEBUG
+            if(bUserData)
+            {
+                cout << "[WARNING]: Pointer to user data will be resized.  Possible leak!" << endl;
+            }
+#endif
             if (bAllocated && (rows > 0) && (cols > 0)) {
                 if (m.cols != cols) {
                     printf("[ERROR]: pkm::Mat push_back(Mat m) requires same number of columns!\n");
                     return;
                 }
                 if (m.bAllocated && (m.cols > 0) && (m.rows > 0)) {
-                    cblas_scopy(rows*cols, data, 1, temp_data, 1);
-                    assert(data != 0);
-                    free(data); data = NULL;
-                    data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4((rows + m.rows) * cols));
-                    //data = (float *)realloc(data, (rows+m.rows)*cols*sizeof(float));
-                    cblas_scopy(rows*cols, temp_data, 1, data, 1);
+                    data = (float *)realloc(data, (rows+m.rows)*cols*sizeof(float));
                     cblas_scopy(m.rows*cols, m.data, 1, data + (rows*cols), 1);
                     rows+=m.rows;
-                    assert(temp_data != 0);
-                    free(temp_data); temp_data = NULL;
-                    temp_data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4(rows * cols));
-                    //temp_data = (float *)realloc(temp_data, rows*cols*sizeof(float));
                 }
                 else {
                     printf("[ERROR]: pkm::Mat push_back(Mat m), matrix m is empty!\n");
@@ -646,6 +642,12 @@ namespace pkm
         
         void push_back(float *m, int size)
         {
+#ifdef DEBUG
+            if(bUserData)
+            {
+                cout << "[WARNING]: Pointer to user data will be resized.  Possible leak!" << endl;
+            }
+#endif
             if(size > 0)
             {
                 if (bAllocated && (rows > 0) && (cols > 0)) {
@@ -653,20 +655,14 @@ namespace pkm
                         printf("[ERROR]: pkm::Mat push_back(float *m) requires same number of columns in Mat as length of vector!\n");
                         return;
                     }
-                    cblas_scopy(rows*cols, data, 1, temp_data, 1);
-                    assert(data != 0);
                     data = (float *)realloc(data, MULTIPLE_OF_4((rows+1)*cols)*sizeof(float));
-                    //cblas_scopy(rows*cols, temp_data, 1, data, 1);
                     cblas_scopy(cols, m, 1, data + (rows*cols), 1);
                     rows++;
-                    assert(temp_data != 0);
-                    temp_data = (float *)realloc(temp_data, MULTIPLE_OF_4(rows*cols)*sizeof(float));
                 }
                 else {
                     cols = size;
                     data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4(cols));
                     cblas_scopy(cols, m, 1, data, 1);
-                    temp_data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4(cols));
                     rows = 1;
                     bAllocated = true;
                 }
@@ -675,21 +671,20 @@ namespace pkm
         
         inline void push_back(vector<float> &m)
         {
+#ifdef DEBUG
+            if(bUserData)
+            {
+                cout << "[WARNING]: Pointer to user data will be resized.  Possible leak!" << endl;
+            }
+#endif
             if (bAllocated && rows > 0 && cols > 0) {
                 if (m.size() != cols) {
                     printf("[ERROR]: pkm::Mat push_back(vector<float> m) requires same number of columns in Mat as length of vector!\n");
                     return;
                 }
-                cblas_scopy(rows*cols, data, 1, temp_data, 1);
-                assert(data != 0);
-                free(data); data = NULL;
-                data = (float *)malloc(MULTIPLE_OF_4((rows+1)*cols)*sizeof(float));
-                cblas_scopy(rows*cols, temp_data, 1, data, 1);
+                data = (float *)realloc(data, MULTIPLE_OF_4((rows+1)*cols)*sizeof(float));
                 cblas_scopy(cols, &(m[0]), 1, data + (rows*cols), 1);
                 rows++;
-                assert(temp_data != 0);
-                free(temp_data); temp_data = NULL;
-                temp_data = (float *)malloc(MULTIPLE_OF_4(rows*cols)*sizeof(float));
             }
             else {
                 *this = m;
@@ -699,23 +694,22 @@ namespace pkm
         
         inline void push_back(vector<vector<float> > &m)
         {
+#ifdef DEBUG
+            if(bUserData)
+            {
+                cout << "[WARNING]: Pointer to user data will be resized.  Possible leak!" << endl;
+            }
+#endif
             if (rows > 0 && cols > 0) {
                 if (m[0].size() != cols) {
                     printf("[ERROR]: pkm::Mat push_back(vector<vector<float> > m) requires same number of cols in Mat as length of each vector!\n");
                     return;
                 }
-                cblas_scopy(rows*cols, data, 1, temp_data, 1);
-                assert(data != 0);
-                free(data); data = NULL;
-                data = (float *)malloc(MULTIPLE_OF_4((rows+m.size())*cols)*sizeof(float));
-                cblas_scopy(rows*cols, temp_data, 1, data, 1);
+                data = (float *)realloc(data, MULTIPLE_OF_4((rows+m.size())*cols)*sizeof(float));
                 for (int i = 0; i < m.size(); i++) {
                     cblas_scopy(cols, &(m[i][0]), 1, data + ((rows+i)*cols), 1);
                 }
                 rows+=m.size();
-                assert(temp_data != 0);
-                free(temp_data); temp_data = NULL;
-                temp_data = (float *)malloc(MULTIPLE_OF_4(rows*cols)*sizeof(float));
             }
             else {
                 *this = m;
@@ -765,17 +759,17 @@ namespace pkm
             if(i == (rows - 1))
             {
                 rows--;
-                realloc(data, sizeof(float)*MULTIPLE_OF_4(rows*cols));                
-                realloc(temp_data, sizeof(float)*MULTIPLE_OF_4(rows*cols));
+                realloc(data, sizeof(float)*MULTIPLE_OF_4(rows*cols));       
             }
             // we have to preserve the memory after the deleted row
             else {
                 int numRowsToCopy = rows - i - 1;
+                float *temp_data = (float *)malloc(sizeof(float)*numRowsToCopy * cols);
                 cblas_scopy(numRowsToCopy * cols, row(i+1), 1, temp_data, 1);
                 rows--;
                 realloc(data, sizeof(float)*MULTIPLE_OF_4(rows*cols));
                 cblas_scopy(cols * numRowsToCopy, temp_data, 1, row(i), 1);
-                realloc(temp_data, sizeof(float)*MULTIPLE_OF_4(rows*cols));
+                free(temp_data);
             }  
         }
 		
@@ -914,9 +908,7 @@ namespace pkm
 			assert(rows == rhs.rows &&
 				   cols == rhs.cols);
 #endif			
-			vDSP_vdiv(rhs.data, 1, data, 1, temp_data, 1, rows*cols);
-			//cblas_scopy(rows*cols, temp_data, 1, data, 1);
-			std::swap(data, temp_data);
+			vDSP_vdiv(rhs.data, 1, data, 1, data, 1, rows*cols);
 		}
 		
 		inline void divide(float scalar, Mat &result) const 
@@ -981,9 +973,7 @@ namespace pkm
 			assert(rows == rhs.rows &&
 				   cols == rhs.cols);
 #endif			
-			vDSP_vadd(data, 1, rhs.data, 1, temp_data, 1, rows*cols);
-			//cblas_scopy(rows*cols, temp_data, 1, data, 1);
-			std::swap(data, temp_data);
+			vDSP_vadd(data, 1, rhs.data, 1, data, 1, rows*cols);
 		}
 		
 		inline void add(float scalar)
@@ -1005,7 +995,7 @@ namespace pkm
 				   cols == rhs.cols && 
 				   rhs.cols == result.cols);
 #endif			
-			vDSP_vsub(data, 1, rhs.data, 1, data, 1, rows*cols);
+			vDSP_vsub(data, 1, rhs.data, 1, result.data, 1, rows*cols);
 			
 		}
 		
@@ -1017,9 +1007,7 @@ namespace pkm
 			assert(rows == rhs.rows &&
 				   cols == rhs.cols);
 #endif			
-			vDSP_vsub(data, 1, rhs.data, 1, temp_data, 1, rows*cols);
-			//cblas_scopy(rows*cols, temp_data, 1, data, 1);
-			std::swap(data, temp_data);
+			vDSP_vsub(data, 1, rhs.data, 1, data, 1, rows*cols);
 		}
 		
 		inline void subtract(float scalar)
@@ -1070,10 +1058,10 @@ namespace pkm
 #ifdef DEBUG      
 			assert(data != NULL);
 #endif      
+            float *temp_data = (float *)malloc(sizeof(float)*rows*cols);
 			vDSP_mtrans(data, 1, temp_data, 1, cols, rows);
 			cblas_scopy(rows*cols, temp_data, 1, data, 1);
-                //std::swap(data, temp_data);					// swap will break certain operations for col/row range as their pointers will have changed. :(
-                //std::swap(rows, cols);
+            free(temp_data);
             int tempvar = cols;
             cols = rows;
             rows = tempvar;
@@ -1088,13 +1076,18 @@ namespace pkm
 		{
 #ifdef DEBUG
 			assert(data != NULL);
+            if(bUserData)
+            {
+                cout << "[WARNING] Pointer to user data will be resized and therefore possibly lost/leaked.  Up to the user to free this memory!" << endl;
+            }
 #endif	
 			if((rows == 1 && cols > 1) || (cols == 1 && rows > 1))
 			{
+                
 				int diagonal_elements = MAX(rows,cols);
 				
 				// create a square matrix
-				temp_data = (float *)realloc(temp_data, MULTIPLE_OF_4(diagonal_elements*diagonal_elements)*sizeof(float));
+                float *temp_data = (float *)malloc(diagonal_elements*diagonal_elements*sizeof(float));
 				
 				// set values to 0
 				vDSP_vclr(temp_data, 1, diagonal_elements*diagonal_elements);
@@ -1106,16 +1099,12 @@ namespace pkm
 				
 				// store in data
 				rows = cols = diagonal_elements;
-				//free(data);
-				//data = (float *)malloc(rows*cols*sizeof(float));
-				//cblas_scopy(rows*cols, temp_data, 1, data, 1);
 				std::swap(data, temp_data);
-				
-				// reallocate temp data for future processing
-				temp_data = (float *)realloc(temp_data, MULTIPLE_OF_4(diagonal_elements*diagonal_elements)*sizeof(float));
-				
-				// save dimensions
+                
+                if(!bUserData)
+                    free(temp_data);
 			}
+            
 		}
 		Mat getDiag();
 		
@@ -1445,12 +1434,13 @@ namespace pkm
             data[3] = a * det;
         }
         
+        /*
         void inv()
         {
 #ifdef DEBUG
             assert(rows == cols); // must be square
 #endif
-            int error=0;
+            int error = 0;
             float *workspace = (float *)malloc(MULTIPLE_OF_4(rows)*sizeof(float));
             int *pivot = (int *)malloc(MULTIPLE_OF_4(rows*rows)*sizeof(int));
             
@@ -1470,6 +1460,7 @@ namespace pkm
             free(workspace);
             free(pivot);
         }
+        */
         
         // input is 1 x d dimensional vector
         // mean is 1 x d dimensional vector
@@ -1489,6 +1480,18 @@ namespace pkm
             l.setTranspose();
             Mat b = a.GEMM(l);
             return (A * expf(-0.5 * b[0]));
+        }
+        
+        void sqr()
+        {
+			vDSP_vmul(data, 1, data, 1, data, 1, rows*cols);
+        }
+        
+        static Mat sqr(Mat &b)
+        {
+            Mat newMat(b.rows, b.cols);
+			vDSP_vmul(b.data, 1, b.data, 1, newMat.data, 1, b.rows*b.cols);
+            return newMat;
         }
         
         void sqrt()
@@ -1640,9 +1643,8 @@ namespace pkm
         
         bool load(string filename)
         {
-            if (bAllocated) {
+            if (bAllocated && !bUserData) {
                 free(data); data = NULL;
-                free(temp_data); temp_data = NULL;
                 rows = cols = 0;
             }
             FILE *fp;
@@ -1650,7 +1652,6 @@ namespace pkm
             if (fp) {
                 fscanf(fp, "%d %d\n", &rows, &cols);
                 data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4(rows * cols));
-                temp_data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4(rows * cols));
                 for(int i = 0; i < rows; i++)
                 {
                     for(int j = 0; j < cols; j++)
@@ -1681,7 +1682,6 @@ namespace pkm
 		int cols;
 		
 		float *data;
-		float *temp_data;
 		
 		bool bAllocated;
 		bool bUserData;
@@ -1696,9 +1696,6 @@ namespace pkm
                     free(data);
                     data = NULL;
                 }
-                assert(temp_data != 0);
-                free(temp_data);
-                temp_data = NULL;
             }
         }
         

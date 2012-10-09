@@ -87,7 +87,7 @@ Mat::Mat()
 {
 	bUserData = false;
 	rows = cols = 0;
-	data = temp_data = NULL;
+	data = NULL;
 	bAllocated = false;
 	current_row = 0;
 	bCircularInsertionFull = false;
@@ -110,9 +110,6 @@ Mat::Mat(vector<float> m)
     rows = 1;
     cols = m.size();
     data = (float *)malloc(sizeof(float)*MULTIPLE_OF_4(cols));
-	
-    // sacrifice memory w/ speed, by pre-allocating a temporary buffer
-	temp_data = (float *)malloc(MULTIPLE_OF_4(cols) * sizeof(float));
     
     cblas_scopy(cols, &m[0], 1, data, 1);
 	current_row = 0;
@@ -126,8 +123,6 @@ Mat::Mat(vector<vector<float> > m)
     rows = m.size();
     cols = m[0].size();
     data = (float *)malloc(sizeof(float)*MULTIPLE_OF_4(rows*cols));
-    // sacrifice memory w/ speed, by pre-allocating a temporary buffer
-	temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
     
     for(int i = 0; i < rows; i++)
         cblas_scopy(cols, &(m[i][0]), 1, data+i*cols, 1);
@@ -144,8 +139,6 @@ Mat::Mat(cv::Mat m)
     rows = m.rows;
     cols = m.cols;
     data = (float *)malloc(sizeof(float)*MULTIPLE_OF_4(rows*cols));
-    // sacrifice memory w/ speed, by pre-allocating a temporary buffer
-	temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
     
     for(int i = 0; i < rows; i++)
         cblas_scopy(cols, m.ptr<float>(i), 1, data+i*cols, 1);
@@ -159,7 +152,7 @@ Mat::Mat(cv::Mat m)
 // allocate data
 Mat::Mat(int r, int c, bool clear)
 {
-	data = temp_data = NULL;
+	data = NULL;
 	
 	bUserData = false;
 	rows = r;
@@ -167,9 +160,6 @@ Mat::Mat(int r, int c, bool clear)
 	current_row = 0;
 	bCircularInsertionFull = false;
 	data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
-	
-	// sacrifice memory w/ speed, by pre-allocating a temporary buffer
-	temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
 
 	bAllocated = true;
 	
@@ -186,16 +176,13 @@ Mat::Mat(int r, int c, bool clear)
 // with copy is not true
 Mat::Mat(int r, int c, float *existing_buffer, bool withCopy)
 {
-	data = temp_data = NULL;
+	data = NULL;
 	
 	bUserData = false;
 	rows = r;
 	cols = c;
 	current_row = 0;
 	bCircularInsertionFull = false;
-	
-	// sacrifice memory w/ speed, by pre-allocating a temporary buffer
-	temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
 	
 	if(withCopy)
 	{
@@ -216,7 +203,7 @@ Mat::Mat(int r, int c, float *existing_buffer, bool withCopy)
 // set every element to a value
 Mat::Mat(int r, int c, float val)
 {
-	data = temp_data = NULL;
+	data = NULL;
 	
 	bUserData = false;
 	rows = r;
@@ -225,8 +212,6 @@ Mat::Mat(int r, int c, float val)
 	bCircularInsertionFull = false;
 	
 	data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
-	// sacrifice memory w/ speed, by pre-allocating a temporary buffer
-	temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
 	
 	bAllocated = true;
 	
@@ -251,9 +236,6 @@ Mat::Mat(const Mat &rhs)
 		
 		data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
 		
-		// sacrifice memory w/ speed, by pre-allocating a temporary buffer
-		temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
-		
 		bAllocated = true;
 		
 		cblas_scopy(rows*cols, rhs.data, 1, data, 1);
@@ -266,7 +248,6 @@ Mat::Mat(const Mat &rhs)
 		bCircularInsertionFull = false;
 		
 		data = NULL;
-		temp_data = NULL;
 		bUserData = false;
 		bAllocated = false;
 	}
@@ -293,7 +274,6 @@ Mat & Mat::operator=(const Mat &rhs)
 			
             
             data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
-            temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
             bAllocated = true;
         
 		}
@@ -313,7 +293,7 @@ Mat & Mat::operator=(const Mat &rhs)
 		current_row = 0;
 		bCircularInsertionFull = false;
 		data = NULL;
-		temp_data = NULL;
+        
 		
 		bAllocated = false;
 		return *this;
@@ -338,7 +318,6 @@ Mat & Mat::operator=(const vector<float> &rhs)
             releaseMemory();
 			
 			data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
-			temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
 			
 			bAllocated = true;
 		}
@@ -358,7 +337,6 @@ Mat & Mat::operator=(const vector<float> &rhs)
 		current_row = 0;
 		bCircularInsertionFull = false;
 		data = NULL;
-		temp_data = NULL;
 		
 		bAllocated = false;
 		return *this;
@@ -383,7 +361,6 @@ Mat & Mat::operator=(const vector<vector<float> > &rhs)
             releaseMemory();
 			
 			data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
-			temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
 			
 			bAllocated = true;
 		}
@@ -405,7 +382,6 @@ Mat & Mat::operator=(const vector<vector<float> > &rhs)
 		current_row = 0;
 		bCircularInsertionFull = false;
 		data = NULL;
-		temp_data = NULL;
 		
 		bAllocated = false;
 		return *this;
@@ -430,7 +406,6 @@ Mat & Mat::operator=(const cv::Mat &rhs)
             releaseMemory();
 			
 			data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
-			temp_data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
 			
 			bAllocated = true;
 		}
@@ -452,7 +427,6 @@ Mat & Mat::operator=(const cv::Mat &rhs)
 		current_row = 0;
 		bCircularInsertionFull = false;
 		data = NULL;
-		temp_data = NULL;
 		
 		bAllocated = false;
 		return *this;
