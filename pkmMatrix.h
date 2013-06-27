@@ -110,8 +110,11 @@
 #include <Accelerate/Accelerate.h>
 #include <vector>
 
-//#define HAVE_OPENCV
-//#define DEBUG
+#ifdef OPENCV_ASSERT
+#define HAVE_OPENCV
+#endif
+
+#define DEBUG
 
 
 #ifdef HAVE_OPENCV
@@ -129,7 +132,8 @@ using namespace std;
 #define MIN(a,b)  ((a) > (b) ? (b) : (a))
 #endif
 
-#define MULTIPLE_OF_4(x) ((x | 0x03) + 1)
+//#define MULTIPLE_OF_4(x) ((x | 0x03) + 1)
+#define MULTIPLE_OF_4(x) x
 
 template <typename T> int signum(T val) {
     return (T(0) < val) - (val < T(0));
@@ -523,35 +527,62 @@ namespace pkm
                 cout << "[WARNING]: Pointer to user data will be lost/leaked.  Up to user to free this memory!" << endl;
             }
 #endif
-            float *temp_data = (float *)malloc(sizeof(float)*MULTIPLE_OF_4(rows*cols));
-            cblas_scopy(rows*cols, data, 1, temp_data, 1);
+            if (bAllocated)
+            {
             
-            if (r >= rows && c >= cols) {
-                if (bUserData) {
-                    data = (float *)malloc(MULTIPLE_OF_4(r * c) * sizeof(float));
+                if (r >= rows && c >= cols) {
+                    
+                    if (bUserData) {
+                        data = (float *)malloc(MULTIPLE_OF_4(r * c) * sizeof(float));
+                    }
+                    else
+                    {
+                        float *temp_data = (float *)malloc(sizeof(float)*MULTIPLE_OF_4(rows*cols));
+                        cblas_scopy(rows*cols, data, 1, temp_data, 1);
+                        
+                        data = (float *)realloc(data, MULTIPLE_OF_4(r * c) * sizeof(float));
+                        cblas_scopy(rows*cols, temp_data, 1, data, 1);
+                        
+                        free(temp_data);
+                        temp_data = NULL;
+                    }
+                    
+                    if(clear)
+                    {
+                        vDSP_vclr(data + rows*cols, 1, r*c - rows*cols);
+                    }
+                    
+                    rows = r;
+                    cols = c;
+                    
+                    bAllocated = true;
+                    bUserData = false;
                 }
-                else
+                else if(r * c == rows * cols)
                 {
-                    data = (float *)realloc(data, MULTIPLE_OF_4(r * c) * sizeof(float));
-                    cblas_scopy(rows*cols, temp_data, 1, data, 1);
+                    rows = r;
+                    cols = c;
                 }
+                else {
+                    printf("[ERROR: pkmMatrix::resize()] Cannot resize to a smaller matrix (yet).\n");
+                }
+
+            
+            }
+            else
+            {
+                data = (float *)malloc(MULTIPLE_OF_4(r * c) * sizeof(float));
+                rows = r;
+                cols = c;
                 
                 if(clear)
                 {
                     vDSP_vclr(data + rows*cols, 1, r*c - rows*cols);
                 }
                 
-                rows = r;
-                cols = c;
-                
                 bAllocated = true;
                 bUserData = false;
             }
-            else {
-                printf("[ERROR: pkmMatrix::resize()] Cannot resize to a smaller matrix (yet).\n");
-            }
-
-            free(temp_data);
             return;
         }
 		
@@ -575,6 +606,26 @@ namespace pkm
 			{
 				vDSP_vclr(data, 1, MULTIPLE_OF_4(rows*cols));
 			}
+		}
+        
+        // can be used to create an already declared matrix without a copy constructor
+		void reset(int r, int c, float val)
+		{
+			rows = r;
+			cols = c;
+			current_row = 0;
+			bCircularInsertionFull = false;
+			
+            releaseMemory();
+            
+            data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
+            
+			bAllocated = true;
+			bUserData = false;
+			
+			// set every element to val
+            vDSP_vfill(&val, data, 1, rows*cols);
+			
 		}
 		
 		// set every element to a value
@@ -770,6 +821,7 @@ namespace pkm
                 realloc(data, sizeof(float)*MULTIPLE_OF_4(rows*cols));
                 cblas_scopy(cols * numRowsToCopy, temp_data, 1, row(i), 1);
                 free(temp_data);
+                temp_data = NULL;
             }  
         }
 		
@@ -1036,7 +1088,7 @@ namespace pkm
 			
 		}
 		
-		inline Mat GEMM(const pkm::Mat &rhs)
+		inline Mat GEMM(const pkm::Mat &rhs) const
 		{
 #ifdef DEBUG
 			assert(data != NULL);
@@ -1062,6 +1114,7 @@ namespace pkm
 			vDSP_mtrans(data, 1, temp_data, 1, cols, rows);
 			cblas_scopy(rows*cols, temp_data, 1, data, 1);
             free(temp_data);
+            temp_data = NULL;
             int tempvar = cols;
             cols = rows;
             rows = tempvar;
@@ -1102,7 +1155,10 @@ namespace pkm
 				std::swap(data, temp_data);
                 
                 if(!bUserData)
+                {
                     free(temp_data);
+                    temp_data = NULL;
+                }
 			}
             
 		}
@@ -1204,6 +1260,19 @@ namespace pkm
 			vDSP_meamgv(buf, 1, &mean, size);
 			return mean;
 		}
+        
+        
+		static float l1norm(float *buf1, float *buf2, int size)
+		{
+			int a = size;
+			float diff = 0;
+			float *p1 = buf1, *p2 = buf2;
+			while (a) {
+				diff += fabs(*p1++ - *p2++);
+				a--;
+			}
+			return diff;///(float)size;
+		}
 		
 		static float sumOfAbsoluteDifferences(float *buf1, float *buf2, int size)
 		{
@@ -1272,10 +1341,15 @@ namespace pkm
         
         static unsigned long minIndex(Mat &A)
         {
-            float maxval;
-            unsigned long maxidx;
-            vDSP_minvi(A.data, 1, &maxval, &maxidx, A.rows*A.cols);
-            return maxidx;
+            float minval;
+            unsigned long minidx;
+            vDSP_minvi(A.data, 1, &minval, &minidx, A.rows*A.cols);
+            return minidx;
+        }
+        
+        void min(float &val, unsigned long &idx)
+        {
+            vDSP_minvi(data, 1, &val, &idx, rows*cols);
         }
 		
 		static float max(Mat &A)
@@ -1291,6 +1365,11 @@ namespace pkm
             unsigned long maxidx;
             vDSP_maxvi(A.data, 1, &maxval, &maxidx, A.rows*A.cols);
             return maxidx;
+        }
+        
+        void max(float &val, unsigned long &idx)
+        {
+            vDSP_maxvi(data, 1, &val, &idx, rows*cols);
         }
 		
 		static float sum(Mat &A)
@@ -1396,6 +1475,54 @@ namespace pkm
                 return newMat;
             }
 
+        }
+        
+        inline void zNormalize()
+        {
+            float mean, stddev;
+            int size = rows * cols;
+            getMeanAndStdDev(mean, stddev);
+            
+            // subtract mean
+			float rhs = -mean;
+			vDSP_vsadd(data, 1, &rhs, data, 1, size);
+            
+            // divide by std dev
+            vDSP_vsdiv(data, 1, &stddev, data, 1, size);
+        }
+        
+        inline void zNormalizeEachCol()
+        {
+            float mean, stddev;
+            float sumval, sumsquareval;
+            int size = rows;
+            if (size > 1) {
+                for (int i = 0; i < cols; i++) {
+                    vDSP_sve(data + i, cols, &sumval, size);
+                    vDSP_svesq(data + i, cols, &sumsquareval, size);
+                    mean = sumval / (float) size;
+                    stddev = sqrtf( sumsquareval / (float) size - mean * mean);
+                    
+                    // subtract mean
+                    float rhs = -mean;
+                    vDSP_vsadd(data + i, cols, &rhs, data + i, cols, size);
+                    
+                    // divide by std dev
+                    vDSP_vsdiv(data + i, cols, &stddev, data + i, cols, size);
+                }
+            }
+        }
+        
+        
+        
+        inline void getMeanAndStdDev(float &mean, float &stddev)
+        {
+            float sumval, sumsquareval;
+            int size = rows * cols;
+			vDSP_sve(data, 1, &sumval, size);
+            vDSP_svesq(data, 1, &sumsquareval, size);
+            mean = sumval / (float) size;
+            stddev = sqrtf( sumsquareval / (float) size - mean * mean);
         }
 		
 		// rescale the values in each row to their maximum
@@ -1617,6 +1744,27 @@ namespace pkm
             return newMat;
         }
         
+        inline int size()
+        {
+            return rows * cols;
+        }
+        
+        inline float *last()
+        {
+#ifdef DEBUG
+			assert(data != NULL);
+#endif	
+            return data + (rows * cols - 1);
+        }
+        
+        inline float *first()
+        {
+#ifdef DEBUG
+			assert(data != NULL);
+#endif	
+            return data;
+        }
+        
         bool save(string filename)
         {
             FILE *fp;
@@ -1651,6 +1799,35 @@ namespace pkm
             fp = fopen(filename.c_str(), "r");
             if (fp) {
                 fscanf(fp, "%d %d\n", &rows, &cols);
+                data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4(rows * cols));
+                for(int i = 0; i < rows; i++)
+                {
+                    for(int j = 0; j < cols; j++)
+                    {
+                        fscanf(fp, "%f, ", &(data[i*cols + j]));
+                    }
+                    fscanf(fp, "\n");
+                }
+                fclose(fp);
+                bAllocated = true;
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        
+        bool load(string filename, int r, int c)
+        {
+            if (bAllocated && !bUserData) {
+                free(data); data = NULL;
+                rows = cols = 0;
+            }
+            FILE *fp;
+            fp = fopen(filename.c_str(), "r");
+            if (fp) {
+                rows = r;
+                cols = c;
                 data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4(rows * cols));
                 for(int i = 0; i < rows; i++)
                 {
