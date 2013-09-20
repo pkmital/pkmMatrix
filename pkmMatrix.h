@@ -114,8 +114,7 @@
 #define HAVE_OPENCV
 #endif
 
-#define DEBUG
-
+//#define DEBUG
 
 #ifdef HAVE_OPENCV
 #include <opencv2/opencv.hpp>
@@ -132,14 +131,13 @@ using namespace std;
 #define MIN(a,b)  ((a) > (b) ? (b) : (a))
 #endif
 
+// uncomment next line for vecLib optimizations
 //#define MULTIPLE_OF_4(x) ((x | 0x03) + 1)
 #define MULTIPLE_OF_4(x) x
 
 template <typename T> int signum(T val) {
     return (T(0) < val) - (val < T(0));
 }
-
-//typedef pkm::Mat pkmMatrix;
 
 namespace pkm
 {	
@@ -1324,6 +1322,13 @@ namespace pkm
 			}
 			return sqrtf(v/(float)size);
 		}
+        
+        float rms()
+        {
+            float val;
+            vDSP_rmsqv(data, 1, &val, rows*cols);
+            return val;
+        }
 		
 		static float rms(float *buf, int size)
 		{
@@ -1370,6 +1375,13 @@ namespace pkm
         void max(float &val, unsigned long &idx)
         {
             vDSP_maxvi(data, 1, &val, &idx, rows*cols);
+        }
+        
+        float sumAll()
+        {
+			float sumval;
+			vDSP_sve(data, 1, &sumval, rows*cols);
+			return sumval;
         }
 		
 		static float sum(Mat &A)
