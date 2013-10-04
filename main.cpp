@@ -37,57 +37,43 @@ int main (int argc, char * const argv[]) {
     //srand ( time(NULL) );
     srand ( 0 );
     
-    int rows = 10;
-    int cols = 10;
+    int rows = 1;
+    int cols = 5;
     
     Mat a(rows, cols);
     for (int i = 0; i < rows * cols; i++) {
-        a[i] = i + rand() % (rows * cols) / (float)rows;
+        a[i] = i * 10;
     }
     a.print();
     
-    Mat b(rows, cols);
-    for (int i = 0; i < rows * cols; i++) {
-        b[i] = floor(i / (float)rows);
-    }
-    b.print();
-    
-    Mat c(rows, cols);
-    for (int i = 0; i < rows * cols; i++) {
-        c[i] = 1 / (float)rows;
-    }
+    Mat c = pkm::Mat::resize(a, rows * cols * 10);
     c.print();
     
-    Mat d(rows, cols);
     
-    vDSP_vintb(a.data, 1, b.data, 1, c.data, d.data, 1, rows * cols);
-    
-
-    d.print();
-    pkmDTW dtw;
-    unsigned long t = clock();
-    int numCandidates = 5;
-    for (int i =0; i < numCandidates; i++) {
-        //Mat e(rows + rand() % (rows * 2), cols);
-        Mat e(rows, cols);
-        e.setRand(-5,5);
-        dtw.addToDatabase(e);
-        //e.print();
-    }
-    t = clock() - t;
-    cout << "ticks: " << t << " (" << (float)t / CLOCKS_PER_SEC << " seconds)" << endl;
-    float distance;
-    int subscript;
-    vector<int> bestPathI, bestPathJ;
-    dtw.getNearestCandidate(d, distance, subscript, bestPathI, bestPathJ);
-    t = clock() - t;
-    cout << "best: " << subscript << " dist:  " << distance << endl;
-    cout << "ticks: " << t << " (" << (float)t / CLOCKS_PER_SEC << " seconds)" << endl;
-    dtw.getNearestCandidateEuclidean(d, distance, subscript);
-    t = clock() - t;
-    cout << "best: " << subscript << " dist:  " << distance << endl;
-    cout << "ticks: " << t << " (" << (float)t / CLOCKS_PER_SEC << " seconds)" << endl;
-    
+//    pkmDTW dtw;
+//    unsigned long t = clock();
+//    int numCandidates = 5;
+//    for (int i =0; i < numCandidates; i++) {
+//        //Mat e(rows + rand() % (rows * 2), cols);
+//        Mat e(rows, cols);
+//        e.setRand(-5,5);
+//        dtw.addToDatabase(e);
+//        //e.print();
+//    }
+//    t = clock() - t;
+//    cout << "ticks: " << t << " (" << (float)t / CLOCKS_PER_SEC << " seconds)" << endl;
+//    float distance;
+//    int subscript;
+//    vector<int> bestPathI, bestPathJ;
+//    dtw.getNearestCandidate(d, distance, subscript, bestPathI, bestPathJ);
+//    t = clock() - t;
+//    cout << "best: " << subscript << " dist:  " << distance << endl;
+//    cout << "ticks: " << t << " (" << (float)t / CLOCKS_PER_SEC << " seconds)" << endl;
+//    dtw.getNearestCandidateEuclidean(d, distance, subscript);
+//    t = clock() - t;
+//    cout << "best: " << subscript << " dist:  " << distance << endl;
+//    cout << "ticks: " << t << " (" << (float)t / CLOCKS_PER_SEC << " seconds)" << endl;
+//    
     /*
     Mat b = pkm::Mat::sgn(a);
     b.print();

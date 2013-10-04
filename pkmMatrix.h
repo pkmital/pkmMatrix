@@ -830,6 +830,7 @@ namespace pkm
 		{
 #ifdef DEBUG
 			assert(rows >= end);
+            assert(end > start);
 #endif
 			Mat submat(end-start, cols, row(start), withCopy);
 			return submat;
@@ -1756,6 +1757,19 @@ namespace pkm
             return newMat;
         }
         
+        static Mat resize(Mat &a, int newSize)
+        {
+            int originalSize = a.size();
+            Mat b(1, newSize);
+            float factor = (float)((newSize - 1) / (float)(originalSize-1));
+            for (int i = 0; i < newSize; i++) {
+                b[i] = i / factor;
+            }
+            Mat c(1, newSize);
+            vDSP_vlint(a.data, b.data, 1, c.data, 1, newSize, originalSize);
+            return c;
+        }
+        
         inline int size()
         {
             return rows * cols;
@@ -1863,6 +1877,8 @@ namespace pkm
 		// only prints maximum of 5 rows/cols
 		void printAbbrev(bool row_major = true);
 		
+        
+        
 		/////////////////////////////////////////
 		
 		int current_row;	// for circular insertion
@@ -1874,6 +1890,7 @@ namespace pkm
 		
 		bool bAllocated;
 		bool bUserData;
+        
         
     protected:
         void releaseMemory()

@@ -105,13 +105,27 @@ public:
         
         range = 0.5;
 #ifdef WITH_FEATURE_WEIGHTING
-        featureWeights = Mat(1,36,1.0f);
-        featureWeights[0] = 20.0f;
+        featureWeights = Mat(1,36,3.0f);
+        featureWeights[0] = 1.45f;
+        featureWeights[1] = 3.12f;
+        featureWeights[2] = 4.38f;
+        featureWeights[3] = 4.34f;
+        featureWeights[4] = 4.83f;
+        featureWeights[5] = 4.9f;
+        featureWeights[6] = 4.7f;
+        featureWeights[7] = 6.48f;
+        featureWeights[8] = 5.02f;
+        featureWeights[9] = 4.22f;
+        featureWeights[10] = 4.44f;
+        featureWeights[11] = 5.2f;
+        featureWeights[12] = 6.49f;
+        featureWeights[24] = 8.4f;
+        
 #endif
         bestSoFar = INFINITY;
     }
     // -------------------------------------------------------------------------
-    
+
     // -------------------------------------------------------------------------
     //  Change the possible range of the warping envelope
     //
@@ -131,8 +145,13 @@ public:
     // -------------------------------------------------------------------------
     void addToDatabase(Mat &el)
     {
+        vector<float> lut_el;
+        lut_el.push_back(candidates.rows);
         candidates.push_back(el);
+        lut_el.push_back(candidates.rows - lut_el[0]);
+        candidates_lut.push_back(lut_el);
         
+        numCandidates++;
         bHaveCandidates = true;
     }
     // -------------------------------------------------------------------------
@@ -151,22 +170,35 @@ public:
         }
         // establish the query
         setQuery(q);
+//        q.printAbbrev();
+        
         subscript = 0;
         // search all candidates linearly
-        for (int i = 0; i < candidates.size(); i++) 
+        for (int i = 0; i < numCandidates; i++)
         {
-            vector<int> pathI, pathJ;    
+            vector<int> pathI, pathJ;
             Mat differenceMatrix, dtwDistance;
-            differenceMatrix = computeDifferenceMatrix(candidates[i]);
-            float thisDistance = dtw(q, candidates[i], differenceMatrix, dtwDistance, pathI, pathJ);
+            Mat thisCandidate = candidates.rowRange(candidates_lut.row(i)[0], candidates_lut.row(i)[0] + candidates_lut.row(i)[1], false);
+            differenceMatrix = computeDifferenceMatrix(thisCandidate);
+            float thisDistance = dtw(q, thisCandidate, differenceMatrix, dtwDistance, pathI, pathJ);
 
-            //cout << "i: " << i << endl;
+//            cout << i << ": " << thisDistance << endl;
             //dtwDistance.print();
             if (thisDistance < bestSoFar) 
             {
                 bestSoFar = thisDistance;
+                
                 bestPathI = pathI;
                 bestPathJ = pathJ;
+                
+//                cout << pathI.size() << " " << bestPathI.size() << endl;
+//                
+//                if(pathI.size() && pathJ.size())
+//                {
+//                    cout << "pathi: " << pathI[0] << " - " << pathI[pathI.size()-1] << endl;
+//                    cout << "pathj: " << pathJ[0] << " - " << pathJ[pathJ.size()-1] << endl;
+//                }
+                
                 subscript = i;
             }
         }
@@ -176,6 +208,21 @@ public:
         
     }
     // -------------------------------------------------------------------------
+    
+    
+    // -------------------------------------------------------------------------
+    void getNearestCandidate(float *q, int numFeatures,
+                             float &distance,
+                             int &subscript,
+                             vector<int> &bestPathI,  // candidate's frame   (source)
+                             vector<int> &bestPathJ)  // query's frame       (target)
+    {
+        Mat qMat(1, numFeatures, q, false);
+        getNearestCandidate(qMat, distance, subscript, bestPathI, bestPathJ);
+        
+    }
+    // -------------------------------------------------------------------------
+    
     
     // -------------------------------------------------------------------------
     void getNearestCandidateEuclidean(const Mat &q, 
@@ -190,9 +237,10 @@ public:
         Mat query = q;
         Mat distanceMatrix = Mat(q.rows, q.cols);
         // search all candidates linearly
-        for (int i = 0; i < candidates.size(); i++) 
+        for (int i = 0; i < numCandidates; i++)
         {
-            query.subtract(candidates[i], distanceMatrix);
+            Mat thisCandidate = candidates.rowRange(candidates_lut.row(i)[0], candidates_lut.row(i)[0] + candidates_lut.row(i)[1], false);
+            query.subtract(thisCandidate, distanceMatrix);
             distanceMatrix.abs();
             Mat distance2 = distanceMatrix.sum(false);
             float thisDistance = Mat::sum(distance2);
@@ -208,54 +256,39 @@ public:
     // -------------------------------------------------------------------------
   
     
+    
     // -------------------------------------------------------------------------
     void save()
     {
-        FILE *fp;
 #ifdef WITH_OF
-        fp = fopen(ofToDataPath("dtwDatabase/dtw.txt").c_str(), "w");
-#else
-        fp = fopen("dtwDatabase/dtw.txt", "w");
-#endif
-        fprintf(fp, "%d", candidates.size());
-        fclose(fp);
-        for (int i = 0; i < candidates.size(); i++) {
-            char buf[256];
-            sprintf(buf, "dtwDatabase/candidate%08d.txt", i);
-#ifdef WITH_OF
-            candidates[i].save(ofToDataPath(buf).c_str());
-#else
-            candidates[i].save(buf);
-#endif
-        }
+        candidates.save(ofToDataPath("dtw.txt"));
+        candidates_lut.save(ofToDataPath("dtw_lut.txt"));
+#endif        
     }
     // -------------------------------------------------------------------------
-    
-    
+       
     // -------------------------------------------------------------------------
     void load()
     {
-        int numCamdidates = 0;
-        FILE *fp;
 #ifdef WITH_OF
-        fp = fopen(ofToDataPath("dtwDatabase/dtw.txt").c_str(), "r");
-#else
-        fp = fopen("dtwDatabase/dtw.txt", "r");
+        candidates.load(ofToDataPath("dtw.txt"));
+        candidates_lut.load(ofToDataPath("dtw_lut.txt"));
 #endif
-        fscanf(fp, "%d", &numCamdidates);
-        fclose(fp);
-        candidates.resize(numCamdidates);
-        for (int i = 0; i < numCamdidates; i++) {
-            char buf[256];
-            sprintf(buf, "dtwDatabase/candidate%08d.txt", i);
-#ifdef WITH_OF
-            candidates[i].load(ofToDataPath(buf).c_str());
-#else
-            candidates[i].load(buf);
-#endif
+        
+        if(bUseZNormalize)
+        {
+            meanValues = candidates.mean();
+            stdValues = candidates.stddev();
+            
+            meanValues.print();
+            stdValues.print();
+            
+            candidates.zNormalizeEachCol();
         }
         
-        if (numCamdidates > 0) {
+        numCandidates = candidates_lut.rows;
+        
+        if (numCandidates > 0) {
             bHaveCandidates = true;
         }
     }
@@ -275,7 +308,8 @@ protected:
         query = q;
         if(bUseZNormalize)
         {
-            query.zNormalizeEachCol();
+            query.subtract(meanValues);
+            query.divide(stdValues);
         }
         queryTransposed = query;
         queryTransposed.setTranspose();
@@ -307,7 +341,12 @@ protected:
                 Mat temp(candidate.rows, candidate.cols);
                 temp.copy(candidate);
                 if (bUseZNormalize) {
-                    temp.zNormalizeEachCol();
+                    for(int i = 0; i < candidate.rows; i++)
+                    {
+                        Mat thisRow = temp.rowRange(i, i + 1, false);
+                        thisRow.subtract(meanValues);
+                        thisRow.divide(stdValues);
+                    }
                 }
                 temp.sqr();
                 Mat candidateNormalization = temp.sum(false);
@@ -327,10 +366,10 @@ protected:
                 differenceMatrix = Mat(candidate.rows, query.rows, HUGE_VALF);
                 
                 Mat ssd(1, candidate.cols);
-                for (int i = 0; i < candidate.rows; i++) 
+                for (int i = 0; i < candidate.rows; i++)
                 {
                     Mat p1(1, candidate.cols, candidate.row(i), false);
-                    for (int j = max(0, i - padding); j < min(query.rows, i + padding - 1); j++) 
+                    for (int j = max(0, i - padding); j < min(query.rows, i + padding - 1); j++)
                     {
                         Mat p2(1, query.cols, query.row(j), false);
                         p1.subtract(p2, ssd);
@@ -338,7 +377,9 @@ protected:
 #ifdef WITH_FEATURE_WEIGHTING
                         ssd.multiply(featureWeights, ssd);
 #endif
-                        differenceMatrix.data[query.rows*i + j] = sqrtf(Mat::sum(ssd));
+                        differenceMatrix.data[query.rows*i + j] = ssd.sumAll() / ssd.size();
+
+//                        differenceMatrix.data[query.rows*i + j] = L1Norm(candidate.row(i), query.row(j), query.cols);
                         
                         /*
                         float sum = 0;
@@ -480,6 +521,37 @@ protected:
     void calculateBounds(Mat &input, 
                          Mat &upperBound, 
                          Mat &lowerBound);
+    
+    float cosineDistance(float *x, float *y, unsigned int count) {
+        float dotProd, magX, magY;
+        float *tmp = (float*)malloc(count * sizeof(float));
+        
+        vDSP_dotpr(x, 1, y, 1, &dotProd, count);
+        
+        vDSP_vsq(x, 1, tmp, 1, count);
+        vDSP_sve(tmp, 1, &magX, count);
+        magX = sqrt(magX);
+        
+        vDSP_vsq(y, 1, tmp, 1, count);
+        vDSP_sve(tmp, 1, &magY, count);
+        magY = sqrt(magY);
+        
+        delete tmp;
+        
+        return 1.0 - (dotProd / (magX * magY));
+    }
+    
+    float L1Norm(float *buf1, float *buf2, int size)
+    {
+        int a = size;
+        float diff = 0;
+        float *p1 = buf1, *p2 = buf2;
+        while (a) {
+            diff += fabs(*p1++ - *p2++);
+            a--;
+        }
+        return diff/(float)size;
+    }
 
     
     
@@ -489,9 +561,15 @@ private:
     float           bestSoFar;
     float           range;
     Mat             query, queryTransposed, queryNormalization;
-    vector<Mat>     candidates;
+    
+    Mat             candidates;
+    Mat             candidates_lut; // idx = segment; 0 = row in candidates, 1 = num rows for segment
+    Mat             meanValues, stdValues;
+    int             numCandidates;
+    
     Mat             queryLB;
     Mat             queryUB;
+    
 #ifdef WITH_FEATURE_WEIGHTING
     Mat             featureWeights;
 #endif
