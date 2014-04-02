@@ -689,6 +689,11 @@ namespace pkm
 
         }
         
+        void push_back(float m)
+        {
+            push_back(&m, 1);
+        }
+        
         void push_back(float *m, int size)
         {
 #ifdef DEBUG
@@ -1082,7 +1087,7 @@ namespace pkm
 				   cols == rhs.rows);
 #endif
 			
-			cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, result.rows, result.cols, cols, 1.0f, data, rows, rhs.data, rhs.rows, 0.0f, result.data, result.cols);
+			cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, result.rows, result.cols, cols, 1.0f, data, cols, rhs.data, rhs.cols, 0.0f, result.data, result.cols);
 			//vDSP_mmul(data, 1, rhs.data, 1, result.data, 1, result.rows, result.cols, cols);
 			
 		}
@@ -1676,6 +1681,20 @@ namespace pkm
             return newMat;
         }
         
+        void pow(float p)
+        {
+            int size = rows*cols;
+            vvpowf(data, &p, data, &size);
+        }
+        
+        static Mat pow(Mat &b, float p)
+        {
+            Mat newMat(b.rows, b.cols);
+            int size = b.rows*b.cols;
+            vvpowf(newMat.data, &p, b.data, &size);
+            return newMat;
+        }
+        
         void log()
         {
             int size = rows*cols;
@@ -1798,6 +1817,30 @@ namespace pkm
             if(fp)
             {
                 fprintf(fp, "%d %d\n", rows, cols);
+                for(int i = 0; i < rows; i++)
+                {
+                    for(int j = 0; j < cols; j++)
+                    {
+                        fprintf(fp, "%f, ", data[i*cols + j]);
+                    }
+                    fprintf(fp,"\n");
+                }
+                fclose(fp);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        
+        bool saveCSV(string filename)
+        {
+            FILE *fp;
+            fp = fopen(filename.c_str(), "w");
+            if(fp)
+            {
+//                fprintf(fp, "%d %d\n", rows, cols);
                 for(int i = 0; i < rows; i++)
                 {
                     for(int j = 0; j < cols; j++)

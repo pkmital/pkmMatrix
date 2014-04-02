@@ -168,9 +168,9 @@ public:
             cout << "[ERROR::pkmDTW]: Add sequences to the database first using pkmDTW::addToDatabase(el)!" << endl;
             return;
         }
+        
         // establish the query
         setQuery(q);
-//        q.printAbbrev();
         
         subscript = 0;
         // search all candidates linearly
@@ -180,25 +180,13 @@ public:
             Mat differenceMatrix, dtwDistance;
             Mat thisCandidate = candidates.rowRange(candidates_lut.row(i)[0], candidates_lut.row(i)[0] + candidates_lut.row(i)[1], false);
             differenceMatrix = computeDifferenceMatrix(thisCandidate);
-            float thisDistance = dtw(q, thisCandidate, differenceMatrix, dtwDistance, pathI, pathJ);
+            float thisDistance = dtw(differenceMatrix, dtwDistance, pathI, pathJ);
 
-//            cout << i << ": " << thisDistance << endl;
-            //dtwDistance.print();
             if (thisDistance < bestSoFar) 
             {
                 bestSoFar = thisDistance;
-                
                 bestPathI = pathI;
                 bestPathJ = pathJ;
-                
-//                cout << pathI.size() << " " << bestPathI.size() << endl;
-//                
-//                if(pathI.size() && pathJ.size())
-//                {
-//                    cout << "pathi: " << pathI[0] << " - " << pathI[pathI.size()-1] << endl;
-//                    cout << "pathj: " << pathJ[0] << " - " << pathJ[pathJ.size()-1] << endl;
-//                }
-                
                 subscript = i;
             }
         }
@@ -308,8 +296,11 @@ protected:
         query = q;
         if(bUseZNormalize)
         {
-            query.subtract(meanValues);
-            query.divide(stdValues);
+            for (int i = 0; i < query.rows; i++) {
+                Mat thisRow = query.rowRange(i,i+1,false);
+                thisRow.subtract(meanValues);
+                thisRow.divide(stdValues);
+            }
         }
         queryTransposed = query;
         queryTransposed.setTranspose();
@@ -340,14 +331,6 @@ protected:
             {
                 Mat temp(candidate.rows, candidate.cols);
                 temp.copy(candidate);
-                if (bUseZNormalize) {
-                    for(int i = 0; i < candidate.rows; i++)
-                    {
-                        Mat thisRow = temp.rowRange(i, i + 1, false);
-                        thisRow.subtract(meanValues);
-                        thisRow.divide(stdValues);
-                    }
-                }
                 temp.sqr();
                 Mat candidateNormalization = temp.sum(false);
                 candidateNormalization.sqrt();
@@ -380,19 +363,9 @@ protected:
                         differenceMatrix.data[query.rows*i + j] = ssd.sumAll() / ssd.size();
 
 //                        differenceMatrix.data[query.rows*i + j] = L1Norm(candidate.row(i), query.row(j), query.cols);
-                        
-                        /*
-                        float sum = 0;
-                        for (int k = 0; k < candidate.cols; k++) {
-                            //sum += sqrtf(powf(candidate.row(i)[k] - query.row(j)[k],2));
-                            sum += fabs(candidate.row(i)[k] - query.row(j)[k]);                            
-                        }
-                        //sum = (sum / (float)candidate.cols);
-                        differenceMatrix.data[query.rows*i + j] = sum;
-                         */
+
                     }
                 }
-                //differenceMatrix.print();
             }
         }
         return differenceMatrix;
@@ -400,9 +373,7 @@ protected:
     // -------------------------------------------------------------------------
     
     // -------------------------------------------------------------------------
-    float dtw(const Mat &query, 
-             const Mat &candidate, 
-             Mat &differenceMatrix,
+    float dtw(Mat &differenceMatrix,
              Mat &dtwDistance,
              vector<int> &pathI,
              vector<int> &pathJ)
@@ -418,9 +389,9 @@ protected:
             float *dist = dtwDistance.row(i);
             float *tb = traceBack.row(i);
             float minCost = INFINITY;
-            //int k = max(0, subscriptRange - i);
-            //for (j = max(0, i - subscriptRange); j < min(i + subscriptRange - 1, differenceMatrix.cols); j++, k++) 
-            for (j = 0; j < differenceMatrix.cols; j++) 
+            int k = max(0, subscriptRange - i);
+            for (j = max(0, i - subscriptRange); j < min(i + subscriptRange - 1, differenceMatrix.cols); j++, k++)
+                //for (j = 0; j < differenceMatrix.cols; j++)
             {
                 if (i == 0 && j == 0) {
                     *dist = *(dtwDistance.data);
@@ -428,7 +399,7 @@ protected:
                     continue;
                 }
                 
-                /*
+                
                 // get distance for all branches
                 if ((j - 1 < 0) || (k - 1 < 0))                     x = INFINITY;                     // horizontal
                 else                                                x = dtwDistance.row(i)[j-1]; 
@@ -436,8 +407,8 @@ protected:
                 else                                                y = dtwDistance.row(i-1)[j];      
                 if ((i - 1 < 0) || (j - 1 < 0))                     z = INFINITY;                     // diagonal
                 else                                                z = dtwDistance.row(i-1)[j-1];
-                */
                 
+                /*
                 // get distance for all branches
                 if (j - 1 < 0)                x = INFINITY;                     // horizontal
                 else                          x = dtwDistance.row(i)[j-1]; 
@@ -445,7 +416,7 @@ protected:
                 else                          y = dtwDistance.row(i-1)[j];      
                 if (i - 1 < 0 || j - 1 < 0)   z = INFINITY;                     // diagonal
                 else                          z = dtwDistance.row(i-1)[j-1];
-                
+                */
                 
                 // find minimum branch and store path
                 float val;
