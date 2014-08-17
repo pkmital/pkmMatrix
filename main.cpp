@@ -32,8 +32,214 @@
 using namespace pkm;
 using namespace std;
 
+//template <class T>
+//class node {
+//public:
+//    node(T x)
+//    {
+//        next = NULL;
+//        item = x;
+//    }
+//    T item;
+//    node *next;
+//};
+//
+//template <class T>
+//class stack {
+//public:
+//    stack()
+//    {
+//        head = NULL;
+//    }
+//    void push(int x)
+//    {
+//        if (head == NULL) {
+//            head = new node<T>(x);
+//        }
+//        else
+//        {
+//            node<T> *i = head;
+//            while (i->next != NULL) {
+//                i = i->next;
+//            }
+//            i->next = new node<T>(x);
+//        }
+//    }
+//    
+//    bool pop(T &val)
+//    {
+//        if (head == NULL) {
+//            return false;
+//        }
+//        else {
+//            val = head->item;
+//            node<T> *new_head = head->next;
+//            delete head;
+//            head = new_head;
+//            return true;
+//        }
+//    }
+//    
+//    bool isEmpty()
+//    {
+//        if (head == NULL) {
+//            return true;
+//        }
+//        else
+//            return false;
+//    }
+//    
+//    int size()
+//    {
+//        int s = 0;
+//        node<T> *i = head;
+//        while (i != NULL) {
+//            i = i->next;
+//            s++;
+//        }
+//        return s;
+//    }
+//private:
+//    int n;
+//    node<T> *head;
+//};
+//
+//template <class T>
+//class queue {
+//public:
+//    queue()
+//    {
+//        front = NULL;
+//        rear = NULL;
+//        n = 0;
+//    }
+//    void enqueue(int x)
+//    {
+//        node<T> *t = new node<T>(x);
+//        if (isEmpty()) {
+//            front = rear = t;
+//        }
+//        else {
+//            rear->next = t;
+//            rear = rear->next;
+//        }
+//        
+//        n++;
+//    }
+//    bool dequeue(T &val)
+//    {
+//        if (isEmpty()) {
+//            return false;
+//        }
+//        
+//        val = front->item;
+//        node<T> *tmp = front;
+//        front = front->next;
+//        delete tmp;
+//        
+//        n--;
+//        return true;
+//    }
+//    bool isEmpty()
+//    {
+//        return n == 0;
+//    }
+//private:
+//    node<T> *front;
+//    node<T> *rear;
+//    int n;
+//};
+//
+//template <class T>
+//class graph {
+//public:
+//    graph(T v)
+//    {
+//        n = v;
+//        adj = new bool*[n];
+//        for (int i = 0; i < n; i++) {
+//            adj[i] = new bool[n];
+//            for (int j = 0; j < n; j++) {
+//                adj[i][j] = false;
+//            }
+//        }
+//    }
+//    
+//    ~graph()
+//    {
+//        for (int i = 0; i < n; i++) {
+//            delete [] adj[i];
+//        }
+//        delete [] adj;
+//    }
+//    
+//    void addEdge(int a, int b)
+//    {
+//        if (a >= 0 && a < n && b >= 0 && b < n) {
+//            adj[a][b] = true;
+//            adj[b][a] = true;
+//        }
+//    }
+//    
+//    bool isEdge(int a, int b)
+//    {
+//        return adj[a][b];
+//    }
+//    
+//    void dfs(int start, int item)
+//    {
+//        visited = new bool[n];
+//        for (int i = 0; i < n; i++)
+//            visited[i] = false;
+//        
+//        if (start == item) {
+//            return;
+//        }
+//        
+//        stack<T> s;
+//        
+//    }
+//    
+//    void bfs(int start, int item)
+//    {
+//        visited = new bool[n];
+//        for (int i = 0; i < n; i++)
+//            visited[i] = false;
+//        
+//        if (start == item) {
+//            return;
+//        }
+//        
+//        queue<T> s;
+//        
+//    }
+//    
+//private:
+//    bool **adj;
+//    bool *visited;
+//    int n;
+//};
+
+
 int main (int argc, char * const argv[]) {
+//    
+//    queue<int> q;
+//    stack<int> s;
+//    for (int i = 0; i < 10; i++) {
+//        q.enqueue(i);
+//        s.push(i);
+//    }
+//    
+//    for (int i = 0; i < 10; i++) {
+//        int v1;
+//        q.dequeue(v1);
+//        cout << "dequeue: " << v1 << endl;
+//        int v2;
+//        s.pop(v2);
+//        cout << "pop: " << v2 << endl;
+//    }
     
+    /*
     //srand ( time(NULL) );
     srand ( 0 );
     
@@ -48,7 +254,7 @@ int main (int argc, char * const argv[]) {
     
     Mat c = pkm::Mat::resize(a, rows * cols * 10);
     c.print();
-    
+    */
     
 //    pkmDTW dtw;
 //    unsigned long t = clock();
@@ -232,5 +438,55 @@ int main (int argc, char * const argv[]) {
 		B.print();
 	}
 	*/
+    
+    int m = 32;
+    int n = 500;
+    int lda = n;
+    int ldu = m;
+    int ldv = n;
+    Mat A(m, n);
+//    A.setRand();
+//    A.print();
+    
+    unsigned long t = clock();
+
+    int nSVs = m > n ? n : m;
+    
+    Mat U(m, m);
+    Mat V_t(n, n);
+    Mat S(1, nSVs);
+    
+    float workSize;
+    
+    int lwork = -1;
+    int info = 0;
+
+    // call svd to query optimal work size:
+    char job = 'A';
+    sgesvd_(&job, &job, &m, &n, A.data, &lda, S.data, U.data, &ldu, V_t.data, &ldv, &workSize, &lwork, &info);
+    
+    lwork = (int)workSize;
+    float *work = (float *)malloc( lwork*sizeof(float) );
+
+    // actual svd
+    sgesvd_( &job, &job, &m, &n, A.data, &lda, S.data, U.data, &ldu, V_t.data, &ldv, work, &lwork, &info );
+    
+    // Check for convergence
+    if( info > 0 ) {
+        printf( "The algorithm computing SVD failed to converge.\\n" );
+        exit( 1 );
+    }
+    
+    t = clock() - t;
+    cout << "ticks: " << t << " (" << (float)t / CLOCKS_PER_SEC << " seconds)" << endl;
+
+    
+    // Print singular values
+//    S.print();
+//    U.print();
+//    V_t.print();
+    
+    free( work );
+    
 	return 0;
 }

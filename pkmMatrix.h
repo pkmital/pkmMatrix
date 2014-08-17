@@ -1810,6 +1810,44 @@ namespace pkm
             return data;
         }
         
+        inline void svd(Mat &S, Mat &U, Mat &V_t)
+        {
+            int m = rows;
+            int n = cols;
+
+            int lda = n;
+            int ldu = m;
+            int ldv = n;
+            
+            int nSVs = m > n ? n : m;
+            
+            U.reset(m, m);
+            V_t.reset(n, n);
+            S.reset(1, nSVs);
+            
+            float workSize;
+            
+            int lwork = -1;
+            int info = 0;
+            
+            // call svd to query optimal work size:
+            char job = 'A';
+            sgesvd_(&job, &job, &m, &n, data, &lda, S.data, U.data, &ldu, V_t.data, &ldv, &workSize, &lwork, &info);
+            
+            lwork = (int)workSize;
+            float *work = (float *)malloc( lwork*sizeof(float) );
+            
+            // actual svd
+            sgesvd_( &job, &job, &m, &n, data, &lda, S.data, U.data, &ldu, V_t.data, &ldv, work, &lwork, &info );
+            
+            // Check for convergence
+            if( info > 0 ) {
+                printf( "[pkm::Mat]::svd(...) sgesvd_() failed to converge.\\n" );
+                exit( 1 );
+            }
+
+        }
+        
         bool save(string filename)
         {
             FILE *fp;

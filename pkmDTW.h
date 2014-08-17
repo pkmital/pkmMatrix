@@ -82,7 +82,7 @@ negotiate a licence. Contact details are: parag@pkmital.com
 
 #include "pkmMatrix.h"
 
-#define WITH_OF
+//#define WITH_OF
 //#define WITH_FEATURE_WEIGHTING
 
 #ifdef WITH_OF

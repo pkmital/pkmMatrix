@@ -261,7 +261,6 @@ Mat & Mat::operator=(const Mat &rhs)
 	
 	if(rhs.bAllocated)
 	{
-		bUserData = false;
 		
 		if (rows != rhs.rows || cols != rhs.cols) {
 
@@ -271,12 +270,13 @@ Mat & Mat::operator=(const Mat &rhs)
 			bCircularInsertionFull = rhs.bCircularInsertionFull;
 			
             releaseMemory();
-			
             
             data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
             bAllocated = true;
         
 		}
+        
+        bUserData = false;
 		
 		cblas_scopy(rows*cols, rhs.data, 1, data, 1);
 		//memcpy(data, rhs.data, sizeof(float)*rows*cols);
@@ -306,7 +306,6 @@ Mat & Mat::operator=(const vector<float> &rhs)
 	
 	if(rhs.size() != 0)
 	{
-		bUserData = false;
 		
 		if (rows != 1 || cols != rhs.size()) {
             
@@ -321,6 +320,8 @@ Mat & Mat::operator=(const vector<float> &rhs)
 			
 			bAllocated = true;
 		}
+        
+		bUserData = false;
 		
 		cblas_scopy(rows*cols, &(rhs[0]), 1, data, 1);
 		//memcpy(data, rhs.data, sizeof(float)*rows*cols);
@@ -349,7 +350,6 @@ Mat & Mat::operator=(const vector<vector<float> > &rhs)
 	
 	if(rhs.size() != 0)
 	{
-		bUserData = false;
 		
 		if (rows != rhs.size() || cols != rhs[0].size()) {
             
@@ -364,6 +364,7 @@ Mat & Mat::operator=(const vector<vector<float> > &rhs)
 			
 			bAllocated = true;
 		}
+		bUserData = false;
 		
         for(int i = 0; i < rows; i++)
             cblas_scopy(cols, &(rhs[i][0]), 1, data+i*cols, 1);
@@ -394,7 +395,6 @@ Mat & Mat::operator=(const cv::Mat &rhs)
 	
 	if(rhs.rows > 0 && rhs.cols > 0)
 	{
-		bUserData = false;
 		
 		if (rows != rhs.rows || cols != rhs.cols) {
             
@@ -409,6 +409,8 @@ Mat & Mat::operator=(const cv::Mat &rhs)
 			
 			bAllocated = true;
 		}
+        
+		bUserData = false;
 		
         for(int i = 0; i < rows; i++)
             cblas_scopy(cols, rhs.ptr<float>(i), 1, data+i*cols, 1);
