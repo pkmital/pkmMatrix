@@ -1840,10 +1840,11 @@ namespace pkm
             // actual svd
             sgesvd_( &job, &job, &m, &n, data, &lda, S.data, U.data, &ldu, V_t.data, &ldv, work, &lwork, &info );
             
+            free(work);
+            
             // Check for convergence
             if( info > 0 ) {
                 printf( "[pkm::Mat]::svd(...) sgesvd_() failed to converge.\\n" );
-                exit( 1 );
             }
 
         }
