@@ -439,17 +439,23 @@ int main (int argc, char * const argv[]) {
 	}
 	*/
     
-    int m = 32;
-    int n = 500;
-    int lda = n;
-    int ldu = m;
-    int ldv = n;
-    Mat A(m, n);
-//    A.setRand();
-//    A.print();
+    Mat A(1000, 32);
+    
+    A.setRand();
+    
     
     unsigned long t = clock();
 
+    //    A.print();
+    A.setTranspose();
+    
+    int m = A.rows;
+    int n = A.cols;
+    int lda = n;
+    int ldu = m;
+    int ldv = n;
+
+    
     int nSVs = m > n ? n : m;
     
     Mat U(m, m);

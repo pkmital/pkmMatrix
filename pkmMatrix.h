@@ -855,7 +855,7 @@ namespace pkm
 		}
 		
 		// copy data into the matrix
-		void copy(Mat rhs)
+		void copy(const Mat rhs)
 		{
 #ifdef DEBUG
 			assert(rhs.rows == rows);
@@ -1531,6 +1531,23 @@ namespace pkm
             }
         }
         
+        inline void centerEachCol()
+        {
+            float mean;
+            float sumval;
+            int size = rows;
+            if (size > 1) {
+                for (int i = 0; i < cols; i++) {
+                    vDSP_sve(data + i, cols, &sumval, size);
+                    mean = sumval / (float) size;
+                    
+                    // subtract mean
+                    float rhs = -mean;
+                    vDSP_vsadd(data + i, cols, &rhs, data + i, cols, size);
+                }
+            }
+        }
+        
         
         
         inline void getMeanAndStdDev(float &mean, float &stddev)
@@ -1810,14 +1827,16 @@ namespace pkm
             return data;
         }
         
-        inline void svd(Mat &S, Mat &U, Mat &V_t)
+        inline int svd(Mat &S, Mat &U, Mat &V_t)
         {
-            int m = rows;
-            int n = cols;
+//            print();
+            
+            __CLPK_integer m = rows;
+            __CLPK_integer n = cols;
 
-            int lda = n;
-            int ldu = m;
-            int ldv = n;
+            __CLPK_integer lda = n;
+            __CLPK_integer ldu = m;
+            __CLPK_integer ldv = n;
             
             int nSVs = m > n ? n : m;
             
@@ -1827,25 +1846,29 @@ namespace pkm
             
             float workSize;
             
-            int lwork = -1;
-            int info = 0;
+            __CLPK_integer lwork = -1;
+            __CLPK_integer info = 0;
+            /* iwork dimension should be at least 8*min(m,n) */
+            __CLPK_integer iwork[8*nSVs];
+            
+            //https://groups.google.com/forum/#!topic/julia-dev/mmgO65i6-fA sdd (divide/conquer, better if memory is available, for large matrices) versus svd (qr)
             
             // call svd to query optimal work size:
             char job = 'A';
-            sgesvd_(&job, &job, &m, &n, data, &lda, S.data, U.data, &ldu, V_t.data, &ldv, &workSize, &lwork, &info);
+            sgesdd_(&job, &m, &n, data, &lda, S.data, U.data, &ldu, V_t.data, &ldv, &workSize, &lwork, iwork, &info);
             
             lwork = (int)workSize;
-            float *work = (float *)malloc( lwork*sizeof(float) );
+            float work[lwork];
             
             // actual svd
-            sgesvd_( &job, &job, &m, &n, data, &lda, S.data, U.data, &ldu, V_t.data, &ldv, work, &lwork, &info );
-            
-            free(work);
+            sgesdd_(&job, &m, &n, data, &lda, S.data, U.data, &ldu, V_t.data, &ldv, work, &lwork, iwork, &info);
             
             // Check for convergence
             if( info > 0 ) {
                 printf( "[pkm::Mat]::svd(...) sgesvd_() failed to converge.\\n" );
             }
+            
+            return info;
 
         }
         
