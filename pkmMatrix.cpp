@@ -228,23 +228,21 @@ Mat::Mat(const Mat &rhs)
 {		
 	if(rhs.bAllocated)
 	{
-		bUserData = rhs.bUserData;
-		
 		rows = rhs.rows;
 		cols = rhs.cols;
 		current_row = rhs.current_row;
 		bCircularInsertionFull = rhs.bCircularInsertionFull;
+		bUserData = rhs.bUserData;
 		
         if (!bUserData) {
             data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
+            cblas_scopy(rows*cols, rhs.data, 1, data, 1);
         }
+        else
+            data = rhs.data;
 		
 		bAllocated = true;
 
-		if (!bUserData) {
-            cblas_scopy(rows*cols, rhs.data, 1, data, 1);
-        }
-		//memcpy(data, rhs.data, sizeof(float)*rows*cols);
 	}
 	else {
 		rows = 0;
@@ -266,27 +264,24 @@ Mat & Mat::operator=(const Mat &rhs)
 	
 	if(rhs.bAllocated)
 	{
-		bUserData = rhs.bUserData;
         
-		if (rows != rhs.rows || cols != rhs.cols) {
+        releaseMemory();
 
-			rows = rhs.rows;
-			cols = rhs.cols;
-			current_row = rhs.current_row;
-			bCircularInsertionFull = rhs.bCircularInsertionFull;
-			
-            releaseMemory();
+        rows = rhs.rows;
+        cols = rhs.cols;
+        current_row = rhs.current_row;
+        bCircularInsertionFull = rhs.bCircularInsertionFull;
+        bUserData = rhs.bUserData;
             
-            if (!bUserData) {
-                data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
-            }
-            bAllocated = true;
-        
-		}
-		
         if (!bUserData) {
+            data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
             cblas_scopy(rows*cols, rhs.data, 1, data, 1);
         }
+        else
+            data = rhs.data;
+        
+        bAllocated = true;
+
 		//memcpy(data, rhs.data, sizeof(float)*rows*cols);
 		
 		return *this;

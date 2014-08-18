@@ -587,7 +587,7 @@ namespace pkm
 		// can be used to create an already declared matrix without a copy constructor
 		void reset(int r, int c, bool clear = false)
 		{
-            if (r != rows || c != cols || bUserData) {
+            if (!bAllocated || r != rows || c != cols || bUserData) {
                 
                 rows = r;
                 cols = c;
@@ -612,7 +612,7 @@ namespace pkm
         // can be used to create an already declared matrix without a copy constructor
 		void reset(int r, int c, float val)
 		{
-            if (r != rows || c != cols || bUserData) {
+            if (!bAllocated || r != rows || c != cols || bUserData) {
                 
                 rows = r;
                 cols = c;
@@ -1119,7 +1119,10 @@ namespace pkm
 		{
 #ifdef DEBUG      
 			assert(data != NULL);
-#endif      
+            if (bUserData) {
+                print("[Warning]: Transposing user data!");
+            }
+#endif
             float *temp_data = (float *)malloc(sizeof(float)*rows*cols);
 			vDSP_mtrans(data, 1, temp_data, 1, cols, rows);
 			cblas_scopy(rows*cols, temp_data, 1, data, 1);
