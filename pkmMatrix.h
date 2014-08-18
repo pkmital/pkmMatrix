@@ -1470,8 +1470,10 @@ namespace pkm
                    cols >0);
 #endif	
             if (row_major) {
+                
                 if (rows == 1) {
-                    return *this;
+                    Mat newMat(1, cols, data, true);
+                    return newMat;
                 }
                 Mat newMat(1, cols);
                 
@@ -1827,7 +1829,7 @@ namespace pkm
             return data;
         }
         
-        inline int svd(Mat &S, Mat &U, Mat &V_t)
+        inline int svd(Mat &U, Mat &S, Mat &V_t)
         {
 //            print();
             
@@ -1848,10 +1850,12 @@ namespace pkm
             
             __CLPK_integer lwork = -1;
             __CLPK_integer info = 0;
-            /* iwork dimension should be at least 8*min(m,n) */
+
+            // iwork dimension should be at least 8*min(m,n)
             __CLPK_integer iwork[8*nSVs];
             
             //https://groups.google.com/forum/#!topic/julia-dev/mmgO65i6-fA sdd (divide/conquer, better if memory is available, for large matrices) versus svd (qr)
+            //http://docs.oracle.com/cd/E19422-01/819-3691/dgesvd.html
             
             // call svd to query optimal work size:
             char job = 'A';

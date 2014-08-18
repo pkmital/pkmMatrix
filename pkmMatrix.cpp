@@ -103,6 +103,7 @@ Mat::~Mat()
 	current_row = 0;
 	bCircularInsertionFull = false;
 	bAllocated = false;
+    bUserData = false;
 }
 
 Mat::Mat(vector<float> m)
