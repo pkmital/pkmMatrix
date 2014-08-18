@@ -587,17 +587,20 @@ namespace pkm
 		// can be used to create an already declared matrix without a copy constructor
 		void reset(int r, int c, bool clear = false)
 		{
-			rows = r;
-			cols = c;
-			current_row = 0;
-			bCircularInsertionFull = false;
-			
-            releaseMemory();
+            if (r != rows || c != cols || bUserData) {
+                
+                rows = r;
+                cols = c;
+                current_row = 0;
+                bCircularInsertionFull = false;
+                
+                releaseMemory();
+                
+                data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
             
-            data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
-        
-			bAllocated = true;
-			bUserData = false;
+                bAllocated = true;
+                bUserData = false;
+            }
 			
 			// set every element to 0
 			if(clear)
@@ -609,18 +612,21 @@ namespace pkm
         // can be used to create an already declared matrix without a copy constructor
 		void reset(int r, int c, float val)
 		{
-			rows = r;
-			cols = c;
-			current_row = 0;
-			bCircularInsertionFull = false;
-			
-            releaseMemory();
+            if (r != rows || c != cols || bUserData) {
+                
+                rows = r;
+                cols = c;
+                current_row = 0;
+                bCircularInsertionFull = false;
+                
+                releaseMemory();
+                
+                data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
+                
+                bAllocated = true;
+                bUserData = false;
+            }
             
-            data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
-            
-			bAllocated = true;
-			bUserData = false;
-			
 			// set every element to val
             vDSP_vfill(&val, data, 1, rows*cols);
 			
@@ -1550,6 +1556,31 @@ namespace pkm
             }
         }
         
+        
+        inline void getMeanAndStdDev(Mat &meanMat, Mat &stddevMat)
+        {
+            meanMat.reset(1, cols);
+            stddevMat.reset(1, cols);
+            
+            float mean, stddev;
+            float sumval, sumsquareval;
+            int size = rows;
+            if (size == 1) {
+                cblas_scopy(cols, data, 1, meanMat.data, 1);
+                stddevMat.setTo(1.0);
+            }
+            else if (size > 1) {
+                for (int i = 0; i < cols; i++) {
+                    vDSP_sve(data + i, cols, &sumval, size);
+                    vDSP_svesq(data + i, cols, &sumsquareval, size);
+                    mean = sumval / (float) size;
+                    stddev = sqrtf( sumsquareval / (float) size - mean * mean);
+                    
+                    meanMat[i] = mean;
+                    stddevMat[i] = stddev;
+                }
+            }
+        }
         
         
         inline void getMeanAndStdDev(float &mean, float &stddev)
