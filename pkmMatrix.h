@@ -587,8 +587,8 @@ namespace pkm
 		// can be used to create an already declared matrix without a copy constructor
 		void reset(int r, int c, bool clear = false)
 		{
-            if (!bAllocated || r != rows || c != cols || bUserData) {
-                
+//            if (!(r == rows && c == cols && !bUserData)) {
+            
                 rows = r;
                 cols = c;
                 current_row = 0;
@@ -600,7 +600,7 @@ namespace pkm
             
                 bAllocated = true;
                 bUserData = false;
-            }
+//            }
 			
 			// set every element to 0
 			if(clear)
@@ -612,8 +612,8 @@ namespace pkm
         // can be used to create an already declared matrix without a copy constructor
 		void reset(int r, int c, float val)
 		{
-            if (!bAllocated || r != rows || c != cols || bUserData) {
-                
+//            if (!bAllocated || r != rows || c != cols || bUserData) {
+            
                 rows = r;
                 cols = c;
                 current_row = 0;
@@ -625,7 +625,7 @@ namespace pkm
                 
                 bAllocated = true;
                 bUserData = false;
-            }
+//            }
             
 			// set every element to val
             vDSP_vfill(&val, data, 1, rows*cols);
@@ -2016,9 +2016,9 @@ namespace pkm
         }
 		
 		// simple print output (be careful with large matrices!)
-		void print(bool row_major = true);
+		void print(bool row_major = true, char delimiter = ',');
 		// only prints maximum of 5 rows/cols
-		void printAbbrev(bool row_major = true);
+		void printAbbrev(bool row_major = true, char delimiter = ',');
 		
         
         

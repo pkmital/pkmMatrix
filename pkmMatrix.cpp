@@ -714,7 +714,7 @@ void Mat::divideEachVecBySum(bool row_major)
 	}
 }
 
-void Mat::printAbbrev(bool row_major)
+void Mat::printAbbrev(bool row_major, char delimiter)
 {
 	
 	printf("r: %d, c: %d\n", rows, cols);
@@ -723,7 +723,7 @@ void Mat::printAbbrev(bool row_major)
 	{
 		for (int r = 0; r < MIN(rows,5); r++) {
 			for (int c = 0; c < MIN(cols,5); c++) {
-				printf("%8.4f ", data[r*cols + c]);
+				printf("%8.4f%c", data[r*cols + c], delimiter);
 			}
 			printf("\n");
 		}
@@ -732,7 +732,7 @@ void Mat::printAbbrev(bool row_major)
 	else {
 		for (int r = 0; r < MIN(rows,5); r++) {
 			for (int c = 0; c < MIN(cols,5); c++) {
-				printf("%8.4f ", data[c*rows + r]);
+				printf("%8.4f%c", data[c*rows + r], delimiter);
 			}
 			printf("\n");
 		}
@@ -741,7 +741,7 @@ void Mat::printAbbrev(bool row_major)
 	
 }
 
-void Mat::print(bool row_major)
+void Mat::print(bool row_major, char delimiter)
 {
 	
 	printf("r: %d, c: %d\n", rows, cols);
@@ -750,7 +750,7 @@ void Mat::print(bool row_major)
 	{
 		for (int r = 0; r < rows; r++) {
 			for (int c = 0; c < cols; c++) {
-				printf("%8.4f ", data[r*cols + c]);
+				printf("%8.4f%c", data[r*cols + c], delimiter);
 			}
 			printf("\n");
 		}
@@ -759,7 +759,7 @@ void Mat::print(bool row_major)
 	else {
 		for (int r = 0; r < rows; r++) {
 			for (int c = 0; c < cols; c++) {
-				printf("%8.4f ", data[c*rows + r]);
+				printf("%8.4f%c", data[c*rows + r], delimiter);
 			}
 			printf("\n");
 		}
