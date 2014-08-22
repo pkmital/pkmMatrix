@@ -1870,7 +1870,7 @@ namespace pkm
             __CLPK_integer m = rows;
             __CLPK_integer n = cols;
 
-            __CLPK_integer lda = n;
+            __CLPK_integer lda = m;
             __CLPK_integer ldu = m;
             __CLPK_integer ldv = n;
             
