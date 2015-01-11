@@ -808,7 +808,7 @@ namespace pkm
 			}
 		}
         
-        inline void insertRowCircularly(vector<float> m)
+        inline void insertRowCircularly(const vector<float> &m)
         {
             insertRowCircularly(&(m[0]));
         }
