@@ -153,11 +153,11 @@ namespace pkm
 		// destructor
 		~Mat();
 		
-        Mat(vector<float> m);
+        Mat(const vector<float> m);
         
-        Mat(vector<vector<float> > m);
+        Mat(const vector<vector<float> > m);
 #ifdef HAVE_OPENCV
-        Mat(cv::Mat m);
+        Mat(const cv::Mat &m);
 #endif
 		// allocate data
 		Mat(int r, int c, bool clear = false);

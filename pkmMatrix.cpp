@@ -106,7 +106,7 @@ Mat::~Mat()
     bUserData = false;
 }
 
-Mat::Mat(vector<float> m)
+Mat::Mat(const vector<float> m)
 {
     rows = 1;
     cols = m.size();
@@ -119,7 +119,7 @@ Mat::Mat(vector<float> m)
 	bAllocated = true;
 }
 
-Mat::Mat(vector<vector<float> > m)
+Mat::Mat(const vector<vector<float> > m)
 {
     rows = m.size();
     cols = m[0].size();
@@ -135,7 +135,7 @@ Mat::Mat(vector<vector<float> > m)
 }
 
 #ifdef HAVE_OPENCV
-Mat::Mat(cv::Mat m)
+Mat::Mat(const cv::Mat &m)
 {
     rows = m.rows;
     cols = m.cols;
