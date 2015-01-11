@@ -110,11 +110,12 @@
 #include <Accelerate/Accelerate.h>
 #include <vector>
 
-#ifdef OPENCV_ASSERT
+#ifdef OPENCV_ERROR
 #define HAVE_OPENCV
 #endif
 
 //#define DEBUG
+#define HAVE_OPENCV
 
 #ifdef HAVE_OPENCV
 #include <opencv2/opencv.hpp>
@@ -140,7 +141,7 @@ template <typename T> int signum(T val) {
 }
 
 namespace pkm
-{	
+{
 	// row-major floating point matrix
 	class Mat
 	{
@@ -164,6 +165,8 @@ namespace pkm
 		// pass in existing data
 		// non-destructive by default
 		Mat(int r, int c, float *existing_buffer, bool withCopy);
+        
+        Mat(int r, int c, const float *existing_buffer);
 		
 		// set every element to a value
 		Mat(int r, int c, float val);
@@ -176,10 +179,10 @@ namespace pkm
 		Mat & operator=(const vector<vector<float> > &rhs);
 #ifdef HAVE_OPENCV
         Mat & operator=(const cv::Mat &rhs);
-        cv::Mat cvMat();
+        cv::Mat cvMat() const;
 #endif
 		
-		inline Mat operator+(const Mat &rhs)
+		inline Mat operator+(const Mat &rhs) const
 		{
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -193,7 +196,7 @@ namespace pkm
 		}
 		
 		
-		inline Mat operator+(float rhs)
+		inline Mat operator+(float rhs) const
 		{	
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -203,7 +206,7 @@ namespace pkm
 			return newMat;
 		}
 		
-		inline Mat operator-(const Mat &rhs)
+		inline Mat operator-(const Mat &rhs) const
 		{
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -218,7 +221,7 @@ namespace pkm
 		
 
 		
-		inline Mat operator-(const float scalar)
+		inline Mat operator-(const float scalar) const
 		{
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -230,7 +233,7 @@ namespace pkm
 		}
 		
 		
-		inline Mat operator*(const pkm::Mat &rhs)
+		inline Mat operator*(const pkm::Mat &rhs) const
 		{
 #ifdef DEBUG
 			assert(data != NULL);
@@ -247,7 +250,7 @@ namespace pkm
 		
 
 		
-		inline Mat operator*(float scalar)
+		inline Mat operator*(float scalar) const
 		{
 #ifdef DEBUG
 			assert(data != NULL);
@@ -260,7 +263,7 @@ namespace pkm
 		}
 		
 		
-		inline Mat operator/(const Mat &rhs)
+		inline Mat operator/(const Mat &rhs) const
 		{
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -273,7 +276,7 @@ namespace pkm
 			return result;
 		}
 		
-		inline Mat operator/(float scalar)
+		inline Mat operator/(float scalar) const
 		{
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -284,7 +287,7 @@ namespace pkm
 			
 		}
 		
-		inline Mat operator>(const Mat &rhs)
+		inline Mat operator>(const Mat &rhs) const
 		{
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -298,7 +301,7 @@ namespace pkm
 			return result;
 		}
 		
-		inline Mat operator>(float scalar)
+		inline Mat operator>(float scalar) const
 		{
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -309,7 +312,7 @@ namespace pkm
 			return result;
 		}
 		
-		inline Mat operator>=(const Mat &rhs)
+		inline Mat operator>=(const Mat &rhs) const
 		{
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -323,7 +326,7 @@ namespace pkm
 			return result;
 		}
 		
-		inline Mat operator>=(float scalar)
+		inline Mat operator>=(float scalar) const
 		{
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -334,7 +337,7 @@ namespace pkm
 			return result;
 		}
 		
-		inline Mat operator<(const Mat &rhs)
+		inline Mat operator<(const Mat &rhs) const
 		{
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -348,7 +351,7 @@ namespace pkm
 			return result;
 		}
 		
-		inline Mat operator<(float scalar)
+		inline Mat operator<(float scalar) const
 		{
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -359,7 +362,7 @@ namespace pkm
 			return result;
 		}
 		
-		inline Mat operator<=(const Mat &rhs)
+		inline Mat operator<=(const Mat &rhs) const
 		{
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -373,7 +376,7 @@ namespace pkm
 			return result;
 		}
 		
-		inline Mat operator<=(float scalar)
+		inline Mat operator<=(float scalar) const
 		{
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -384,7 +387,7 @@ namespace pkm
 			return result;
 		}
 		
-		inline Mat operator==(const Mat &rhs)
+		inline Mat operator==(const Mat &rhs) const
 		{
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -398,7 +401,7 @@ namespace pkm
 			return result;
 		}
 		
-		inline Mat operator==(float scalar)
+		inline Mat operator==(float scalar) const
 		{
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -409,7 +412,7 @@ namespace pkm
 			return result;
 		}
 		
-		inline Mat operator!=(const Mat &rhs)
+		inline Mat operator!=(const Mat &rhs) const
 		{
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -423,7 +426,7 @@ namespace pkm
 			return result;
 		}
 		
-		inline Mat operator!=(float scalar)
+		inline Mat operator!=(float scalar) const
 		{
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -434,7 +437,7 @@ namespace pkm
 			return result;
 		}
 		
-		inline float & operator[](int idx)
+		inline float & operator[](int idx) const
 		{
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -444,7 +447,7 @@ namespace pkm
 		}
 		
 		// return a vector composed on non-zero indices of logicalMat
-		inline Mat operator[](Mat rhs)
+		inline Mat operator[](const Mat &rhs) const
 		{
 #ifdef DEBUG			
 			assert(data != NULL);
@@ -516,6 +519,25 @@ namespace pkm
                 }
             }
             return false;
+        }
+        
+        void setNaNsTo(float f)
+        {
+            for(int i = 0; i < rows*cols; i++)
+            {
+                if (isnan(data[i]) || isinf(data[i])) {
+                    data[i] = f;
+                }
+            }
+        }
+        
+        void reshape(int r, int c)
+        {
+            if ((r * c) == (rows * cols))
+            {
+                rows = r;
+                cols = c;
+            }
         }
 		
         void resize(int r, int c, bool clear = false)
@@ -660,13 +682,13 @@ namespace pkm
 			return (data + r*cols);
 		}
 		
-		inline void insertRow(float *buf, int row_idx)
+		inline void insertRow(const float *buf, int row_idx)
 		{
 			float * rowData = row(row_idx);
 			cblas_scopy(cols, buf, 1, rowData, 1);
 		}
 		
-        void push_back(Mat m)
+        void push_back(const Mat &m)
         {
 #ifdef DEBUG
             if(bUserData)
@@ -700,7 +722,7 @@ namespace pkm
             push_back(&m, 1);
         }
         
-        void push_back(float *m, int size)
+        void push_back(const float *m, int size)
         {
 #ifdef DEBUG
             if(bUserData)
@@ -777,7 +799,7 @@ namespace pkm
             
         }
         
-		inline void insertRowCircularly(float *buf)
+		inline void insertRowCircularly(const float *buf)
 		{
 			insertRow(buf, current_row);
 			current_row = (current_row + 1) % rows;
@@ -785,6 +807,17 @@ namespace pkm
 				bCircularInsertionFull = true;
 			}
 		}
+        
+        inline void insertRowCircularly(vector<float> m)
+        {
+            insertRowCircularly(&(m[0]));
+        }
+        
+        
+        inline void insertRowCircularly(const pkm::Mat &m)
+        {
+            insertRowCircularly(m.data);
+        }
         
         float * getLastCircularRow()
         {
@@ -1057,7 +1090,7 @@ namespace pkm
 				   cols == rhs.cols && 
 				   rhs.cols == result.cols);
 #endif			
-			vDSP_vsub(data, 1, rhs.data, 1, result.data, 1, rows*cols);
+			vDSP_vsub(rhs.data, 1, data, 1, result.data, 1, rows*cols);
 			
 		}
 		
@@ -1069,7 +1102,7 @@ namespace pkm
 			assert(rows == rhs.rows &&
 				   cols == rhs.cols);
 #endif			
-			vDSP_vsub(data, 1, rhs.data, 1, data, 1, rows*cols);
+			vDSP_vsub(rhs.data, 1, data, 1, data, 1, rows*cols);
 		}
 		
 		inline void subtract(float scalar)
@@ -1133,7 +1166,7 @@ namespace pkm
             rows = tempvar;
 		}
 		
-		Mat getTranspose();
+		Mat getTranspose() const;
 		
 		
 		// diagonalize the vector into a square matrix with 
@@ -1180,7 +1213,7 @@ namespace pkm
         void abs();
         
         // returns a new matrix with each el the abs(el)
-        static Mat abs(Mat &A);
+        static Mat abs(const Mat &A);
 		
         /*
         // returns a new matrix with each el the log(el)
@@ -1191,7 +1224,7 @@ namespace pkm
 		*/
         
 		// returns a new diagonalized matrix version of A
-		static Mat diag(Mat &A);
+		static Mat diag(const Mat &A);
 		
 		// get a new identity matrix of size dim x dim
 		static Mat identity(int dim);
@@ -1211,7 +1244,7 @@ namespace pkm
 		Mat sum(bool across_rows = true);
 		
 		// repeat a vector for size times
-		static Mat repeat(Mat &m, int size)
+		static Mat repeat(const Mat &m, int size)
 		{
 			// repeat a column vector across cols
 			if(m.rows > 1 && m.cols == 1 && size > 1)
@@ -1267,7 +1300,7 @@ namespace pkm
 			
 		}
 		
-		static float meanMagnitude(float *buf, int size)
+		static float meanMagnitude(const float *buf, int size)
 		{
 			float mean;
 			vDSP_meamgv(buf, 1, &mean, size);
@@ -1275,11 +1308,11 @@ namespace pkm
 		}
         
         
-		static float l1norm(float *buf1, float *buf2, int size)
+		static float l1norm(const float *buf1, const float *buf2, int size)
 		{
 			int a = size;
 			float diff = 0;
-			float *p1 = buf1, *p2 = buf2;
+			const float *p1 = buf1, *p2 = buf2;
 			while (a) {
 				diff += fabs(*p1++ - *p2++);
 				a--;
@@ -1287,11 +1320,11 @@ namespace pkm
 			return diff;///(float)size;
 		}
 		
-		static float sumOfAbsoluteDifferences(float *buf1, float *buf2, int size)
+		static float sumOfAbsoluteDifferences(const float *buf1, const float *buf2, int size)
 		{
 			int a = size;
 			float diff = 0;
-			float *p1 = buf1, *p2 = buf2;
+			const float *p1 = buf1, *p2 = buf2;
 			while (a) {
 				diff += fabs(*p1++ - *p2++);
 				a--;
@@ -1299,19 +1332,26 @@ namespace pkm
 			return diff/(float)size;
 		}
 		
-		static float mean(float *buf, int size, int stride = 1)
+		static float mean(const float *buf, int size, int stride = 1)
 		{
 			float val;
 			vDSP_meanv(buf, stride, &val, size);
 			return val;
 		}
-		
-		static float var(float *buf, int size, int stride = 1)
+        
+        static float mean(const Mat &m, int stride = 1)
+        {
+            float val;
+            vDSP_meanv(m.data, stride, &val, m.rows * m.cols);
+            return val;
+        }
+        
+		static float var(const float *buf, int size, int stride = 1)
 		{
 			float m = mean(buf, size, stride);
 			float v = 0;
 			float sqr = 0;
-			float *p = buf;
+			const float *p = buf;
 			int a = size;
 			while (a) {
 				sqr = (*p - m);
@@ -1322,12 +1362,12 @@ namespace pkm
 			return v/(float)size;
 		}
         
-        static float stddev(float *buf, int size, int stride = 1)
+        static float stddev(const float *buf, int size, int stride = 1)
 		{
 			float m = mean(buf, size, stride);
 			float v = 0;
 			float sqr = 0;
-			float *p = buf;
+			const float *p = buf;
 			int a = size;
 			while (a) {
 				sqr = (*p - m);
@@ -1345,21 +1385,21 @@ namespace pkm
             return val;
         }
 		
-		static float rms(float *buf, int size)
+		static float rms(const float *buf, int size)
 		{
 			float val;
 			vDSP_rmsqv(buf, 1, &val, size);
 			return val;
 		}
 		
-		static float min(Mat &A)
+		static float min(const Mat &A)
 		{
 			float minval;
 			vDSP_minv(A.data, 1, &minval, A.rows*A.cols);
 			return minval;
 		}
         
-        static unsigned long minIndex(Mat &A)
+        static unsigned long minIndex(const Mat &A)
         {
             float minval;
             unsigned long minidx;
@@ -1367,19 +1407,19 @@ namespace pkm
             return minidx;
         }
         
-        void min(float &val, unsigned long &idx)
+        void min(float &val, unsigned long &idx) const
         {
             vDSP_minvi(data, 1, &val, &idx, rows*cols);
         }
 		
-		static float max(Mat &A)
+		static float max(const Mat &A)
 		{
 			float maxval;
 			vDSP_maxv(A.data, 1, &maxval, A.rows*A.cols);
 			return maxval;
 		}
         
-        static unsigned long maxIndex(Mat &A)
+        static unsigned long maxIndex(const Mat &A)
         {
             float maxval;
             unsigned long maxidx;
@@ -1399,14 +1439,14 @@ namespace pkm
 			return sumval;
         }
 		
-		static float sum(Mat &A)
+		static float sum(const Mat &A)
 		{
 			float sumval;
 			vDSP_sve(A.data, 1, &sumval, A.rows*A.cols);
 			return sumval;
 		}
 		
-		Mat var(bool row_major = true)
+		Mat var(bool row_major = true) const
 		{
 #ifdef DEBUG			
             assert(data != NULL);
@@ -1438,7 +1478,7 @@ namespace pkm
             }	
 		}
 		
-        Mat stddev(bool row_major = true)
+        Mat stddev(bool row_major = true) const
 		{
 #ifdef DEBUG			
             assert(data != NULL);
@@ -1471,7 +1511,7 @@ namespace pkm
 		}
         
         
-        Mat mean(bool row_major = true)
+        Mat mean(bool row_major = true) const
         {
 #ifdef DEBUG			
             assert(data != NULL);
@@ -1560,7 +1600,7 @@ namespace pkm
         }
         
         
-        inline void getMeanAndStdDev(Mat &meanMat, Mat &stddevMat)
+        inline void getMeanAndStdDev(Mat &meanMat, Mat &stddevMat) const
         {
             meanMat.reset(1, cols);
             stddevMat.reset(1, cols);
@@ -1586,7 +1626,7 @@ namespace pkm
         }
         
         
-        inline void getMeanAndStdDev(float &mean, float &stddev)
+        inline void getMeanAndStdDev(float &mean, float &stddev) const
         {
             float sumval, sumsquareval;
             int size = rows * cols;
@@ -1663,7 +1703,7 @@ namespace pkm
         // input is 1 x d dimensional vector
         // mean is 1 x d dimensional vector
         // sigma is d x d dimensional matrix
-        static float gaussianPosterior(Mat input, Mat mean, Mat sigma)
+        static float gaussianPosterior(const Mat &input, Mat mean, Mat sigma)
         {
 #ifdef DEBUG
             assert(input.cols == mean.cols);
@@ -1671,10 +1711,11 @@ namespace pkm
             assert(input.cols == sigma.cols);
 #endif
             float A = 1.0 / (powf(M_PI * 2.0, input.cols / 2.0) * sqrtf(sigma[0]*sigma[3] - sigma[2]*sigma[1]));
-            input.subtract(mean);
+            Mat inputCopy = input;
+            inputCopy.subtract(mean);
             sigma.inv2x2();
-            Mat a = input.GEMM(sigma);
-            Mat l = input;
+            Mat a = inputCopy.GEMM(sigma);
+            Mat l = inputCopy;
             l.setTranspose();
             Mat b = a.GEMM(l);
             return (A * expf(-0.5 * b[0]));
@@ -1685,7 +1726,7 @@ namespace pkm
 			vDSP_vmul(data, 1, data, 1, data, 1, rows*cols);
         }
         
-        static Mat sqr(Mat &b)
+        static Mat sqr(const Mat &b)
         {
             Mat newMat(b.rows, b.cols);
 			vDSP_vmul(b.data, 1, b.data, 1, newMat.data, 1, b.rows*b.cols);
@@ -1698,7 +1739,7 @@ namespace pkm
             vvsqrtf(data, data, &size);
         }
         
-        static Mat sqrt(Mat &b)
+        static Mat sqrt(const Mat &b)
         {
             Mat newMat(b.rows, b.cols);
             int size = b.rows*b.cols;
@@ -1712,7 +1753,7 @@ namespace pkm
             vvsinf(data, data, &size);
         }
         
-        static Mat sin(Mat &b)
+        static Mat sin(const Mat &b)
         {
             Mat newMat(b.rows, b.cols);
             int size = b.rows*b.cols;
@@ -1726,7 +1767,7 @@ namespace pkm
             vvcosf(data, data, &size);
         }
         
-        static Mat cos(Mat &b)
+        static Mat cos(const Mat &b)
         {
             Mat newMat(b.rows, b.cols);
             int size = b.rows*b.cols;
@@ -1740,7 +1781,7 @@ namespace pkm
             vvpowf(data, &p, data, &size);
         }
         
-        static Mat pow(Mat &b, float p)
+        static Mat pow(const Mat &b, float p)
         {
             Mat newMat(b.rows, b.cols);
             int size = b.rows*b.cols;
@@ -1754,7 +1795,7 @@ namespace pkm
             vvlogf(data, data, &size);
         }
         
-        static Mat log(Mat &b)
+        static Mat log(const Mat &b)
         {
             Mat newMat(b.rows, b.cols);
             int size = b.rows*b.cols;
@@ -1768,7 +1809,7 @@ namespace pkm
             vvlog10f(data, data, &size);
         }
         
-        static Mat log10(Mat &b)
+        static Mat log10(const Mat &b)
         {
             Mat newMat(b.rows, b.cols);
             int size = b.rows*b.cols;
@@ -1782,7 +1823,7 @@ namespace pkm
             vvexpf(data, data, &size);
         }
         
-        static Mat exp(Mat &b)
+        static Mat exp(const Mat &b)
         {
             Mat newMat(b.rows, b.cols);
             int size = b.rows*b.cols;
@@ -1796,7 +1837,7 @@ namespace pkm
             vvfloorf(data, data, &size);
         }
         
-        static Mat floor(Mat &b)
+        static Mat floor(const Mat &b)
         {
             Mat newMat(b.rows, b.cols);
             int size = b.rows*b.cols;
@@ -1810,7 +1851,7 @@ namespace pkm
             vvceilf(data, data, &size);
         }
         
-        static Mat ceil(Mat &b)
+        static Mat ceil(const Mat &b)
         {
             Mat newMat(b.rows, b.cols);
             int size = b.rows*b.cols;
@@ -1818,7 +1859,7 @@ namespace pkm
             return newMat;
         }
         
-        static Mat sgn(Mat &b)
+        static Mat sgn(const Mat &b)
         {
             Mat newMat(b.rows, b.cols);
             float *p = b.data;
@@ -1829,7 +1870,7 @@ namespace pkm
             return newMat;
         }
         
-        static Mat resize(Mat &a, int newSize)
+        static Mat resize(const Mat &a, int newSize)
         {
             int originalSize = a.size();
             Mat b(1, newSize);
@@ -1842,7 +1883,7 @@ namespace pkm
             return c;
         }
         
-        inline int size()
+        inline int size() const
         {
             return rows * cols;
         }
@@ -1908,6 +1949,18 @@ namespace pkm
             
             return info;
 
+        }
+        
+        void copyToDouble(double *ptr) const
+        {
+            vDSP_vspdp(data, 1, ptr, 1, rows*cols);
+        }
+        
+        
+        void copyFromDouble(const double *ptr, size_t rows, size_t cols)
+        {
+            resize(rows, cols);
+            vDSP_vdpsp(ptr, 1, data, 1, size());
         }
         
         bool save(string filename)

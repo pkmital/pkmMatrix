@@ -171,6 +171,30 @@ Mat::Mat(int r, int c, bool clear)
 	}
 }
 
+
+
+// pass in existing data
+// non-destructive by default
+// this WILL destroy the passed in data when object leaves scope if
+// with copy is not true
+Mat::Mat(int r, int c, const float *existing_buffer)
+{
+    data = NULL;
+    
+    bUserData = false;
+    rows = r;
+    cols = c;
+    current_row = 0;
+    bCircularInsertionFull = false;
+    
+    data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
+        
+    cblas_scopy(rows*cols, existing_buffer, 1, data, 1);
+    
+    bAllocated = true;
+}
+
+
 // pass in existing data
 // non-destructive by default
 // this WILL destroy the passed in data when object leaves scope if
@@ -439,7 +463,7 @@ Mat & Mat::operator=(const cv::Mat &rhs)
 }
 
 
-cv::Mat Mat::cvMat()
+cv::Mat Mat::cvMat() const
 {
     cv::Mat cvm(rows, cols, CV_32FC1, data);
     return cvm;
@@ -454,7 +478,7 @@ cv::Mat Mat::cvMat()
 /////////////////////////////////////////
 
 
-Mat Mat::getTranspose()
+Mat Mat::getTranspose() const
 {
 #ifndef DEBUG			
 	assert(data != NULL);
@@ -503,7 +527,7 @@ Mat Mat::getDiag()
 	}
 }
 
-Mat Mat::diag(Mat &A)
+Mat Mat::diag(const Mat &A)
 {
 	if((A.rows == 1 && A.cols > 1) || (A.cols == 1 && A.rows > 1))
 	{
@@ -525,7 +549,7 @@ Mat Mat::diag(Mat &A)
 	}
 }
 
-Mat Mat::abs(Mat &A)
+Mat Mat::abs(const Mat &A)
 {
 #ifdef DEBUG			
     assert(A.data != NULL);
