@@ -160,16 +160,16 @@ namespace pkm
         Mat(const cv::Mat &m);
 #endif
 		// allocate data
-		Mat(int r, int c, bool clear = false);
+		Mat(size_t r, size_t c, bool clear = false);
 		
 		// pass in existing data
 		// non-destructive by default
-		Mat(int r, int c, float *existing_buffer, bool withCopy);
+		Mat(size_t r, size_t c, float *existing_buffer, bool withCopy);
         
-        Mat(int r, int c, const float *existing_buffer);
+        Mat(size_t r, size_t c, const float *existing_buffer);
 		
 		// set every element to a value
-		Mat(int r, int c, float val);
+		Mat(size_t r, size_t c, float val);
 		
 		// copy-constructor, called during:
 		//		pkm::Mat a(rhs);
@@ -751,7 +751,7 @@ namespace pkm
             }
         }
         
-        inline void push_back(vector<float> &m)
+        inline void push_back(const vector<float> &m)
         {
 #ifdef DEBUG
             if(bUserData)
@@ -774,7 +774,7 @@ namespace pkm
             
         }
         
-        inline void push_back(vector<vector<float> > &m)
+        inline void push_back(const vector<vector<float> > &m)
         {
 #ifdef DEBUG
             if(bUserData)
@@ -904,7 +904,7 @@ namespace pkm
 			
 		}
 		
-		void copy(Mat &rhs, Mat &indx)
+		void copy(const Mat &rhs, const Mat &indx)
 		{
 #ifdef DEBUG
 			assert(indx.rows == rows);
@@ -943,7 +943,7 @@ namespace pkm
 		}		
 		// element-wise multiplication
 		// result stored in newly created matrix
-		inline Mat multiply(const Mat &rhs)
+		inline Mat multiply(const Mat &rhs) const
 		{
 #ifdef DEBUG
 			assert(data != NULL);
@@ -1208,7 +1208,7 @@ namespace pkm
 			}
             
 		}
-		Mat getDiag();
+		Mat getDiag() const;
 		
         void abs();
         
@@ -1227,9 +1227,9 @@ namespace pkm
 		static Mat diag(const Mat &A);
 		
 		// get a new identity matrix of size dim x dim
-		static Mat identity(int dim);
+		static Mat identity(size_t dim);
 		
-		static Mat zeros(int rows, int cols)
+		static Mat zeros(size_t rows, size_t cols)
 		{
 			return Mat(rows, cols, true);
 		}
@@ -1238,7 +1238,7 @@ namespace pkm
 		void setRand(float low = 0.0, float high = 1.0);
 		
 		// create a random matrix
-		static Mat rand(int r, int c, float low = 0.0, float high = 1.0);
+		static Mat rand(size_t r, size_t c, float low = 0.0, float high = 1.0);
 		
 		// sum across rows or columns creating a vector from a matrix, or a scalar from a vector
 		Mat sum(bool across_rows = true);
@@ -1280,7 +1280,7 @@ namespace pkm
 			if(m.rows > 1 && m.cols == 1 && size > 1)
 			{
 				dst.reset(size, m.rows);
-				for (int i = 0; i < size; i++) {
+				for (size_t i = 0; i < size; i++) {
 					cblas_scopy(m.rows, m.data, 1, dst.data + (i*m.rows), 1);
 				}
 				dst.setTranspose();
@@ -1289,7 +1289,7 @@ namespace pkm
 			{
 				dst.reset(size, m.cols);
 				
-				for (int i = 0; i < size; i++) {
+				for (size_t i = 0; i < size; i++) {
 					cblas_scopy(m.cols, m.data, 1, dst.data + (i*m.cols), 1);
 				}
 			}
@@ -1300,7 +1300,7 @@ namespace pkm
 			
 		}
 		
-		static float meanMagnitude(const float *buf, int size)
+		static float meanMagnitude(const float *buf, size_t size)
 		{
 			float mean;
 			vDSP_meamgv(buf, 1, &mean, size);
@@ -1308,7 +1308,7 @@ namespace pkm
 		}
         
         
-		static float l1norm(const float *buf1, const float *buf2, int size)
+		static float l1norm(const float *buf1, const float *buf2, size_t size)
 		{
 			int a = size;
 			float diff = 0;
@@ -1320,7 +1320,7 @@ namespace pkm
 			return diff;///(float)size;
 		}
 		
-		static float sumOfAbsoluteDifferences(const float *buf1, const float *buf2, int size)
+		static float sumOfAbsoluteDifferences(const float *buf1, const float *buf2, size_t size)
 		{
 			int a = size;
 			float diff = 0;
@@ -1332,27 +1332,27 @@ namespace pkm
 			return diff/(float)size;
 		}
 		
-		static float mean(const float *buf, int size, int stride = 1)
+		static float mean(const float *buf, size_t size, size_t stride = 1)
 		{
 			float val;
 			vDSP_meanv(buf, stride, &val, size);
 			return val;
 		}
         
-        static float mean(const Mat &m, int stride = 1)
+        static float mean(const Mat &m, size_t stride = 1)
         {
             float val;
             vDSP_meanv(m.data, stride, &val, m.rows * m.cols);
             return val;
         }
         
-		static float var(const float *buf, int size, int stride = 1)
+		static float var(const float *buf, size_t size, size_t stride = 1)
 		{
 			float m = mean(buf, size, stride);
 			float v = 0;
 			float sqr = 0;
 			const float *p = buf;
-			int a = size;
+			size_t a = size;
 			while (a) {
 				sqr = (*p - m);
 				p += stride;
@@ -1362,13 +1362,13 @@ namespace pkm
 			return v/(float)size;
 		}
         
-        static float stddev(const float *buf, int size, int stride = 1)
+        static float stddev(const float *buf, size_t size, size_t stride = 1)
 		{
 			float m = mean(buf, size, stride);
 			float v = 0;
 			float sqr = 0;
 			const float *p = buf;
-			int a = size;
+			size_t a = size;
 			while (a) {
 				sqr = (*p - m);
 				p += stride;
@@ -1491,7 +1491,7 @@ namespace pkm
                 }
                 Mat newMat(1, cols);
                 
-                for(int i = 0; i < cols; i++)
+                for(size_t i = 0; i < cols; i++)
                 {
                     newMat.data[i] = stddev(data + i, rows, cols);
                 }
@@ -1502,7 +1502,7 @@ namespace pkm
                     return *this;
                 }
                 Mat newMat(rows, 1);
-                for(int i = 0; i < rows; i++)
+                for(size_t i = 0; i < rows; i++)
                 {
                     newMat.data[i] = stddev(data + i*cols, cols, 1);
                 }
@@ -1526,7 +1526,7 @@ namespace pkm
                 }
                 Mat newMat(1, cols);
                 
-                for(int i = 0; i < cols; i++)
+                for(size_t i = 0; i < cols; i++)
                 {
                     newMat.data[i] = mean(data + i, rows, cols);
                 }
@@ -1537,7 +1537,7 @@ namespace pkm
                     return *this;
                 }
                 Mat newMat(rows, 1);
-                for(int i = 0; i < rows; i++)
+                for(size_t i = 0; i < rows; i++)
                 {
                     newMat.data[i] = mean(data + i*cols, cols, 1);
                 }
@@ -1549,7 +1549,7 @@ namespace pkm
         inline void zNormalize()
         {
             float mean, stddev;
-            int size = rows * cols;
+            size_t size = rows * cols;
             getMeanAndStdDev(mean, stddev);
             
             // subtract mean
@@ -1564,9 +1564,9 @@ namespace pkm
         {
             float mean, stddev;
             float sumval, sumsquareval;
-            int size = rows;
+            size_t size = rows;
             if (size > 1) {
-                for (int i = 0; i < cols; i++) {
+                for (size_t i = 0; i < cols; i++) {
                     vDSP_sve(data + i, cols, &sumval, size);
                     vDSP_svesq(data + i, cols, &sumsquareval, size);
                     mean = sumval / (float) size;
@@ -1586,9 +1586,9 @@ namespace pkm
         {
             float mean;
             float sumval;
-            int size = rows;
+            size_t size = rows;
             if (size > 1) {
-                for (int i = 0; i < cols; i++) {
+                for (size_t i = 0; i < cols; i++) {
                     vDSP_sve(data + i, cols, &sumval, size);
                     mean = sumval / (float) size;
                     
@@ -1607,13 +1607,13 @@ namespace pkm
             
             float mean, stddev;
             float sumval, sumsquareval;
-            int size = rows;
+            size_t size = rows;
             if (size == 1) {
                 cblas_scopy(cols, data, 1, meanMat.data, 1);
                 stddevMat.setTo(1.0);
             }
             else if (size > 1) {
-                for (int i = 0; i < cols; i++) {
+                for (size_t i = 0; i < cols; i++) {
                     vDSP_sve(data + i, cols, &sumval, size);
                     vDSP_svesq(data + i, cols, &sumsquareval, size);
                     mean = sumval / (float) size;
@@ -1629,7 +1629,7 @@ namespace pkm
         inline void getMeanAndStdDev(float &mean, float &stddev) const
         {
             float sumval, sumsquareval;
-            int size = rows * cols;
+            size_t size = rows * cols;
 			vDSP_sve(data, 1, &sumval, size);
             vDSP_svesq(data, 1, &sumsquareval, size);
             mean = sumval / (float) size;
@@ -1639,7 +1639,7 @@ namespace pkm
 		// rescale the values in each row to their maximum
 		void setNormalize(bool row_major = true);
 		
-		void normalizeRow(int r)
+		void normalizeRow(size_t r)
 		{
 			float min, max;
 			vDSP_minv(&(data[r*cols]), 1, &min, cols);
@@ -1904,6 +1904,40 @@ namespace pkm
             return data;
         }
         
+        void getIndexOfClosestRowL1(const pkm::Mat& row_vector, float &best_sum, size_t &best_idx)
+        {
+            best_sum = HUGE_VALF;
+            best_idx = 0;
+            pkm::Mat sub(1, cols);
+            for( size_t i = 0; i < rows; i++ )
+            {
+                rowRange(i, i+1, false).subtract(row_vector, sub);
+                sub.abs();
+                float l1 = sub.sum()[0];
+                if (l1 < best_sum) {
+                    best_sum = l1;
+                    best_idx = i;
+                }
+            }
+        }
+        
+        void getIndexOfClosestRowL2(const pkm::Mat& row_vector, float &best_sum, size_t &best_idx)
+        {
+            best_sum = HUGE_VALF;
+            best_idx = 0;
+            pkm::Mat sub(1, cols);
+            for( size_t i = 0; i < rows; i++ )
+            {
+                rowRange(i, i+1, false).subtract(row_vector, sub);
+                sub.sqr();
+                float l1 = sub.sum()[0];
+                if (l1 < best_sum) {
+                    best_sum = l1;
+                    best_idx = i;
+                }
+            }
+        }
+        
         inline int svd(Mat &U, Mat &S, Mat &V_t)
         {
 //            print();
@@ -1915,7 +1949,7 @@ namespace pkm
             __CLPK_integer ldu = m;
             __CLPK_integer ldv = n;
             
-            int nSVs = m > n ? n : m;
+            size_t nSVs = m > n ? n : m;
             
             U.reset(m, m);
             V_t.reset(n, n);
@@ -2077,10 +2111,10 @@ namespace pkm
         
 		/////////////////////////////////////////
 		
-		int current_row;	// for circular insertion
+		size_t current_row;	// for circular insertion
 		bool bCircularInsertionFull;
-		int rows;
-		int cols;
+		size_t rows;
+		size_t cols;
 		
 		float *data;
 		

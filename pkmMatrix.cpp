@@ -151,7 +151,7 @@ Mat::Mat(const cv::Mat &m)
 }
 #endif
 // allocate data
-Mat::Mat(int r, int c, bool clear)
+Mat::Mat(size_t r, size_t c, bool clear)
 {
 	data = NULL;
 	
@@ -177,7 +177,7 @@ Mat::Mat(int r, int c, bool clear)
 // non-destructive by default
 // this WILL destroy the passed in data when object leaves scope if
 // with copy is not true
-Mat::Mat(int r, int c, const float *existing_buffer)
+Mat::Mat(size_t r, size_t c, const float *existing_buffer)
 {
     data = NULL;
     
@@ -199,7 +199,7 @@ Mat::Mat(int r, int c, const float *existing_buffer)
 // non-destructive by default
 // this WILL destroy the passed in data when object leaves scope if
 // with copy is not true
-Mat::Mat(int r, int c, float *existing_buffer, bool withCopy)
+Mat::Mat(size_t r, size_t c, float *existing_buffer, bool withCopy)
 {
 	data = NULL;
 	
@@ -226,7 +226,7 @@ Mat::Mat(int r, int c, float *existing_buffer, bool withCopy)
 }
 
 // set every element to a value
-Mat::Mat(int r, int c, float val)
+Mat::Mat(size_t r, size_t c, float val)
 {
 	data = NULL;
 	
@@ -393,7 +393,7 @@ Mat & Mat::operator=(const vector<vector<float> > &rhs)
 		}
 		bUserData = false;
 		
-        for(int i = 0; i < rows; i++)
+        for(size_t i = 0; i < rows; i++)
             cblas_scopy(cols, &(rhs[i][0]), 1, data+i*cols, 1);
 
 		//memcpy(data, rhs.data, sizeof(float)*rows*cols);
@@ -439,7 +439,7 @@ Mat & Mat::operator=(const cv::Mat &rhs)
         
 		bUserData = false;
 		
-        for(int i = 0; i < rows; i++)
+        for(size_t i = 0; i < rows; i++)
             cblas_scopy(cols, rhs.ptr<float>(i), 1, data+i*cols, 1);
         
 		//memcpy(data, rhs.data, sizeof(float)*rows*cols);
@@ -498,20 +498,20 @@ Mat Mat::getTranspose() const
 
 
 // get a diagonalized version of the current vector (non-destructive)
-Mat Mat::getDiag()
+Mat Mat::getDiag() const
 {
 #ifndef DEBUG
 	assert(data != NULL);
 #endif	
 	if((rows == 1 && cols > 1) || (cols == 1 && rows > 1))
 	{
-		int diagonal_elements = MAX(rows,cols);
+        size_t diagonal_elements = std::max<size_t>(rows,cols);
 		
 		// create a square matrix
 		Mat diagonalMatrix(diagonal_elements, diagonal_elements, true);
 		
 		// set diagonal elements to the current vector in data
-		for (int i = 0; i < diagonal_elements; i++) {
+		for (size_t i = 0; i < diagonal_elements; i++) {
 			diagonalMatrix.data[i*diagonal_elements+i] = data[i];
 		}
 		return diagonalMatrix;
@@ -531,13 +531,13 @@ Mat Mat::diag(const Mat &A)
 {
 	if((A.rows == 1 && A.cols > 1) || (A.cols == 1 && A.rows > 1))
 	{
-		int diagonal_elements = MAX(A.rows,A.cols);
+        size_t diagonal_elements = std::max<size_t>(A.rows,A.cols);
 		
 		// create a square matrix
 		Mat diagonalMatrix(diagonal_elements,diagonal_elements, true);
 		
 		// set diagonal elements to the current vector in data
-		for (int i = 0; i < diagonal_elements; i++) {
+		for (size_t i = 0; i < diagonal_elements; i++) {
 			diagonalMatrix.data[i*diagonal_elements+i] = A.data[i];
 		}
 		return diagonalMatrix;
@@ -605,14 +605,14 @@ Mat Mat::exp(Mat &A)
 */
 
 
-Mat Mat::identity(int dim)
+Mat Mat::identity(size_t dim)
 {
 	
 	// create a square matrix
 	Mat identityMatrix(dim,dim, true);
 	
 	// set diagonal elements to the current vector in data
-	for (int i = 0; i < dim; i++) {
+	for (size_t i = 0; i < dim; i++) {
 		identityMatrix.data[i*dim+i] = 1;
 	}
 	
@@ -625,14 +625,14 @@ void Mat::setRand(float low, float high)
 {
 	float width = (high-low);
 	float *ptr = data;
-	for (int i = 0; i < rows*cols; i++) {
+	for (size_t i = 0; i < rows*cols; i++) {
 		*ptr = low + (float(::random())/float(RAND_MAX))*width;
 		++ptr;
 	}
 }
 
 // create a random matrix
-Mat Mat::rand(int r, int c, float low, float high)
+Mat Mat::rand(size_t r, size_t c, float low, float high)
 {
 	Mat randomMatrix(r, c);
 	randomMatrix.setRand(low, high);
@@ -645,7 +645,7 @@ Mat Mat::sum(bool across_rows)
 	if(across_rows)
 	{
 		Mat result(1, cols);
-		for (int i = 0; i < cols; i++) {
+		for (size_t i = 0; i < cols; i++) {
 			vDSP_sve(data+i, cols, result.data+i, rows);
 		}				
 		return result;
@@ -654,7 +654,7 @@ Mat Mat::sum(bool across_rows)
 	else
 	{
 		Mat result(rows, 1);
-		for (int i = 0; i < rows; i++) {
+		for (size_t i = 0; i < rows; i++) {
 			vDSP_sve(data+(i*cols), 1, result.data+i, cols);
 		}
 		return result;
@@ -666,7 +666,7 @@ Mat Mat::sum(bool across_rows)
 void Mat::setNormalize(bool row_major)
 {
 	if (row_major) {
-		for (int r = 0; r < rows; r++) {
+		for (size_t r = 0; r < rows; r++) {
 			float min, max;
 			vDSP_minv(&(data[r*cols]), 1, &min, cols);
 			vDSP_maxv(&(data[r*cols]), 1, &max, cols);
@@ -680,7 +680,7 @@ void Mat::setNormalize(bool row_major)
 	}
 	// or for each column
 	else {
-		for (int c = 0; c < cols; c++) {
+		for (size_t c = 0; c < cols; c++) {
 			float min, max;
 			vDSP_minv(&(data[c]), cols, &min, rows);
 			vDSP_maxv(&(data[c]), cols, &max, rows);
@@ -697,8 +697,8 @@ void Mat::setNormalize(bool row_major)
 void Mat::divideEachVecByMaxVecElement(bool row_major)
 {
 	if (row_major) {
-		for (int r = 0; r < rows; r++) {
-			int idx = cblas_isamax(cols, data+r*cols, 1);
+		for (size_t r = 0; r < rows; r++) {
+			size_t idx = cblas_isamax(cols, data+r*cols, 1);
 			float val = *(data+r*cols+idx);
 			if (val != 0.0f) {
 				vDSP_vsdiv(&(data[r*cols]), 1, &val, &(data[r*cols]), 1, cols);	
@@ -706,8 +706,8 @@ void Mat::divideEachVecByMaxVecElement(bool row_major)
 		}
 	}
 	else {
-		for (int c = 0; c < cols; c++) {
-			int idx = cblas_isamax(rows, data+c, cols);
+		for (size_t c = 0; c < cols; c++) {
+			size_t idx = cblas_isamax(rows, data+c, cols);
 			float val = *(data+c+idx);
 			if (val != 0.0f) {
 				vDSP_vsdiv(&(data[c]), cols, &val, &(data[c]), cols, rows);	
@@ -719,7 +719,7 @@ void Mat::divideEachVecByMaxVecElement(bool row_major)
 void Mat::divideEachVecBySum(bool row_major)
 {
 	if (row_major) {
-		for (int r = 0; r < rows; r++) {
+		for (size_t r = 0; r < rows; r++) {
 			float val;
 			vDSP_sve(data+r*cols, 1, &val, cols);
 			if (val != 0.0f) {
@@ -728,7 +728,7 @@ void Mat::divideEachVecBySum(bool row_major)
 		}
 	}
 	else {
-		for (int c = 0; c < cols; c++) {
+		for (size_t c = 0; c < cols; c++) {
 			float val;
 			vDSP_sve(data+c, cols, &val, rows);
 			if (val != 0.0f) {
@@ -741,12 +741,12 @@ void Mat::divideEachVecBySum(bool row_major)
 void Mat::printAbbrev(bool row_major, char delimiter)
 {
 	
-	printf("r: %d, c: %d\n", rows, cols);
+    std::cout<< "r: " << rows << " c: " <<  cols << endl;
 	
 	if(row_major)
 	{
-		for (int r = 0; r < MIN(rows,5); r++) {
-			for (int c = 0; c < MIN(cols,5); c++) {
+        for (size_t r = 0; r < std::min<size_t>(rows,5); r++) {
+			for (size_t c = 0; c < std::min<size_t>(cols,5); c++) {
 				printf("%8.4f%c", data[r*cols + c], delimiter);
 			}
 			printf("\n");
@@ -754,8 +754,8 @@ void Mat::printAbbrev(bool row_major, char delimiter)
 		printf("\n");
 	}
 	else {
-		for (int r = 0; r < MIN(rows,5); r++) {
-			for (int c = 0; c < MIN(cols,5); c++) {
+		for (size_t r = 0; r < std::min<size_t>(rows,5); r++) {
+			for (size_t c = 0; c < std::min<size_t>(cols,5); c++) {
 				printf("%8.4f%c", data[c*rows + r], delimiter);
 			}
 			printf("\n");
@@ -767,13 +767,13 @@ void Mat::printAbbrev(bool row_major, char delimiter)
 
 void Mat::print(bool row_major, char delimiter)
 {
-	
-	printf("r: %d, c: %d\n", rows, cols);
-	
+    
+    std::cout<< "r: " << rows << " c: " <<  cols << endl;
+    
 	if(row_major)
 	{
-		for (int r = 0; r < rows; r++) {
-			for (int c = 0; c < cols; c++) {
+		for (size_t r = 0; r < rows; r++) {
+			for (size_t c = 0; c < cols; c++) {
 				printf("%8.4f%c", data[r*cols + c], delimiter);
 			}
 			printf("\n");
@@ -781,8 +781,8 @@ void Mat::print(bool row_major, char delimiter)
 		printf("\n");
 	}
 	else {
-		for (int r = 0; r < rows; r++) {
-			for (int c = 0; c < cols; c++) {
+		for (size_t r = 0; r < rows; r++) {
+			for (size_t c = 0; c < cols; c++) {
 				printf("%8.4f%c", data[c*rows + r], delimiter);
 			}
 			printf("\n");
