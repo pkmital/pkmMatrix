@@ -823,10 +823,10 @@ namespace pkm
         {
             unsigned int lastRow;
             if (bCircularInsertionFull) {
-                lastRow = (current_row - 1) >= 0 ? current_row - 1 : rows - 1;
+                lastRow = (int)(current_row - 1) >= 0 ? current_row - 1 : rows - 1;
             }
             else {
-                lastRow = (current_row - 1) >= 0 ? current_row - 1 : 0;
+                lastRow = (int)(current_row - 1) >= 0 ? current_row - 1 : 0;
             }
             return row(lastRow);
         }
@@ -2003,7 +2003,7 @@ namespace pkm
             fp = fopen(filename.c_str(), "w");
             if(fp)
             {
-                fprintf(fp, "%d %d\n", rows, cols);
+                fprintf(fp, "%lu %lu\n", rows, cols);
                 for(int i = 0; i < rows; i++)
                 {
                     for(int j = 0; j < cols; j++)
@@ -2054,7 +2054,7 @@ namespace pkm
             FILE *fp;
             fp = fopen(filename.c_str(), "r");
             if (fp) {
-                fscanf(fp, "%d %d\n", &rows, &cols);
+                fscanf(fp, "%lu %lu\n", &rows, &cols);
                 data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4(rows * cols));
                 for(int i = 0; i < rows; i++)
                 {
