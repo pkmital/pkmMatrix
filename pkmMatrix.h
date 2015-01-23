@@ -1248,12 +1248,12 @@ namespace pkm
             if(row_major)
             {
                 cols = rows * cols;
-                rows = rows > 1 ? 1 : 0;
+                rows = rows > 0 ? 1 : 0;
             }
             else
             {
                 rows = rows * cols;
-                cols = cols > 1 ? 1 : 0;
+                cols = cols > 0 ? 1 : 0;
             }
         }
 		
