@@ -688,6 +688,11 @@ namespace pkm
 			cblas_scopy(cols, buf, 1, rowData, 1);
 		}
 		
+        inline bool isEmpty() const
+        {
+            return !(bAllocated && (rows > 0) && (cols > 0));
+        }
+        
         void push_back(const Mat &m)
         {
 #ifdef DEBUG
@@ -696,16 +701,33 @@ namespace pkm
                 cout << "[WARNING]: Pointer to user data will be resized.  Possible leak!" << endl;
             }
 #endif
-            if (bAllocated && (rows > 0) && (cols > 0)) {
-                if (m.cols != cols) {
-                    printf("[ERROR]: pkm::Mat push_back(Mat m) requires same number of columns!\n");
-                    return;
+            // we're not empty
+            if (!isEmpty()) {
+                if(!m.isEmpty())
+                {
+                    if (m.cols == cols){
+                        // add more rows, since the columns are the same dimension
+                        data = (float *)realloc(data, (rows+m.rows)*cols*sizeof(float));
+                        cblas_scopy(m.rows*cols, m.data, 1, data + (rows*cols), 1);
+                        rows+=m.rows;
+                    }
+                    else {
+                        // the columns don't match, and there are more than 1 rows, so no idea how to push back
+                        if (m.rows > 1 || rows > 1) {
+                            printf("[ERROR]: pkm::Mat push_back(Mat m) requires same number of columns or both matrices with <= 1 rows to concat along columns!\n");
+                            return;
+                        }
+                        // the columns don't match but the rows must be equal to 1 (because it is not empty)
+                        else
+                        {
+                            // extend along column dimension
+                            data = (float *)realloc(data, (cols + m.cols)*sizeof(float));
+                            cblas_scopy(m.cols, m.data, 1, data + cols, 1);
+                            cols += m.cols;
+                        }
+                    }
                 }
-                if (m.bAllocated && (m.cols > 0) && (m.rows > 0)) {
-                    data = (float *)realloc(data, (rows+m.rows)*cols*sizeof(float));
-                    cblas_scopy(m.rows*cols, m.data, 1, data + (rows*cols), 1);
-                    rows+=m.rows;
-                }
+                // so m is empty, nothing to do
                 else {
                     printf("[ERROR]: pkm::Mat push_back(Mat m), matrix m is empty!\n");
                     return;
@@ -1156,14 +1178,22 @@ namespace pkm
                 print("[Warning]: Transposing user data!");
             }
 #endif
-            float *temp_data = (float *)malloc(sizeof(float)*rows*cols);
-			vDSP_mtrans(data, 1, temp_data, 1, cols, rows);
-			cblas_scopy(rows*cols, temp_data, 1, data, 1);
-            free(temp_data);
-            temp_data = NULL;
-            int tempvar = cols;
-            cols = rows;
-            rows = tempvar;
+            if (rows == 1 || cols == 1) {
+                
+                size_t tempvar = cols;
+                cols = rows;
+                rows = tempvar;
+            }
+            else {
+                float *temp_data = (float *)malloc(sizeof(float)*rows*cols);
+                vDSP_mtrans(data, 1, temp_data, 1, cols, rows);
+                cblas_scopy(rows*cols, temp_data, 1, data, 1);
+                free(temp_data);
+                temp_data = NULL;
+                size_t tempvar = cols;
+                cols = rows;
+                rows = tempvar;
+            }
 		}
 		
 		Mat getTranspose() const;
@@ -1209,6 +1239,23 @@ namespace pkm
             
 		}
 		Mat getDiag() const;
+        
+        void flatten(bool row_major = true)
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+#endif
+            if(row_major)
+            {
+                cols = rows * cols;
+                rows = rows > 1 ? 1 : 0;
+            }
+            else
+            {
+                rows = rows * cols;
+                cols = cols > 1 ? 1 : 0;
+            }
+        }
 		
         void abs();
         
