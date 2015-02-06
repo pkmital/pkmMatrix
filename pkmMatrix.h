@@ -115,7 +115,7 @@
 #endif
 
 //#define DEBUG
-#define HAVE_OPENCV
+//#define HAVE_OPENCV
 
 #ifdef HAVE_OPENCV
 #include <opencv2/opencv.hpp>
@@ -123,6 +123,9 @@
 
 using namespace std;
 
+#ifndef EPSILON
+#define EPSILON 0.0000001
+#endif
 
 #ifndef MAX
 #define MAX(a,b)  ((a) < (b) ? (b) : (a))
@@ -531,6 +534,7 @@ namespace pkm
             }
         }
         
+        // can be used to swap r and c, but without manipulating data... not sure when this would be useful
         void reshape(int r, int c)
         {
             if ((r * c) == (rows * cols))
@@ -540,6 +544,8 @@ namespace pkm
             }
         }
 		
+        // attempt to resize to new dimensions without interpolating data, just keeping it...
+        // could be more efficient to create new matrix and push_back, i haven't tested this method too much.
         void resize(int r, int c, bool clear = false)
         {
 #ifdef DEBUG
@@ -631,6 +637,161 @@ namespace pkm
 			}
 		}
         
+        // interpolates data (row-major) to new size
+        void rescale(int r, int c)
+        {
+            Mat interp_mat(r, c);
+            size_t old_size = rows*cols;
+            size_t new_size = r*c;
+            float factor = (float)std::max<size_t>(0, old_size - 1) / (float)std::max<size_t>(0, new_size - 1);
+            for (int i = 0; i < new_size; i++) {
+                interp_mat[i] = factor*i;
+            }
+            
+            float *new_data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4(new_size));
+            
+            vDSP_vlint(data, interp_mat.data, 1, new_data, 1, new_size, old_size);
+            free(data);
+            data = new_data;
+            
+            rows = r;
+            cols = c;
+        }
+        
+        // interpolates data (row-major) to new size
+        void rescale(int r, int c, Mat &new_mat) const
+        {
+            Mat interp_mat(r, c);
+            size_t old_size = rows*cols;
+            size_t new_size = r*c;
+            float factor = (float)std::max<size_t>(0, old_size - 1) / (float)std::max<size_t>(0, new_size - 1);
+            for (float i = 0; i < new_size; i++) {
+                interp_mat[i] = factor * i;
+            }
+            
+            new_mat = Mat(r, c);
+            
+            vDSP_vlint(data, interp_mat.data, 1, new_mat.data, 1, new_size, old_size);
+        }
+        
+        // like rescale, but 2D information preserved..
+        void interpolate(int r, int c)
+        {
+            float *new_data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4(r * c));
+            
+            vImage_Buffer src = { (void *)data, (vImagePixelCount)rows, (vImagePixelCount)cols, (size_t)(sizeof(float) * cols) };
+            vImage_Buffer dest = { (void *)new_data, (vImagePixelCount)r, (vImagePixelCount)c, (size_t)(sizeof(float) * cols) };
+            vImage_Error err = vImageScale_PlanarF(&src, &dest, NULL, kvImageNoFlags);
+            
+            if(err == kvImageNoError)
+            {
+                
+            }
+            else if (err ==  kvImageRoiLargerThanInputBuffer)
+            {
+                cout << "image roi larger than input buffer" << endl;
+            }
+            else if (err == kvImageInvalidKernelSize)
+            {
+                cout << "image invalid kernel size" << endl;
+            }
+            else if (err == kvImageInvalidEdgeStyle)
+            {
+                cout << "invalid edge style" << endl;
+            }
+            else if (err == kvImageInvalidOffset_X)
+            {
+                cout << "invalid image offset x" << endl;
+            }
+            else if (err == kvImageInvalidOffset_Y)
+            {
+                cout << "invalid image offset y" << endl;
+            }
+            else if (err == kvImageMemoryAllocationError)
+            {
+                cout << "image memory allocation error" << endl;
+            }
+            else if (err == kvImageNullPointerArgument)
+            {
+                cout << "image null pointer argument error" << endl;
+            }
+            else if (err == kvImageInvalidParameter)
+            {
+                cout << "image invalid parameter" << endl;
+            }
+            else if (err == kvImageBufferSizeMismatch)
+            {
+                cout << "image buffer size mismatch" << endl;
+            }
+            else if (err == kvImageUnknownFlagsBit)
+            {
+                cout << "unknown flag bit error" << endl;
+            }
+            
+            free(data);
+            data = new_data;
+            
+            rows = r;
+            cols = c;
+        }
+        
+        
+        // like rescale, but 2D information preserved..
+        void interpolate(int r, int c, Mat &new_mat) const
+        {
+            new_mat.reset(r, c);
+            
+            vImage_Buffer src = { (void *)data, (vImagePixelCount)rows, (vImagePixelCount)cols, (size_t)sizeof(float) * cols };
+            vImage_Buffer dest = { (void *)new_mat.data, (vImagePixelCount)r, (vImagePixelCount)c, (size_t)sizeof(float) * c };
+            vImage_Error err = vImageScale_PlanarF(&src, &dest, NULL, kvImageNoFlags);
+            
+            if(err == kvImageNoError)
+            {
+                
+            }
+            else if (err ==  kvImageRoiLargerThanInputBuffer)
+            {
+                cout << "image roi larger than input buffer" << endl;
+            }
+            else if (err == kvImageInvalidKernelSize)
+            {
+                cout << "image invalid kernel size" << endl;
+            }
+            else if (err == kvImageInvalidEdgeStyle)
+            {
+                cout << "invalid edge style" << endl;
+            }
+            else if (err == kvImageInvalidOffset_X)
+            {
+                cout << "invalid image offset x" << endl;
+            }
+            else if (err == kvImageInvalidOffset_Y)
+            {
+                cout << "invalid image offset y" << endl;
+            }
+            else if (err == kvImageMemoryAllocationError)
+            {
+                cout << "image memory allocation error" << endl;
+            }
+            else if (err == kvImageNullPointerArgument)
+            {
+                cout << "image null pointer argument error" << endl;
+            }
+            else if (err == kvImageInvalidParameter)
+            {
+                cout << "image invalid parameter" << endl;
+            }
+            else if (err == kvImageBufferSizeMismatch)
+            {
+                cout << "image buffer size mismatch" << endl;
+            }
+            else if (err == kvImageUnknownFlagsBit)
+            {
+                cout << "unknown flag bit error" << endl;
+            }
+            
+        }
+        
         // can be used to create an already declared matrix without a copy constructor
 		void reset(int r, int c, float val)
 		{
@@ -663,6 +824,7 @@ namespace pkm
 			vDSP_vfill(&val, data, 1, rows * cols);
 		}	
 		
+        // set every element to 0
 		inline void clear()
 		{
 			if (rows == 0 || cols == 0) {
@@ -707,8 +869,15 @@ namespace pkm
                 {
                     if (m.cols == cols){
                         // add more rows, since the columns are the same dimension
-                        data = (float *)realloc(data, (rows+m.rows)*cols*sizeof(float));
-                        cblas_scopy(m.rows*cols, m.data, 1, data + (rows*cols), 1);
+                        float *temp_data = (float *)malloc((rows+m.rows)*cols*sizeof(float));
+                        
+                        cblas_scopy(rows*cols, data, 1, temp_data, 1);
+                        
+                        cblas_scopy(m.rows*m.cols, m.data, 1, temp_data + (rows*cols), 1);
+
+                        free(data);
+                        data = temp_data;
+                        
                         rows+=m.rows;
                     }
                     else {
@@ -1201,7 +1370,7 @@ namespace pkm
 		
 		// diagonalize the vector into a square matrix with 
 		// the current data vector along the diagonal
-		inline void setDiag()
+		inline void setDiagMat()
 		{
 #ifdef DEBUG
 			assert(data != NULL);
@@ -1237,8 +1406,9 @@ namespace pkm
                 }
 			}
             
-		}
-		Mat getDiag() const;
+        }
+        Mat getDiag() const;
+        Mat getDiagMat() const;
         
         void flatten(bool row_major = true)
         {
@@ -1270,8 +1440,9 @@ namespace pkm
 		static Mat exp(Mat &A);
 		*/
         
-		// returns a new diagonalized matrix version of A
-		static Mat diag(const Mat &A);
+        // returns a new diagonalized matrix version of A
+//        static Mat diag(const Mat &A);
+        static Mat diagMat(const Mat &A);
 		
 		// get a new identity matrix of size dim x dim
 		static Mat identity(size_t dim);
@@ -1466,6 +1637,14 @@ namespace pkm
 			return maxval;
 		}
         
+        unsigned long maxIndex()
+        {
+            float maxval;
+            unsigned long maxidx;
+            vDSP_maxvi(data, 1, &maxval, &maxidx, rows*cols);
+            return maxidx;
+        }
+        
         static unsigned long maxIndex(const Mat &A)
         {
             float maxval;
@@ -1617,7 +1796,7 @@ namespace pkm
                     vDSP_sve(data + i, cols, &sumval, size);
                     vDSP_svesq(data + i, cols, &sumsquareval, size);
                     mean = sumval / (float) size;
-                    stddev = sqrtf( sumsquareval / (float) size - mean * mean);
+                    stddev = sqrtf( sumsquareval / (float) size - mean * mean) + EPSILON;
                     
                     // subtract mean
                     float rhs = -mean;

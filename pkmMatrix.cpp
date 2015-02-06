@@ -496,9 +496,36 @@ Mat Mat::getTranspose() const
 	return transposedMatrix;
 }
 
+// get the diagonalized vector of a matrix (non-destructive)
+Mat Mat::getDiag() const
+{
+#ifndef DEBUG
+    assert(data != NULL && rows == cols);
+#endif
+
+    
+    if(rows == 1 && cols == 1)
+    {
+        return *this;
+    }
+    else
+    {
+        size_t diagonal_elements = std::min<size_t>(rows,cols);
+        
+        // create a square matrix
+        Mat diagonalMatrix(1, diagonal_elements, true);
+        
+        // set diagonal elements to the current vector in data
+        for (size_t i = 0; i < diagonal_elements; i++) {
+            diagonalMatrix.data[i] = data[i*diagonal_elements+i];
+        }
+        return diagonalMatrix;
+    }
+}
+
 
 // get a diagonalized version of the current vector (non-destructive)
-Mat Mat::getDiag() const
+Mat Mat::getDiagMat() const
 {
 #ifndef DEBUG
 	assert(data != NULL);
@@ -527,7 +554,7 @@ Mat Mat::getDiag() const
 	}
 }
 
-Mat Mat::diag(const Mat &A)
+Mat Mat::diagMat(const Mat &A)
 {
 	if((A.rows == 1 && A.cols > 1) || (A.cols == 1 && A.rows > 1))
 	{
