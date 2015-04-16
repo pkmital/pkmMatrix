@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		891D7B141346447A008B6915 /* pkmMatrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 891D7B131346447A008B6915 /* pkmMatrix.cpp */; };
 		891D7B191346453D008B6915 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 891D7B181346453D008B6915 /* Accelerate.framework */; };
-		892C3A8A1630D584007A16E3 /* pkmDTW.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 892C3A891630D584007A16E3 /* pkmDTW.cpp */; };
 		8DD76F650486A84900D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 		8DD76F6A0486A84900D96B5E /* pkmMatrix.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = C6859E8B029090EE04C91782 /* pkmMatrix.1 */; };
 /* End PBXBuildFile section */
@@ -32,8 +31,6 @@
 		891D7B121346447A008B6915 /* pkmMatrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pkmMatrix.h; sourceTree = "<group>"; };
 		891D7B131346447A008B6915 /* pkmMatrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pkmMatrix.cpp; sourceTree = "<group>"; };
 		891D7B181346453D008B6915 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
-		892C3A881630D57D007A16E3 /* pkmDTW.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pkmDTW.h; sourceTree = "<group>"; };
-		892C3A891630D584007A16E3 /* pkmDTW.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pkmDTW.cpp; sourceTree = "<group>"; };
 		8DD76F6C0486A84900D96B5E /* pkmMatrix */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pkmMatrix; sourceTree = BUILT_PRODUCTS_DIR; };
 		C6859E8B029090EE04C91782 /* pkmMatrix.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = pkmMatrix.1; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -67,8 +64,6 @@
 				08FB7796FE84155DC02AAC07 /* main.cpp */,
 				891D7B121346447A008B6915 /* pkmMatrix.h */,
 				891D7B131346447A008B6915 /* pkmMatrix.cpp */,
-				892C3A881630D57D007A16E3 /* pkmDTW.h */,
-				892C3A891630D584007A16E3 /* pkmDTW.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -115,6 +110,8 @@
 /* Begin PBXProject section */
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "pkmMatrix" */;
 			compatibilityVersion = "Xcode 3.1";
 			developmentRegion = English;
@@ -141,7 +138,6 @@
 			files = (
 				8DD76F650486A84900D96B5E /* main.cpp in Sources */,
 				891D7B141346447A008B6915 /* pkmMatrix.cpp in Sources */,
-				892C3A8A1630D584007A16E3 /* pkmDTW.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -159,6 +155,7 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/bin;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = pkmMatrix;
 			};
 			name = Debug;
@@ -171,6 +168,7 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/bin;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = pkmMatrix;
 			};
 			name = Release;

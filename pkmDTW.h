@@ -82,8 +82,7 @@ negotiate a licence. Contact details are: parag@pkmital.com
 
 #include "pkmMatrix.h"
 
-//#define WITH_OF
-//#define WITH_FEATURE_WEIGHTING
+#define WITH_OF
 
 #ifdef WITH_OF
 #include "ofMain.h"
@@ -104,24 +103,7 @@ public:
         bUseCosineDistance = false;
         
         range = 0.5;
-#ifdef WITH_FEATURE_WEIGHTING
-        featureWeights = Mat(1,36,3.0f);
-        featureWeights[0] = 1.45f;
-        featureWeights[1] = 3.12f;
-        featureWeights[2] = 4.38f;
-        featureWeights[3] = 4.34f;
-        featureWeights[4] = 4.83f;
-        featureWeights[5] = 4.9f;
-        featureWeights[6] = 4.7f;
-        featureWeights[7] = 6.48f;
-        featureWeights[8] = 5.02f;
-        featureWeights[9] = 4.22f;
-        featureWeights[10] = 4.44f;
-        featureWeights[11] = 5.2f;
-        featureWeights[12] = 6.49f;
-        featureWeights[24] = 8.4f;
-        
-#endif
+
         bestSoFar = INFINITY;
     }
     // -------------------------------------------------------------------------
@@ -251,6 +233,9 @@ public:
 #ifdef WITH_OF
         candidates.save(ofToDataPath("dtw.txt"));
         candidates_lut.save(ofToDataPath("dtw_lut.txt"));
+#else
+        candidates.save("dtw.txt");
+        candidates_lut.save("dtw_lut.txt");
 #endif        
     }
     // -------------------------------------------------------------------------
@@ -261,6 +246,9 @@ public:
 #ifdef WITH_OF
         candidates.load(ofToDataPath("dtw.txt"));
         candidates_lut.load(ofToDataPath("dtw_lut.txt"));
+#else
+        candidates.load("dtw.txt");
+        candidates_lut.load("dtw_lut.txt");
 #endif
         
         if(bUseZNormalize)
@@ -357,9 +345,7 @@ protected:
                         Mat p2(1, query.cols, query.row(j), false);
                         p1.subtract(p2, ssd);
                         ssd.sqr();
-#ifdef WITH_FEATURE_WEIGHTING
-                        ssd.multiply(featureWeights, ssd);
-#endif
+
                         differenceMatrix.data[query.rows*i + j] = ssd.sumAll() / ssd.size();
 
 //                        differenceMatrix.data[query.rows*i + j] = L1Norm(candidate.row(i), query.row(j), query.cols);
@@ -540,10 +526,6 @@ private:
     
     Mat             queryLB;
     Mat             queryUB;
-    
-#ifdef WITH_FEATURE_WEIGHTING
-    Mat             featureWeights;
-#endif
     // -------------------------------------------------------------------------
     
     // -------------------------------------------------------------------------

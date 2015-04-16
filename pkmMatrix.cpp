@@ -125,7 +125,7 @@ Mat::Mat(const vector<vector<float> > m)
     cols = m[0].size();
     data = (float *)malloc(sizeof(float)*MULTIPLE_OF_4(rows*cols));
     
-    for(int i = 0; i < rows; i++)
+    for(size_t i = 0; i < rows; i++)
         cblas_scopy(cols, &(m[i][0]), 1, data+i*cols, 1);
     
 	current_row = 0;
@@ -141,7 +141,7 @@ Mat::Mat(const cv::Mat &m)
     cols = m.cols;
     data = (float *)malloc(sizeof(float)*MULTIPLE_OF_4(rows*cols));
     
-    for(int i = 0; i < rows; i++)
+    for(size_t i = 0; i < rows; i++)
         cblas_scopy(cols, m.ptr<float>(i), 1, data+i*cols, 1);
     
 	current_row = 0;
@@ -608,7 +608,7 @@ Mat Mat::log(Mat &A)
            A.cols >0);
 #endif	
 	Mat newMat(A.rows, A.cols);
-	for(int i = 0; i < A.rows*A.cols; i++)
+	for(size_t i = 0; i < A.rows*A.cols; i++)
 	{
 		newMat.data[i] = logf(A.data[i]);
 	}
@@ -623,7 +623,7 @@ Mat Mat::exp(Mat &A)
            A.cols >0);
 #endif	
 	Mat newMat(A.rows, A.cols);
-	for(int i = 0; i < A.rows*A.cols; i++)
+	for(size_t i = 0; i < A.rows*A.cols; i++)
 	{
 		newMat.data[i] = expf(A.data[i]);
 	}

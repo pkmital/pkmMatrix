@@ -1,6 +1,8 @@
+/* Note the copyright below.  I obviously don't care if firefly is using this code for commercial work since they're paying me. */
+
 /*
  *  pkmMatrix.h
- *  
+ *
  
  row-major floating point matrix utility class
  utilizes Apple Accelerate's vDSP functions for SSE optimizations
@@ -11,11 +13,11 @@
  ("pkmital") The Licensee will ensure that the Copyright Notice set
  out above appears prominently wherever the Software is used.
  
- The Software is distributed under this Licence: 
+ The Software is distributed under this Licence:
  
- - on a non-exclusive basis, 
+ - on a non-exclusive basis,
  
- - solely for non-commercial use in the hope that it will be useful, 
+ - solely for non-commercial use in the hope that it will be useful,
  
  - "AS-IS" and in order for the benefit of its educational and research
  purposes, pkmital makes clear that no condition is made or to be
@@ -25,7 +27,7 @@
  use or for use under any specific conditions; and (iii) whether use
  of the Software will infringe third-party rights.
  
- pkmital disclaims: 
+ pkmital disclaims:
  
  - all responsibility for the use which is made of the Software; and
  
@@ -45,7 +47,7 @@
  arise directly or indirectly from the use of the Software or any
  derivative of it or the sale of any products based on the
  Software. The Licensee undertakes to make no liability claim against
- any employee, student, agent or appointee of pkmital, in connection 
+ any employee, student, agent or appointee of pkmital, in connection
  with this Licence or the Software.
  
  
@@ -110,7 +112,7 @@
 #include <Accelerate/Accelerate.h>
 #include <vector>
 
-#ifdef OPENCV_ERROR
+#ifdef OPENCV
 #define HAVE_OPENCV
 #endif
 
@@ -145,373 +147,373 @@ template <typename T> int signum(T val) {
 
 namespace pkm
 {
-	// row-major floating point matrix
-	class Mat
-	{
-		/////////////////////////////////////////
-	public:
-		// default constructor
-		Mat();
-		
-		// destructor
-		~Mat();
-		
+    // row-major floating point matrix
+    class Mat
+    {
+        /////////////////////////////////////////
+    public:
+        // default constructor
+        Mat();
+        
+        // destructor
+        ~Mat();
+        
         Mat(const vector<float> m);
         
         Mat(const vector<vector<float> > m);
 #ifdef HAVE_OPENCV
         Mat(const cv::Mat &m);
 #endif
-		// allocate data
-		Mat(size_t r, size_t c, bool clear = false);
-		
-		// pass in existing data
-		// non-destructive by default
-		Mat(size_t r, size_t c, float *existing_buffer, bool withCopy);
+        // allocate data
+        Mat(size_t r, size_t c, bool clear = false);
+        
+        // pass in existing data
+        // non-destructive by default
+        Mat(size_t r, size_t c, float *existing_buffer, bool withCopy);
         
         Mat(size_t r, size_t c, const float *existing_buffer);
-		
-		// set every element to a value
-		Mat(size_t r, size_t c, float val);
-		
-		// copy-constructor, called during:
-		//		pkm::Mat a(rhs);
-		Mat(const Mat &rhs);
-		Mat & operator=(const Mat &rhs);
-		Mat & operator=(const vector<float> &rhs);
-		Mat & operator=(const vector<vector<float> > &rhs);
+        
+        // set every element to a value
+        Mat(size_t r, size_t c, float val);
+        
+        // copy-constructor, called during:
+        //		pkm::Mat a(rhs);
+        Mat(const Mat &rhs);
+        Mat & operator=(const Mat &rhs);
+        Mat & operator=(const vector<float> &rhs);
+        Mat & operator=(const vector<vector<float> > &rhs);
 #ifdef HAVE_OPENCV
         Mat & operator=(const cv::Mat &rhs);
         cv::Mat cvMat() const;
 #endif
-		
-		inline Mat operator+(const Mat &rhs) const
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(rows == rhs.rows &&
-				   cols == rhs.cols);
-#endif			
-			Mat newMat(rows, cols);
-			vDSP_vadd(data, 1, rhs.data, 1, newMat.data, 1, rows*cols);
-			return newMat;
-		}
-		
-		
-		inline Mat operator+(float rhs) const
-		{	
-#ifdef DEBUG			
-			assert(data != NULL);
-#endif			
-			Mat newMat(rows, cols);
-			vDSP_vsadd(data, 1, &rhs, newMat.data, 1, rows*cols);
-			return newMat;
-		}
-		
-		inline Mat operator-(const Mat &rhs) const
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(rows == rhs.rows &&
-				   cols == rhs.cols);
-#endif			
-			Mat newMat(rows, cols);
-			vDSP_vsub(data, 1, rhs.data, 1, newMat.data, 1, rows*cols);
-			return newMat;
-		}
-		
-
-		
-		inline Mat operator-(const float scalar) const
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-#endif			
-			Mat newMat(rows, cols);
-			float rhs = -scalar;
-			vDSP_vsadd(data, 1, &rhs, newMat.data, 1, rows*cols);
-			return newMat;
-		}
-		
-		
-		inline Mat operator*(const pkm::Mat &rhs) const
-		{
+        
+        inline Mat operator+(const Mat &rhs) const
+        {
 #ifdef DEBUG
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(cols == rhs.rows);
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(rows == rhs.rows &&
+                   cols == rhs.cols);
 #endif
-			
-			Mat gemmResult(rows, rhs.cols);
-			//ldb must be >= MAX(N,1): ldb=30 N=3533Parameter 11 to routine cblas_sgemm was incorrect
-			cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, gemmResult.rows, gemmResult.cols, cols, 1.0f, data, cols, rhs.data, rhs.cols, 0.0f, gemmResult.data, gemmResult.cols);
-			//vDSP_mmul(data, 1, rhs.data, 1, gemmResult.data, 1, gemmResult.rows, gemmResult.cols, cols);
-			return gemmResult;
-		}
-		
-
-		
-		inline Mat operator*(float scalar) const
-		{
+            Mat newMat(rows, cols);
+            vDSP_vadd(data, 1, rhs.data, 1, newMat.data, 1, rows*cols);
+            return newMat;
+        }
+        
+        
+        inline Mat operator+(float rhs) const
+        {
 #ifdef DEBUG
-			assert(data != NULL);
+            assert(data != NULL);
 #endif
-			
-			Mat gemmResult(rows, cols);
-			vDSP_vsmul(data, 1, &scalar, gemmResult.data, 1, rows*cols);
-			
-			return gemmResult;
-		}
-		
-		
-		inline Mat operator/(const Mat &rhs) const
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(rows == rhs.rows && 
-				   cols == rhs.cols);
-#endif			
-			Mat result(rows, cols);
-			vDSP_vdiv(rhs.data, 1, data, 1, result.data, 1, rows*cols);
-			return result;
-		}
-		
-		inline Mat operator/(float scalar) const
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-#endif			
-			Mat result(rows, cols);
-			vDSP_vsdiv(data, 1, &scalar, result.data, 1, rows*cols);
-			return result;
-			
-		}
-		
-		inline Mat operator>(const Mat &rhs) const
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(rows == rhs.rows && 
-				   cols == rhs.cols);
-#endif			
-			Mat result(rows, cols);
-			for(int i = 0; i < rows*cols; i++)
-				result.data[i] = data[i] > rhs.data[i];
-			return result;
-		}
-		
-		inline Mat operator>(float scalar) const
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-#endif			
-			Mat result(rows, cols);
-			for(int i = 0; i < rows*cols; i++)
-				result.data[i] = data[i] > scalar;
-			return result;
-		}
-		
-		inline Mat operator>=(const Mat &rhs) const
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(rows == rhs.rows && 
-				   cols == rhs.cols);
-#endif			
-			Mat result(rows, cols);
-			for(int i = 0; i < rows*cols; i++)
-				result.data[i] = data[i] >= rhs.data[i];
-			return result;
-		}
-		
-		inline Mat operator>=(float scalar) const
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-#endif			
-			Mat result(rows, cols);
-			for(int i = 0; i < rows*cols; i++)
-				result.data[i] = data[i] >= scalar;
-			return result;
-		}
-		
-		inline Mat operator<(const Mat &rhs) const
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(rows == rhs.rows && 
-				   cols == rhs.cols);
-#endif			
-			Mat result(rows, cols);
-			for(int i = 0; i < rows*cols; i++)
-				result.data[i] = data[i] < rhs.data[i];
-			return result;
-		}
-		
-		inline Mat operator<(float scalar) const
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-#endif			
-			Mat result(rows, cols);
-			for(int i = 0; i < rows*cols; i++)
-				result.data[i] = data[i] < scalar;
-			return result;
-		}
-		
-		inline Mat operator<=(const Mat &rhs) const
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(rows == rhs.rows && 
-				   cols == rhs.cols);
-#endif			
-			Mat result(rows, cols);
-			for(int i = 0; i < rows*cols; i++)
-				result.data[i] = data[i] <= rhs.data[i];
-			return result;
-		}
-		
-		inline Mat operator<=(float scalar) const
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-#endif			
-			Mat result(rows, cols);
-			for(int i = 0; i < rows*cols; i++)
-				result.data[i] = data[i] <= scalar;
-			return result;
-		}
-		
-		inline Mat operator==(const Mat &rhs) const
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(rows == rhs.rows && 
-				   cols == rhs.cols);
-#endif			
-			Mat result(rows, cols);
-			for(int i = 0; i < rows*cols; i++)
-				result.data[i] = data[i] == rhs.data[i];
-			return result;
-		}
-		
-		inline Mat operator==(float scalar) const
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-#endif			
-			Mat result(rows, cols);
-			for(int i = 0; i < rows*cols; i++)
-				result.data[i] = data[i] == scalar;
-			return result;
-		}
-		
-		inline Mat operator!=(const Mat &rhs) const
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(rows == rhs.rows && 
-				   cols == rhs.cols);
-#endif			
-			Mat result(rows, cols);
-			for(int i = 0; i < rows*cols; i++)
-				result.data[i] = data[i] != rhs.data[i];
-			return result;
-		}
-		
-		inline Mat operator!=(float scalar) const
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-#endif			
-			Mat result(rows, cols);
-			for(int i = 0; i < rows*cols; i++)
-				result.data[i] = data[i] != scalar;
-			return result;
-		}
-		
-		inline float & operator[](int idx) const
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-			assert(rows*cols >= idx);
-#endif	
-			return data[idx];
-		}
-		
-		// return a vector composed on non-zero indices of logicalMat
-		inline Mat operator[](const Mat &rhs) const
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(rows == rhs.rows && 
-				   cols == rhs.cols);
-#endif	
-			std::vector<float> newMat;
-			for(int i = 0; i < rows*cols; i++)
-			{
-				if (rhs.data[i] > 0) {
-					newMat.push_back(data[i]);
-				}
-			}
-			if (newMat.size() > 0) {
-				Mat result(1,newMat.size());
-				for(int i = 0; i < newMat.size(); i++)
-				{
-					result.data[i] = newMat[i];
-				}
-				return result;
-			}
-			else {
-				Mat empty;
-				return empty;
-			}
-		}
-		
-
-		
-		friend Mat operator-(float lhs, const Mat &rhs)
-		{
-#ifdef DEBUG			
-			assert(rhs.data != NULL);
-#endif			
-			Mat newMat(rhs.rows, rhs.cols);
-			float scalar = -lhs;
-			vDSP_vsadd(rhs.data, 1, &scalar, newMat.data, 1, rhs.rows*rhs.cols);
-			return newMat;
-		}
-		
-		friend Mat operator*(float lhs, const Mat &rhs)
-		{
+            Mat newMat(rows, cols);
+            vDSP_vsadd(data, 1, &rhs, newMat.data, 1, rows*cols);
+            return newMat;
+        }
+        
+        inline Mat operator-(const Mat &rhs) const
+        {
 #ifdef DEBUG
-			assert(rhs.data != NULL);
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(rows == rhs.rows &&
+                   cols == rhs.cols);
 #endif
-			
-			Mat gemmResult(rhs.rows, rhs.cols);
-			vDSP_vsmul(rhs.data, 1, &lhs, gemmResult.data, 1, rhs.rows*rhs.cols);
-			
-			return gemmResult;
-		}
-		friend Mat operator+(float lhs, const Mat &rhs)
-		{
-#ifdef DEBUG			
-			assert(rhs.data != NULL);
-#endif			
-			Mat newMat(rhs.rows, rhs.cols);
-			vDSP_vsadd(rhs.data, 1, &lhs, newMat.data, 1, rhs.rows*rhs.cols);
-			return newMat;
-		}
+            Mat newMat(rows, cols);
+            vDSP_vsub(data, 1, rhs.data, 1, newMat.data, 1, rows*cols);
+            return newMat;
+        }
+        
+        
+        
+        inline Mat operator-(const float scalar) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+#endif
+            Mat newMat(rows, cols);
+            float rhs = -scalar;
+            vDSP_vsadd(data, 1, &rhs, newMat.data, 1, rows*cols);
+            return newMat;
+        }
+        
+        
+        inline Mat operator*(const pkm::Mat &rhs) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(cols == rhs.rows);
+#endif
+            
+            Mat gemmResult(rows, rhs.cols);
+            //ldb must be >= MAX(N,1): ldb=30 N=3533Parameter 11 to routine cblas_sgemm was incorrect
+            cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, gemmResult.rows, gemmResult.cols, cols, 1.0f, data, cols, rhs.data, rhs.cols, 0.0f, gemmResult.data, gemmResult.cols);
+            //vDSP_mmul(data, 1, rhs.data, 1, gemmResult.data, 1, gemmResult.rows, gemmResult.cols, cols);
+            return gemmResult;
+        }
+        
+        
+        
+        inline Mat operator*(float scalar) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+#endif
+            
+            Mat gemmResult(rows, cols);
+            vDSP_vsmul(data, 1, &scalar, gemmResult.data, 1, rows*cols);
+            
+            return gemmResult;
+        }
+        
+        
+        inline Mat operator/(const Mat &rhs) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(rows == rhs.rows &&
+                   cols == rhs.cols);
+#endif
+            Mat result(rows, cols);
+            vDSP_vdiv(rhs.data, 1, data, 1, result.data, 1, rows*cols);
+            return result;
+        }
+        
+        inline Mat operator/(float scalar) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+#endif
+            Mat result(rows, cols);
+            vDSP_vsdiv(data, 1, &scalar, result.data, 1, rows*cols);
+            return result;
+            
+        }
+        
+        inline Mat operator>(const Mat &rhs) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(rows == rhs.rows &&
+                   cols == rhs.cols);
+#endif
+            Mat result(rows, cols);
+            for(int i = 0; i < rows*cols; i++)
+                result.data[i] = data[i] > rhs.data[i];
+            return result;
+        }
+        
+        inline Mat operator>(float scalar) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+#endif
+            Mat result(rows, cols);
+            for(int i = 0; i < rows*cols; i++)
+                result.data[i] = data[i] > scalar;
+            return result;
+        }
+        
+        inline Mat operator>=(const Mat &rhs) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(rows == rhs.rows &&
+                   cols == rhs.cols);
+#endif
+            Mat result(rows, cols);
+            for(int i = 0; i < rows*cols; i++)
+                result.data[i] = data[i] >= rhs.data[i];
+            return result;
+        }
+        
+        inline Mat operator>=(float scalar) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+#endif
+            Mat result(rows, cols);
+            for(int i = 0; i < rows*cols; i++)
+                result.data[i] = data[i] >= scalar;
+            return result;
+        }
+        
+        inline Mat operator<(const Mat &rhs) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(rows == rhs.rows &&
+                   cols == rhs.cols);
+#endif
+            Mat result(rows, cols);
+            for(int i = 0; i < rows*cols; i++)
+                result.data[i] = data[i] < rhs.data[i];
+            return result;
+        }
+        
+        inline Mat operator<(float scalar) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+#endif
+            Mat result(rows, cols);
+            for(int i = 0; i < rows*cols; i++)
+                result.data[i] = data[i] < scalar;
+            return result;
+        }
+        
+        inline Mat operator<=(const Mat &rhs) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(rows == rhs.rows &&
+                   cols == rhs.cols);
+#endif
+            Mat result(rows, cols);
+            for(int i = 0; i < rows*cols; i++)
+                result.data[i] = data[i] <= rhs.data[i];
+            return result;
+        }
+        
+        inline Mat operator<=(float scalar) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+#endif
+            Mat result(rows, cols);
+            for(int i = 0; i < rows*cols; i++)
+                result.data[i] = data[i] <= scalar;
+            return result;
+        }
+        
+        inline Mat operator==(const Mat &rhs) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(rows == rhs.rows &&
+                   cols == rhs.cols);
+#endif
+            Mat result(rows, cols);
+            for(int i = 0; i < rows*cols; i++)
+                result.data[i] = data[i] == rhs.data[i];
+            return result;
+        }
+        
+        inline Mat operator==(float scalar) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+#endif
+            Mat result(rows, cols);
+            for(int i = 0; i < rows*cols; i++)
+                result.data[i] = data[i] == scalar;
+            return result;
+        }
+        
+        inline Mat operator!=(const Mat &rhs) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(rows == rhs.rows &&
+                   cols == rhs.cols);
+#endif
+            Mat result(rows, cols);
+            for(int i = 0; i < rows*cols; i++)
+                result.data[i] = data[i] != rhs.data[i];
+            return result;
+        }
+        
+        inline Mat operator!=(float scalar) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+#endif
+            Mat result(rows, cols);
+            for(int i = 0; i < rows*cols; i++)
+                result.data[i] = data[i] != scalar;
+            return result;
+        }
+        
+        inline float & operator[](int idx) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(rows*cols >= idx);
+#endif
+            return data[idx];
+        }
+        
+        // return a vector composed on non-zero indices of logicalMat
+        inline Mat operator[](const Mat &rhs) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(rows == rhs.rows &&
+                   cols == rhs.cols);
+#endif
+            std::vector<float> newMat;
+            for(int i = 0; i < rows*cols; i++)
+            {
+                if (rhs.data[i] > 0) {
+                    newMat.push_back(data[i]);
+                }
+            }
+            if (newMat.size() > 0) {
+                Mat result(1,newMat.size());
+                for(int i = 0; i < newMat.size(); i++)
+                {
+                    result.data[i] = newMat[i];
+                }
+                return result;
+            }
+            else {
+                Mat empty;
+                return empty;
+            }
+        }
+        
+        
+        
+        friend Mat operator-(float lhs, const Mat &rhs)
+        {
+#ifdef DEBUG
+            assert(rhs.data != NULL);
+#endif
+            Mat newMat(rhs.rows, rhs.cols);
+            float scalar = -lhs;
+            vDSP_vsadd(rhs.data, 1, &scalar, newMat.data, 1, rhs.rows*rhs.cols);
+            return newMat;
+        }
+        
+        friend Mat operator*(float lhs, const Mat &rhs)
+        {
+#ifdef DEBUG
+            assert(rhs.data != NULL);
+#endif
+            
+            Mat gemmResult(rhs.rows, rhs.cols);
+            vDSP_vsmul(rhs.data, 1, &lhs, gemmResult.data, 1, rhs.rows*rhs.cols);
+            
+            return gemmResult;
+        }
+        friend Mat operator+(float lhs, const Mat &rhs)
+        {
+#ifdef DEBUG
+            assert(rhs.data != NULL);
+#endif
+            Mat newMat(rhs.rows, rhs.cols);
+            vDSP_vsadd(rhs.data, 1, &lhs, newMat.data, 1, rhs.rows*rhs.cols);
+            return newMat;
+        }
         
         bool isNaN()
         {
@@ -543,7 +545,7 @@ namespace pkm
                 cols = c;
             }
         }
-		
+        
         // attempt to resize to new dimensions without interpolating data, just keeping it...
         // could be more efficient to create new matrix and push_back, i haven't tested this method too much.
         void resize(int r, int c, bool clear = false)
@@ -555,7 +557,7 @@ namespace pkm
 #endif
             if (bAllocated)
             {
-            
+                
                 if (r >= rows && c >= cols) {
                     
                     if (bUserData) {
@@ -592,8 +594,8 @@ namespace pkm
                 else {
                     printf("[ERROR: pkmMatrix::resize()] Cannot resize to a smaller matrix (yet).\n");
                 }
-
-            
+                
+                
             }
             else
             {
@@ -611,31 +613,31 @@ namespace pkm
             }
             return;
         }
-		
-		// can be used to create an already declared matrix without a copy constructor
-		void reset(int r, int c, bool clear = false)
-		{
-//            if (!(r == rows && c == cols && !bUserData)) {
+        
+        // can be used to create an already declared matrix without a copy constructor
+        void reset(int r, int c, bool clear = false)
+        {
+            //            if (!(r == rows && c == cols && !bUserData)) {
             
-                rows = r;
-                cols = c;
-                current_row = 0;
-                bCircularInsertionFull = false;
-                
-                releaseMemory();
-                
-                data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
+            rows = r;
+            cols = c;
+            current_row = 0;
+            bCircularInsertionFull = false;
             
-                bAllocated = true;
-                bUserData = false;
-//            }
-			
-			// set every element to 0
-			if(clear)
-			{
-				vDSP_vclr(data, 1, MULTIPLE_OF_4(rows*cols));
-			}
-		}
+            releaseMemory();
+            
+            data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
+            
+            bAllocated = true;
+            bUserData = false;
+            //            }
+            
+            // set every element to 0
+            if(clear)
+            {
+                vDSP_vclr(data, 1, MULTIPLE_OF_4(rows*cols));
+            }
+        }
         
         // interpolates data (row-major) to new size
         void rescale(int r, int c)
@@ -793,63 +795,63 @@ namespace pkm
         }
         
         // can be used to create an already declared matrix without a copy constructor
-		void reset(int r, int c, float val)
-		{
-//            if (!bAllocated || r != rows || c != cols || bUserData) {
+        void reset(int r, int c, float val)
+        {
+            //            if (!bAllocated || r != rows || c != cols || bUserData) {
             
-                rows = r;
-                cols = c;
-                current_row = 0;
-                bCircularInsertionFull = false;
-                
-                releaseMemory();
-                
-                data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
-                
-                bAllocated = true;
-                bUserData = false;
-//            }
+            rows = r;
+            cols = c;
+            current_row = 0;
+            bCircularInsertionFull = false;
             
-			// set every element to val
+            releaseMemory();
+            
+            data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
+            
+            bAllocated = true;
+            bUserData = false;
+            //            }
+            
+            // set every element to val
             vDSP_vfill(&val, data, 1, rows*cols);
-			
-		}
-		
-		// set every element to a value
-		inline void setTo(float val)
-		{
+            
+        }
+        
+        // set every element to a value
+        inline void setTo(float val)
+        {
 #ifdef DEBUG
-			assert(data != NULL);
-#endif	
-			vDSP_vfill(&val, data, 1, rows * cols);
-		}	
-		
+            assert(data != NULL);
+#endif
+            vDSP_vfill(&val, data, 1, rows * cols);
+        }
+        
         // set every element to 0
-		inline void clear()
-		{
-			if (rows == 0 || cols == 0) {
-				return;
-			}
-
-			vDSP_vclr(data, 1, rows * cols);
-		}
-		
-		/////////////////////////////////////////
-		
-		inline float * row(int r)
-		{
+        inline void clear()
+        {
+            if (rows == 0 || cols == 0) {
+                return;
+            }
+            
+            vDSP_vclr(data, 1, rows * cols);
+        }
+        
+        /////////////////////////////////////////
+        
+        inline float * row(size_t r)
+        {
 #ifdef DEBUG
-			assert(data != NULL);
-#endif			
-			return (data + r*cols);
-		}
-		
-		inline void insertRow(const float *buf, int row_idx)
-		{
-			float * rowData = row(row_idx);
-			cblas_scopy(cols, buf, 1, rowData, 1);
-		}
-		
+            assert(data != NULL);
+#endif
+            return (data + r*cols);
+        }
+        
+        inline void insertRow(const float *buf, size_t row_idx)
+        {
+            float * rowData = row(row_idx);
+            cblas_scopy(cols, buf, 1, rowData, 1);
+        }
+        
         inline bool isEmpty() const
         {
             return !(bAllocated && (rows > 0) && (cols > 0));
@@ -874,7 +876,7 @@ namespace pkm
                         cblas_scopy(rows*cols, data, 1, temp_data, 1);
                         
                         cblas_scopy(m.rows*m.cols, m.data, 1, temp_data + (rows*cols), 1);
-
+                        
                         free(data);
                         data = temp_data;
                         
@@ -905,7 +907,7 @@ namespace pkm
             else {
                 *this = m;
             }
-
+            
         }
         
         void push_back(float m)
@@ -990,14 +992,14 @@ namespace pkm
             
         }
         
-		inline void insertRowCircularly(const float *buf)
-		{
-			insertRow(buf, current_row);
-			current_row = (current_row + 1) % rows;
-			if (current_row == 0) {
-				bCircularInsertionFull = true;
-			}
-		}
+        inline void insertRowCircularly(const float *buf)
+        {
+            insertRow(buf, current_row);
+            current_row = (current_row + 1) % rows;
+            if (current_row == 0) {
+                bCircularInsertionFull = true;
+            }
+        }
         
         inline void insertRowCircularly(const vector<float> &m)
         {
@@ -1043,7 +1045,7 @@ namespace pkm
             if(i == (rows - 1))
             {
                 rows--;
-                realloc(data, sizeof(float)*MULTIPLE_OF_4(rows*cols));       
+                realloc(data, sizeof(float)*MULTIPLE_OF_4(rows*cols));
             }
             // we have to preserve the memory after the deleted row
             else {
@@ -1055,294 +1057,294 @@ namespace pkm
                 cblas_scopy(cols * numRowsToCopy, temp_data, 1, row(i), 1);
                 free(temp_data);
                 temp_data = NULL;
-            }  
+            }
         }
-		
-		// inclusive of start, exclusive of end
-		// can be a copy of the original matrix, or a way of editing the original
-		// one by not copying the values (default)
-		inline Mat rowRange(int start, int end, bool withCopy = true)
-		{
+        
+        // inclusive of start, exclusive of end
+        // can be a copy of the original matrix, or a way of editing the original
+        // one by not copying the values (default)
+        inline Mat rowRange(int start, int end, bool withCopy = true)
+        {
 #ifdef DEBUG
-			assert(rows >= end);
+            assert(rows >= end);
             assert(end > start);
 #endif
-			Mat submat(end-start, cols, row(start), withCopy);
-			return submat;
-		}
-		
-		
-		inline Mat colRange(int start, int end, bool withCopy = true)
-		{
-#ifdef DEBUG
-			assert(cols >= end);
-#endif
-			setTranspose();
-			Mat submat(end-start, cols, row(start), withCopy);
-			setTranspose();
-			submat.setTranspose();
-			return submat;
-		}
-		
-		// copy data into the matrix
-		void copy(const Mat rhs)
-		{
-#ifdef DEBUG
-			assert(rhs.rows == rows);
-			assert(rhs.cols == cols);
-#endif
-			cblas_scopy(rows*cols, rhs.data, 1, data, 1);
-			
-		}
-		
-		void copy(const Mat &rhs, const Mat &indx)
-		{
-#ifdef DEBUG
-			assert(indx.rows == rows);
-			assert(indx.cols == cols);
-#endif
-			int idx = 0;
-			for(int i = 0; i < rows; i++)
-			{
-				for(int j = 0; j < cols; j++)
-				{
-					if (indx.data[i*cols + j]) {
-						data[i*cols + j] = rhs[idx];
-						idx++;
-					}
-				}
-				
-			}
-		}
-		
-		/////////////////////////////////////////
-		
-		// element-wise multiplication
-		inline void multiply(const Mat &rhs, Mat &result) const 
-		{
-#ifdef DEBUG
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(result.data != NULL);
-			assert(rows == rhs.rows && 
-				   rhs.rows == result.rows &&
-				   cols == rhs.cols && 
-				   rhs.cols == result.cols);
-#endif
-			vDSP_vmul(data, 1, rhs.data, 1, result.data, 1, rows*cols);
-			
-		}		
-		// element-wise multiplication
-		// result stored in newly created matrix
-		inline Mat multiply(const Mat &rhs) const
-		{
-#ifdef DEBUG
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(rows == rhs.rows && 
-				   cols == rhs.cols);
-#endif			
-			Mat multiplied_matrix(rows, cols);
-			
-			vDSP_vmul(data, 1, rhs.data, 1, multiplied_matrix.data, 1, rows*cols);
-			return multiplied_matrix;
-		}		
-		
-		inline void multiply(float scalar, Mat &result) const 
-		{
-#ifdef DEBUG
-			assert(data != NULL);
-			assert(result.data != NULL);
-			assert(rows == result.rows &&
-				   cols == result.cols);
-#endif			
-			vDSP_vsmul(data, 1, &scalar, result.data, 1, rows*cols);
-			
-		}
-		
-		inline void multiply(float scalar)
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-#endif
-			vDSP_vsmul(data, 1, &scalar, data, 1, rows*cols);
-		}
-		
-
-		
-		
-		inline void divide(const Mat &rhs, Mat &result) const 
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(result.data != NULL);
-			assert(rows == rhs.rows && 
-				   rhs.rows == result.rows &&
-				   cols == rhs.cols && 
-				   rhs.cols == result.cols);
-#endif			
-			vDSP_vdiv(rhs.data, 1, data, 1, result.data, 1, rows*cols);
-			
-		}
-		
-		inline void divide(const Mat &rhs)
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(rows == rhs.rows &&
-				   cols == rhs.cols);
-#endif			
-			vDSP_vdiv(rhs.data, 1, data, 1, data, 1, rows*cols);
-		}
-		
-		inline void divide(float scalar, Mat &result) const 
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-			assert(result.data != NULL);
-			assert(rows == result.rows &&
-				   cols == result.cols);
-#endif	
-			
-			vDSP_vsdiv(data, 1, &scalar, result.data, 1, rows*cols);
-		}
-		
-		inline void divide(float scalar)
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-#endif
-			vDSP_vsdiv(data, 1, &scalar, data, 1, rows*cols);
-		}
+            Mat submat(end-start, cols, row(start), withCopy);
+            return submat;
+        }
         
-        inline void divideUnder(float scalar, Mat &result) const 
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-			assert(result.data != NULL);
-			assert(rows == result.rows &&
-				   cols == result.cols);
-#endif	
-			
-			vDSP_svdiv(&scalar, data, 1, result.data, 1, rows*cols);
-		}
-		
-		inline void divideUnder(float scalar)
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-#endif
-			vDSP_svdiv(&scalar, data, 1, data, 1, rows*cols);
-		}
-		
-		inline void add(const Mat &rhs, Mat &result) const 
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(result.data != NULL);
-			assert(rows == rhs.rows && 
-				   rhs.rows == result.rows &&
-				   cols == rhs.cols && 
-				   rhs.cols == result.cols);
-#endif			
-			vDSP_vadd(data, 1, rhs.data, 1, result.data, 1, rows*cols);
-		}
-		
-		inline void add(const Mat &rhs)
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(rows == rhs.rows &&
-				   cols == rhs.cols);
-#endif			
-			vDSP_vadd(data, 1, rhs.data, 1, data, 1, rows*cols);
-		}
-		
-		inline void add(float scalar)
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-#endif			
-			vDSP_vsadd(data, 1, &scalar, data, 1, rows*cols);
-		}
-		
-		inline void subtract(const Mat &rhs, Mat &result) const 
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(result.data != NULL);
-			assert(rows == rhs.rows && 
-				   rhs.rows == result.rows &&
-				   cols == rhs.cols && 
-				   rhs.cols == result.cols);
-#endif			
-			vDSP_vsub(rhs.data, 1, data, 1, result.data, 1, rows*cols);
-			
-		}
-		
-		inline void subtract(const Mat &rhs)
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(rows == rhs.rows &&
-				   cols == rhs.cols);
-#endif			
-			vDSP_vsub(rhs.data, 1, data, 1, data, 1, rows*cols);
-		}
-		
-		inline void subtract(float scalar)
-		{
-#ifdef DEBUG			
-			assert(data != NULL);
-#endif			
-			float rhs = -scalar;
-			vDSP_vsadd(data, 1, &rhs, data, 1, rows*cols);
-		}
-			
-		
-		inline void GEMM(const Mat &rhs, Mat &result) const 
-		{
+        
+        inline Mat colRange(int start, int end, bool withCopy = true)
+        {
 #ifdef DEBUG
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(result.data != NULL);
-			assert(rows == result.rows &&
-				   rhs.cols == result.cols &&
-				   cols == rhs.rows);
+            assert(cols >= end);
 #endif
-			
-			cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, result.rows, result.cols, cols, 1.0f, data, cols, rhs.data, rhs.cols, 0.0f, result.data, result.cols);
-			//vDSP_mmul(data, 1, rhs.data, 1, result.data, 1, result.rows, result.cols, cols);
-			
-		}
-		
-		inline Mat GEMM(const pkm::Mat &rhs) const
-		{
+            setTranspose();
+            Mat submat(end-start, cols, row(start), withCopy);
+            setTranspose();
+            submat.setTranspose();
+            return submat;
+        }
+        
+        // copy data into the matrix
+        void copy(const Mat rhs)
+        {
 #ifdef DEBUG
-			assert(data != NULL);
-			assert(rhs.data != NULL);
-			assert(cols == rhs.rows);
+            assert(rhs.rows == rows);
+            assert(rhs.cols == cols);
 #endif
-			
-			Mat gemmResult(rows, rhs.cols);
-			
-			//printf("lda: %d\nldb: %d\nldc: %d\n", rows, rhs.rows, gemmResult.rows); 
-			cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, gemmResult.rows, gemmResult.cols, cols, 1.0f, data, cols, rhs.data, rhs.cols, 0.0f, gemmResult.data, gemmResult.cols);
-			//vDSP_mmul(data, 1, rhs.data, 1, gemmResult.data, 1, gemmResult.rows, gemmResult.cols, cols);
-			return gemmResult;
-			
-		}
-				
-		inline void setTranspose()
-		{
-#ifdef DEBUG      
-			assert(data != NULL);
+            cblas_scopy(rows*cols, rhs.data, 1, data, 1);
+            
+        }
+        
+        void copy(const Mat &rhs, const Mat &indx)
+        {
+#ifdef DEBUG
+            assert(indx.rows == rows);
+            assert(indx.cols == cols);
+#endif
+            int idx = 0;
+            for(int i = 0; i < rows; i++)
+            {
+                for(int j = 0; j < cols; j++)
+                {
+                    if (indx.data[i*cols + j]) {
+                        data[i*cols + j] = rhs[idx];
+                        idx++;
+                    }
+                }
+                
+            }
+        }
+        
+        /////////////////////////////////////////
+        
+        // element-wise multiplication
+        inline void multiply(const Mat &rhs, Mat &result) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(result.data != NULL);
+            assert(rows == rhs.rows &&
+                   rhs.rows == result.rows &&
+                   cols == rhs.cols &&
+                   rhs.cols == result.cols);
+#endif
+            vDSP_vmul(data, 1, rhs.data, 1, result.data, 1, rows*cols);
+            
+        }
+        // element-wise multiplication
+        // result stored in newly created matrix
+        inline Mat multiply(const Mat &rhs) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(rows == rhs.rows &&
+                   cols == rhs.cols);
+#endif
+            Mat multiplied_matrix(rows, cols);
+            
+            vDSP_vmul(data, 1, rhs.data, 1, multiplied_matrix.data, 1, rows*cols);
+            return multiplied_matrix;
+        }
+        
+        inline void multiply(float scalar, Mat &result) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(result.data != NULL);
+            assert(rows == result.rows &&
+                   cols == result.cols);
+#endif
+            vDSP_vsmul(data, 1, &scalar, result.data, 1, rows*cols);
+            
+        }
+        
+        inline void multiply(float scalar)
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+#endif
+            vDSP_vsmul(data, 1, &scalar, data, 1, rows*cols);
+        }
+        
+        
+        
+        
+        inline void divide(const Mat &rhs, Mat &result) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(result.data != NULL);
+            assert(rows == rhs.rows &&
+                   rhs.rows == result.rows &&
+                   cols == rhs.cols &&
+                   rhs.cols == result.cols);
+#endif
+            vDSP_vdiv(rhs.data, 1, data, 1, result.data, 1, rows*cols);
+            
+        }
+        
+        inline void divide(const Mat &rhs)
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(rows == rhs.rows &&
+                   cols == rhs.cols);
+#endif
+            vDSP_vdiv(rhs.data, 1, data, 1, data, 1, rows*cols);
+        }
+        
+        inline void divide(float scalar, Mat &result) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(result.data != NULL);
+            assert(rows == result.rows &&
+                   cols == result.cols);
+#endif
+            
+            vDSP_vsdiv(data, 1, &scalar, result.data, 1, rows*cols);
+        }
+        
+        inline void divide(float scalar)
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+#endif
+            vDSP_vsdiv(data, 1, &scalar, data, 1, rows*cols);
+        }
+        
+        inline void divideUnder(float scalar, Mat &result) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(result.data != NULL);
+            assert(rows == result.rows &&
+                   cols == result.cols);
+#endif
+            
+            vDSP_svdiv(&scalar, data, 1, result.data, 1, rows*cols);
+        }
+        
+        inline void divideUnder(float scalar)
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+#endif
+            vDSP_svdiv(&scalar, data, 1, data, 1, rows*cols);
+        }
+        
+        inline void add(const Mat &rhs, Mat &result) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(result.data != NULL);
+            assert(rows == rhs.rows &&
+                   rhs.rows == result.rows &&
+                   cols == rhs.cols &&
+                   rhs.cols == result.cols);
+#endif
+            vDSP_vadd(data, 1, rhs.data, 1, result.data, 1, rows*cols);
+        }
+        
+        inline void add(const Mat &rhs)
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(rows == rhs.rows &&
+                   cols == rhs.cols);
+#endif
+            vDSP_vadd(data, 1, rhs.data, 1, data, 1, rows*cols);
+        }
+        
+        inline void add(float scalar)
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+#endif
+            vDSP_vsadd(data, 1, &scalar, data, 1, rows*cols);
+        }
+        
+        inline void subtract(const Mat &rhs, Mat &result) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(result.data != NULL);
+            assert(rows == rhs.rows &&
+                   rhs.rows == result.rows &&
+                   cols == rhs.cols &&
+                   rhs.cols == result.cols);
+#endif
+            vDSP_vsub(rhs.data, 1, data, 1, result.data, 1, rows*cols);
+            
+        }
+        
+        inline void subtract(const Mat &rhs)
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(rows == rhs.rows &&
+                   cols == rhs.cols);
+#endif
+            vDSP_vsub(rhs.data, 1, data, 1, data, 1, rows*cols);
+        }
+        
+        inline void subtract(float scalar)
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+#endif
+            float rhs = -scalar;
+            vDSP_vsadd(data, 1, &rhs, data, 1, rows*cols);
+        }
+        
+        
+        inline void GEMM(const Mat &rhs, Mat &result) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(result.data != NULL);
+            assert(rows == result.rows &&
+                   rhs.cols == result.cols &&
+                   cols == rhs.rows);
+#endif
+            
+            cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, result.rows, result.cols, cols, 1.0f, data, cols, rhs.data, rhs.cols, 0.0f, result.data, result.cols);
+            //vDSP_mmul(data, 1, rhs.data, 1, result.data, 1, result.rows, result.cols, cols);
+            
+        }
+        
+        inline Mat GEMM(const pkm::Mat &rhs) const
+        {
+#ifdef DEBUG
+            assert(data != NULL);
+            assert(rhs.data != NULL);
+            assert(cols == rhs.rows);
+#endif
+            
+            Mat gemmResult(rows, rhs.cols);
+            
+            //printf("lda: %d\nldb: %d\nldc: %d\n", rows, rhs.rows, gemmResult.rows);
+            cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, gemmResult.rows, gemmResult.cols, cols, 1.0f, data, cols, rhs.data, rhs.cols, 0.0f, gemmResult.data, gemmResult.cols);
+            //vDSP_mmul(data, 1, rhs.data, 1, gemmResult.data, 1, gemmResult.rows, gemmResult.cols, cols);
+            return gemmResult;
+            
+        }
+        
+        inline void setTranspose()
+        {
+#ifdef DEBUG
+            assert(data != NULL);
             if (bUserData) {
                 print("[Warning]: Transposing user data!");
             }
@@ -1363,48 +1365,48 @@ namespace pkm
                 cols = rows;
                 rows = tempvar;
             }
-		}
-		
-		Mat getTranspose() const;
-		
-		
-		// diagonalize the vector into a square matrix with 
-		// the current data vector along the diagonal
-		inline void setDiagMat()
-		{
+        }
+        
+        Mat getTranspose() const;
+        
+        
+        // diagonalize the vector into a square matrix with
+        // the current data vector along the diagonal
+        inline void setDiagMat()
+        {
 #ifdef DEBUG
-			assert(data != NULL);
+            assert(data != NULL);
             if(bUserData)
             {
                 cout << "[WARNING] Pointer to user data will be resized and therefore possibly lost/leaked.  Up to the user to free this memory!" << endl;
             }
-#endif	
-			if((rows == 1 && cols > 1) || (cols == 1 && rows > 1))
-			{
+#endif
+            if((rows == 1 && cols > 1) || (cols == 1 && rows > 1))
+            {
                 
-				int diagonal_elements = MAX(rows,cols);
-				
-				// create a square matrix
+                int diagonal_elements = MAX(rows,cols);
+                
+                // create a square matrix
                 float *temp_data = (float *)malloc(diagonal_elements*diagonal_elements*sizeof(float));
-				
-				// set values to 0
-				vDSP_vclr(temp_data, 1, diagonal_elements*diagonal_elements);
-				
-				// set diagonal elements to the current vector in data
-				for (int i = 0; i < diagonal_elements; i++) {
-					temp_data[i*diagonal_elements+i] = data[i];
-				}
-				
-				// store in data
-				rows = cols = diagonal_elements;
-				std::swap(data, temp_data);
+                
+                // set values to 0
+                vDSP_vclr(temp_data, 1, diagonal_elements*diagonal_elements);
+                
+                // set diagonal elements to the current vector in data
+                for (int i = 0; i < diagonal_elements; i++) {
+                    temp_data[i*diagonal_elements+i] = data[i];
+                }
+                
+                // store in data
+                rows = cols = diagonal_elements;
+                std::swap(data, temp_data);
                 
                 if(!bUserData)
                 {
                     free(temp_data);
                     temp_data = NULL;
                 }
-			}
+            }
             
         }
         Mat getDiag() const;
@@ -1426,136 +1428,136 @@ namespace pkm
                 cols = cols > 0 ? 1 : 0;
             }
         }
-		
+        
         void abs();
         
         // returns a new matrix with each el the abs(el)
         static Mat abs(const Mat &A);
-		
+        
         /*
-        // returns a new matrix with each el the log(el)
-		static Mat log(Mat &A);
-		
-		// returns a new matrix with each el the exp(el)
-		static Mat exp(Mat &A);
-		*/
+         // returns a new matrix with each el the log(el)
+         static Mat log(Mat &A);
+         
+         // returns a new matrix with each el the exp(el)
+         static Mat exp(Mat &A);
+         */
         
         // returns a new diagonalized matrix version of A
-//        static Mat diag(const Mat &A);
+        //        static Mat diag(const Mat &A);
         static Mat diagMat(const Mat &A);
-		
-		// get a new identity matrix of size dim x dim
-		static Mat identity(size_t dim);
-		
-		static Mat zeros(size_t rows, size_t cols)
-		{
-			return Mat(rows, cols, true);
-		}
-		
-		// set every element to a random value between low and high
-		void setRand(float low = 0.0, float high = 1.0);
-		
-		// create a random matrix
-		static Mat rand(size_t r, size_t c, float low = 0.0, float high = 1.0);
-		
-		// sum across rows or columns creating a vector from a matrix, or a scalar from a vector
-		Mat sum(bool across_rows = true);
-		
-		// repeat a vector for size times
-		static Mat repeat(const Mat &m, int size)
-		{
-			// repeat a column vector across cols
-			if(m.rows > 1 && m.cols == 1 && size > 1)
-			{
-				Mat repeated_matrix(size, m.rows);
-				for (int i = 0; i < size; i++) {
-					cblas_scopy(m.rows, m.data, 1, repeated_matrix.data + (i*m.rows), 1);
-				}
-				repeated_matrix.setTranspose();
-				return repeated_matrix;
-			}
-			else if( m.rows == 1 && m.cols > 1 && size > 1)
-			{
-				Mat repeated_matrix(size, m.cols, 5.0f);
-				
-				for (int i = 0; i < size; i++) {
-					cblas_scopy(m.cols, m.data, 1, repeated_matrix.data + (i*m.cols), 1);
-				}
-				return repeated_matrix;
-			}
-			else {
-				printf("[ERROR]: repeat requires a vector and a size to repeat on.");
-				Mat a;
-				return a;
-			}
-
-		}
-		
-		// repeat a vector for size times
-		static void repeat(Mat &dst, const Mat &m, int size)
-		{
-			// repeat a column vector across cols
-			if(m.rows > 1 && m.cols == 1 && size > 1)
-			{
-				dst.reset(size, m.rows);
-				for (size_t i = 0; i < size; i++) {
-					cblas_scopy(m.rows, m.data, 1, dst.data + (i*m.rows), 1);
-				}
-				dst.setTranspose();
-			}
-			else if( m.rows == 1 && m.cols > 1 && size > 1)
-			{
-				dst.reset(size, m.cols);
-				
-				for (size_t i = 0; i < size; i++) {
-					cblas_scopy(m.cols, m.data, 1, dst.data + (i*m.cols), 1);
-				}
-			}
-			else {
-				printf("[ERROR]: repeat requires a vector and a size to repeat on.");
-				
-			}
-			
-		}
-		
-		static float meanMagnitude(const float *buf, size_t size)
-		{
-			float mean;
-			vDSP_meamgv(buf, 1, &mean, size);
-			return mean;
-		}
+        
+        // get a new identity matrix of size dim x dim
+        static Mat identity(size_t dim);
+        
+        static Mat zeros(size_t rows, size_t cols)
+        {
+            return Mat(rows, cols, true);
+        }
+        
+        // set every element to a random value between low and high
+        void setRand(float low = 0.0, float high = 1.0);
+        
+        // create a random matrix
+        static Mat rand(size_t r, size_t c, float low = 0.0, float high = 1.0);
+        
+        // sum across rows or columns creating a vector from a matrix, or a scalar from a vector
+        Mat sum(bool across_rows = true);
+        
+        // repeat a vector for size times
+        static Mat repeat(const Mat &m, int size)
+        {
+            // repeat a column vector across cols
+            if(m.rows > 1 && m.cols == 1 && size > 1)
+            {
+                Mat repeated_matrix(size, m.rows);
+                for (int i = 0; i < size; i++) {
+                    cblas_scopy(m.rows, m.data, 1, repeated_matrix.data + (i*m.rows), 1);
+                }
+                repeated_matrix.setTranspose();
+                return repeated_matrix;
+            }
+            else if( m.rows == 1 && m.cols > 1 && size > 1)
+            {
+                Mat repeated_matrix(size, m.cols, 5.0f);
+                
+                for (int i = 0; i < size; i++) {
+                    cblas_scopy(m.cols, m.data, 1, repeated_matrix.data + (i*m.cols), 1);
+                }
+                return repeated_matrix;
+            }
+            else {
+                printf("[ERROR]: repeat requires a vector and a size to repeat on.");
+                Mat a;
+                return a;
+            }
+            
+        }
+        
+        // repeat a vector for size times
+        static void repeat(Mat &dst, const Mat &m, int size)
+        {
+            // repeat a column vector across cols
+            if(m.rows > 1 && m.cols == 1 && size > 1)
+            {
+                dst.reset(size, m.rows);
+                for (size_t i = 0; i < size; i++) {
+                    cblas_scopy(m.rows, m.data, 1, dst.data + (i*m.rows), 1);
+                }
+                dst.setTranspose();
+            }
+            else if( m.rows == 1 && m.cols > 1 && size > 1)
+            {
+                dst.reset(size, m.cols);
+                
+                for (size_t i = 0; i < size; i++) {
+                    cblas_scopy(m.cols, m.data, 1, dst.data + (i*m.cols), 1);
+                }
+            }
+            else {
+                printf("[ERROR]: repeat requires a vector and a size to repeat on.");
+                
+            }
+            
+        }
+        
+        static float meanMagnitude(const float *buf, size_t size)
+        {
+            float mean;
+            vDSP_meamgv(buf, 1, &mean, size);
+            return mean;
+        }
         
         
-		static float l1norm(const float *buf1, const float *buf2, size_t size)
-		{
-			int a = size;
-			float diff = 0;
-			const float *p1 = buf1, *p2 = buf2;
-			while (a) {
-				diff += fabs(*p1++ - *p2++);
-				a--;
-			}
-			return diff;///(float)size;
-		}
-		
-		static float sumOfAbsoluteDifferences(const float *buf1, const float *buf2, size_t size)
-		{
-			int a = size;
-			float diff = 0;
-			const float *p1 = buf1, *p2 = buf2;
-			while (a) {
-				diff += fabs(*p1++ - *p2++);
-				a--;
-			}
-			return diff/(float)size;
-		}
-		
-		static float mean(const float *buf, size_t size, size_t stride = 1)
-		{
-			float val;
-			vDSP_meanv(buf, stride, &val, size);
-			return val;
-		}
+        static float l1norm(const float *buf1, const float *buf2, size_t size)
+        {
+            int a = size;
+            float diff = 0;
+            const float *p1 = buf1, *p2 = buf2;
+            while (a) {
+                diff += fabs(*p1++ - *p2++);
+                a--;
+            }
+            return diff;///(float)size;
+        }
+        
+        static float sumOfAbsoluteDifferences(const float *buf1, const float *buf2, size_t size)
+        {
+            int a = size;
+            float diff = 0;
+            const float *p1 = buf1, *p2 = buf2;
+            while (a) {
+                diff += fabs(*p1++ - *p2++);
+                a--;
+            }
+            return diff/(float)size;
+        }
+        
+        static float mean(const float *buf, size_t size, size_t stride = 1)
+        {
+            float val;
+            vDSP_meanv(buf, stride, &val, size);
+            return val;
+        }
         
         static float mean(const Mat &m, size_t stride = 1)
         {
@@ -1564,37 +1566,37 @@ namespace pkm
             return val;
         }
         
-		static float var(const float *buf, size_t size, size_t stride = 1)
-		{
-			float m = mean(buf, size, stride);
-			float v = 0;
-			float sqr = 0;
-			const float *p = buf;
-			size_t a = size;
-			while (a) {
-				sqr = (*p - m);
-				p += stride;
-				v += sqr*sqr;
-				a--;
-			}
-			return v/(float)size;
-		}
+        static float var(const float *buf, size_t size, size_t stride = 1)
+        {
+            float m = mean(buf, size, stride);
+            float v = 0;
+            float sqr = 0;
+            const float *p = buf;
+            size_t a = size;
+            while (a) {
+                sqr = (*p - m);
+                p += stride;
+                v += sqr*sqr;
+                a--;
+            }
+            return v/(float)size;
+        }
         
         static float stddev(const float *buf, size_t size, size_t stride = 1)
-		{
-			float m = mean(buf, size, stride);
-			float v = 0;
-			float sqr = 0;
-			const float *p = buf;
-			size_t a = size;
-			while (a) {
-				sqr = (*p - m);
-				p += stride;
-				v += sqr*sqr;
-				a--;
-			}
-			return sqrtf(v/(float)size);
-		}
+        {
+            float m = mean(buf, size, stride);
+            float v = 0;
+            float sqr = 0;
+            const float *p = buf;
+            size_t a = size;
+            while (a) {
+                sqr = (*p - m);
+                p += stride;
+                v += sqr*sqr;
+                a--;
+            }
+            return sqrtf(v/(float)size);
+        }
         
         float rms()
         {
@@ -1602,20 +1604,20 @@ namespace pkm
             vDSP_rmsqv(data, 1, &val, rows*cols);
             return val;
         }
-		
-		static float rms(const float *buf, int size)
-		{
-			float val;
-			vDSP_rmsqv(buf, 1, &val, size);
-			return val;
-		}
-		
-		static float min(const Mat &A)
-		{
-			float minval;
-			vDSP_minv(A.data, 1, &minval, A.rows*A.cols);
-			return minval;
-		}
+        
+        static float rms(const float *buf, int size)
+        {
+            float val;
+            vDSP_rmsqv(buf, 1, &val, size);
+            return val;
+        }
+        
+        static float min(const Mat &A)
+        {
+            float minval;
+            vDSP_minv(A.data, 1, &minval, A.rows*A.cols);
+            return minval;
+        }
         
         static unsigned long minIndex(const Mat &A)
         {
@@ -1629,13 +1631,13 @@ namespace pkm
         {
             vDSP_minvi(data, 1, &val, &idx, rows*cols);
         }
-		
-		static float max(const Mat &A)
-		{
-			float maxval;
-			vDSP_maxv(A.data, 1, &maxval, A.rows*A.cols);
-			return maxval;
-		}
+        
+        static float max(const Mat &A)
+        {
+            float maxval;
+            vDSP_maxv(A.data, 1, &maxval, A.rows*A.cols);
+            return maxval;
+        }
         
         unsigned long maxIndex()
         {
@@ -1660,25 +1662,25 @@ namespace pkm
         
         float sumAll()
         {
-			float sumval;
-			vDSP_sve(data, 1, &sumval, rows*cols);
-			return sumval;
+            float sumval;
+            vDSP_sve(data, 1, &sumval, rows*cols);
+            return sumval;
         }
-		
-		static float sum(const Mat &A)
-		{
-			float sumval;
-			vDSP_sve(A.data, 1, &sumval, A.rows*A.cols);
-			return sumval;
-		}
-		
-		Mat var(bool row_major = true) const
-		{
-#ifdef DEBUG			
+        
+        static float sum(const Mat &A)
+        {
+            float sumval;
+            vDSP_sve(A.data, 1, &sumval, A.rows*A.cols);
+            return sumval;
+        }
+        
+        Mat var(bool row_major = true) const
+        {
+#ifdef DEBUG
             assert(data != NULL);
             assert(rows >0 &&
                    cols >0);
-#endif	
+#endif
             if (row_major) {
                 if (rows == 1) {
                     return *this;
@@ -1701,16 +1703,16 @@ namespace pkm
                     newMat.data[i] = var(data + i*cols, cols, 1);
                 }
                 return newMat;
-            }	
-		}
-		
+            }
+        }
+        
         Mat stddev(bool row_major = true) const
-		{
-#ifdef DEBUG			
+        {
+#ifdef DEBUG
             assert(data != NULL);
             assert(rows >0 &&
                    cols >0);
-#endif	
+#endif
             if (row_major) {
                 if (rows == 1) {
                     return *this;
@@ -1733,17 +1735,17 @@ namespace pkm
                     newMat.data[i] = stddev(data + i*cols, cols, 1);
                 }
                 return newMat;
-            }	
-		}
+            }
+        }
         
         
         Mat mean(bool row_major = true) const
         {
-#ifdef DEBUG			
+#ifdef DEBUG
             assert(data != NULL);
             assert(rows >0 &&
                    cols >0);
-#endif	
+#endif
             if (row_major) {
                 
                 if (rows == 1) {
@@ -1769,7 +1771,7 @@ namespace pkm
                 }
                 return newMat;
             }
-
+            
         }
         
         inline void zNormalize()
@@ -1779,8 +1781,8 @@ namespace pkm
             getMeanAndStdDev(mean, stddev);
             
             // subtract mean
-			float rhs = -mean;
-			vDSP_vsadd(data, 1, &rhs, data, 1, size);
+            float rhs = -mean;
+            vDSP_vsadd(data, 1, &rhs, data, 1, size);
             
             // divide by std dev
             vDSP_vsdiv(data, 1, &stddev, data, 1, size);
@@ -1856,30 +1858,30 @@ namespace pkm
         {
             float sumval, sumsquareval;
             size_t size = rows * cols;
-			vDSP_sve(data, 1, &sumval, size);
+            vDSP_sve(data, 1, &sumval, size);
             vDSP_svesq(data, 1, &sumsquareval, size);
             mean = sumval / (float) size;
             stddev = sqrtf( sumsquareval / (float) size - mean * mean);
         }
-		
-		// rescale the values in each row to their maximum
-		void setNormalize(bool row_major = true);
-		
-		void normalizeRow(size_t r)
-		{
-			float min, max;
-			vDSP_minv(&(data[r*cols]), 1, &min, cols);
-			vDSP_maxv(&(data[r*cols]), 1, &max, cols);
-			float height = max-min;
-			min = -min;
-			vDSP_vsadd(&(data[r*cols]), 1, &min, &(data[r*cols]), 1, cols);
-			if (height != 0) {
-				vDSP_vsdiv(&(data[r*cols]), 1, &height, &(data[r*cols]), 1, cols);	
-			}
-		}
-		
-		void divideEachVecByMaxVecElement(bool row_major);
-		void divideEachVecBySum(bool row_major);
+        
+        // rescale the values in each row to their maximum
+        void setNormalize(bool row_major = true);
+        
+        void normalizeRow(size_t r)
+        {
+            float min, max;
+            vDSP_minv(&(data[r*cols]), 1, &min, cols);
+            vDSP_maxv(&(data[r*cols]), 1, &max, cols);
+            float height = max-min;
+            min = -min;
+            vDSP_vsadd(&(data[r*cols]), 1, &min, &(data[r*cols]), 1, cols);
+            if (height != 0) {
+                vDSP_vsdiv(&(data[r*cols]), 1, &height, &(data[r*cols]), 1, cols);
+            }
+        }
+        
+        void divideEachVecByMaxVecElement(bool row_major);
+        void divideEachVecBySum(bool row_major);
         
         void inv2x2()
         {
@@ -1898,33 +1900,68 @@ namespace pkm
             data[3] = a * det;
         }
         
-        /*
+        
         void inv()
         {
 #ifdef DEBUG
-            assert(rows == cols); // must be square
+            assert(rows == cols);
 #endif
-            int error = 0;
-            float *workspace = (float *)malloc(MULTIPLE_OF_4(rows)*sizeof(float));
-            int *pivot = (int *)malloc(MULTIPLE_OF_4(rows*rows)*sizeof(int));
             
-            sgetrf_(&rows, &rows, data, &rows, pivot, &error);
+            __CLPK_integer n = rows;
+            __CLPK_integer info = 0;
+            __CLPK_integer ipiv[rows];
+            __CLPK_real workspace[n];
             
+            sgetrf_(&n, &n, data, &n, ipiv, &info);
 #ifdef DEBUG
-            if (error != 0) {
-                cerr << "[pkmMatrix]: Error 1";
+            if (info != 0)
+            {
+                printf("[pkmMatrix]: ERROR: Something went wrong factoring A\n");
+                return;
             }
 #endif
-            sgetri_(&rows, data, &rows, pivot, workspace, &rows, &error);
+            
+            sgetri_(&n, data, &n, ipiv, workspace, &n, &info);
 #ifdef DEBUG
-            if (error != 0) {
-                cerr << "[pkmMatrix]: Error 2";
+            if (info != 0) {
+                printf("[pkmMatrix]: ERROR: Something went wrong w/ inverse A\n");
             }
 #endif
-            free(workspace);
-            free(pivot);
+            
         }
-        */
+        
+        Mat getInv() const
+        {
+            
+#ifdef DEBUG
+            assert(rows == cols);
+#endif
+            Mat m(rows, cols, 0.0f);
+            memcpy(m.data, data, sizeof(float)*rows*cols);
+            
+            __CLPK_integer n = rows;
+            __CLPK_integer info = 0;
+            __CLPK_integer ipiv[rows];
+            __CLPK_real workspace[n];
+            
+            sgetrf_(&n, &n, m.data, &n, ipiv, &info);
+#ifdef DEBUG
+            if (info != 0)
+            {
+                printf("[pkmMatrix]: ERROR: Something went wrong LU factorization A\n");
+            }
+#endif
+            sgetri_(&n, m.data, &n, ipiv, workspace, &n, &info);
+            
+#ifdef DEBUG
+            if (info != 0) {
+                printf("[pkmMatrix]: ERROR: Something went wrong w/ inverse A\n");
+            }
+#endif
+            
+            return m;
+        }
+        
         
         // input is 1 x d dimensional vector
         // mean is 1 x d dimensional vector
@@ -1949,13 +1986,13 @@ namespace pkm
         
         void sqr()
         {
-			vDSP_vmul(data, 1, data, 1, data, 1, rows*cols);
+            vDSP_vmul(data, 1, data, 1, data, 1, rows*cols);
         }
         
         static Mat sqr(const Mat &b)
         {
             Mat newMat(b.rows, b.cols);
-			vDSP_vmul(b.data, 1, b.data, 1, newMat.data, 1, b.rows*b.cols);
+            vDSP_vmul(b.data, 1, b.data, 1, newMat.data, 1, b.rows*b.cols);
             return newMat;
         }
         
@@ -2117,15 +2154,15 @@ namespace pkm
         inline float *last()
         {
 #ifdef DEBUG
-			assert(data != NULL);
-#endif	
+            assert(data != NULL);
+#endif
             return data + (rows * cols - 1);
         }
         
         inline float *first()
         {
 #ifdef DEBUG
-			assert(data != NULL);
+            assert(data != NULL);
 #endif	
             return data;
         }
@@ -2139,7 +2176,7 @@ namespace pkm
             {
                 rowRange(i, i+1, false).subtract(row_vector, sub);
                 sub.abs();
-                float l1 = sub.sum()[0];
+                float l1 = sub.sum().sum(false)[0];
                 if (l1 < best_sum) {
                     best_sum = l1;
                     best_idx = i;
@@ -2156,7 +2193,7 @@ namespace pkm
             {
                 rowRange(i, i+1, false).subtract(row_vector, sub);
                 sub.sqr();
-                float l1 = sub.sum()[0];
+                float l1 = sub.sum().sum(false)[0];
                 if (l1 < best_sum) {
                     best_sum = l1;
                     best_idx = i;
@@ -2166,11 +2203,11 @@ namespace pkm
         
         inline int svd(Mat &U, Mat &S, Mat &V_t)
         {
-//            print();
+            //            print();
             
             __CLPK_integer m = rows;
             __CLPK_integer n = cols;
-
+            
             __CLPK_integer lda = m;
             __CLPK_integer ldu = m;
             __CLPK_integer ldv = n;
@@ -2185,7 +2222,7 @@ namespace pkm
             
             __CLPK_integer lwork = -1;
             __CLPK_integer info = 0;
-
+            
             // iwork dimension should be at least 8*min(m,n)
             __CLPK_integer iwork[8*nSVs];
             
@@ -2208,7 +2245,7 @@ namespace pkm
             }
             
             return info;
-
+            
         }
         
         void copyToDouble(double *ptr) const
@@ -2253,7 +2290,7 @@ namespace pkm
             fp = fopen(filename.c_str(), "w");
             if(fp)
             {
-//                fprintf(fp, "%d %d\n", rows, cols);
+                //                fprintf(fp, "%d %d\n", rows, cols);
                 for(int i = 0; i < rows; i++)
                 {
                     for(int j = 0; j < cols; j++)
@@ -2327,25 +2364,25 @@ namespace pkm
                 return false;
             }
         }
-		
-		// simple print output (be careful with large matrices!)
-		void print(bool row_major = true, char delimiter = ',');
-		// only prints maximum of 5 rows/cols
-		void printAbbrev(bool row_major = true, char delimiter = ',');
-		
+        
+        // simple print output (be careful with large matrices!)
+        void print(bool row_major = true, char delimiter = ',');
+        // only prints maximum of 5 rows/cols
+        void printAbbrev(bool row_major = true, char delimiter = ',');
         
         
-		/////////////////////////////////////////
-		
-		size_t current_row;	// for circular insertion
-		bool bCircularInsertionFull;
-		size_t rows;
-		size_t cols;
-		
-		float *data;
-		
-		bool bAllocated;
-		bool bUserData;
+        
+        /////////////////////////////////////////
+        
+        size_t current_row;	// for circular insertion
+        bool bCircularInsertionFull;
+        size_t rows;
+        size_t cols;
+        
+        float *data;
+        
+        bool bAllocated;
+        bool bUserData;
         
         
     protected:
@@ -2361,7 +2398,7 @@ namespace pkm
             }
         }
         
-	};
+    };
     
-	
+    
 };
