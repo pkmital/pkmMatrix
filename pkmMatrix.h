@@ -1,5 +1,3 @@
-/* Note the copyright below.  I obviously don't care if firefly is using this code for commercial work since they're paying me. */
-
 /*
  *  pkmMatrix.h
  *
@@ -7,7 +5,7 @@
  row-major floating point matrix utility class
  utilizes Apple Accelerate's vDSP functions for SSE optimizations
  
- Copyright (C) 2011 Parag K. Mital
+ Copyright (C) 2015 Parag K. Mital
  
  The Software is and remains the property of Parag K Mital
  ("pkmital") The Licensee will ensure that the Copyright Notice set
@@ -1883,6 +1881,11 @@ namespace pkm
         void divideEachVecByMaxVecElement(bool row_major);
         void divideEachVecBySum(bool row_major);
         
+        void solve()
+        {
+            
+        }
+        
         void inv2x2()
         {
 #ifdef DEBUG
@@ -1906,7 +1909,6 @@ namespace pkm
 #ifdef DEBUG
             assert(rows == cols);
 #endif
-            
             __CLPK_integer n = rows;
             __CLPK_integer info = 0;
             __CLPK_integer ipiv[rows];
