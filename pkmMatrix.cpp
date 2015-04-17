@@ -631,19 +631,23 @@ Mat Mat::exp(Mat &A)
 }
 */
 
+Mat Mat::eye(size_t dim)
+{
+    
+    // create a square matrix
+    Mat identityMatrix(dim, dim, true);
+    
+    // set diagonal elements to the current vector in data
+    for (size_t i = 0; i < dim; i++) {
+        identityMatrix.data[i*dim+i] = 1;
+    }
+    
+    return identityMatrix;
+}
 
 Mat Mat::identity(size_t dim)
 {
-	
-	// create a square matrix
-	Mat identityMatrix(dim,dim, true);
-	
-	// set diagonal elements to the current vector in data
-	for (size_t i = 0; i < dim; i++) {
-		identityMatrix.data[i*dim+i] = 1;
-	}
-	
-	return identityMatrix;
+	return eye(dim);
 }
 
 

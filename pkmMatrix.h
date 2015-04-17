@@ -218,7 +218,7 @@ namespace pkm
                    cols == rhs.cols);
 #endif
             Mat newMat(rows, cols);
-            vDSP_vsub(data, 1, rhs.data, 1, newMat.data, 1, rows*cols);
+            vDSP_vsub(rhs.data, 1, data, 1, newMat.data, 1, rows*cols);
             return newMat;
         }
         
@@ -546,7 +546,7 @@ namespace pkm
         
         // attempt to resize to new dimensions without interpolating data, just keeping it...
         // could be more efficient to create new matrix and push_back, i haven't tested this method too much.
-        void resize(int r, int c, bool clear = false)
+        void resize(size_t r, size_t c, bool clear = false)
         {
 #ifdef DEBUG
             if (bUserData) {
@@ -675,7 +675,7 @@ namespace pkm
         }
         
         // like rescale, but 2D information preserved..
-        void interpolate(int r, int c)
+        void interpolate(size_t r, size_t c)
         {
             float *new_data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4(r * c));
             
@@ -737,7 +737,7 @@ namespace pkm
         
         
         // like rescale, but 2D information preserved..
-        void interpolate(int r, int c, Mat &new_mat) const
+        void interpolate(size_t r, size_t c, Mat &new_mat) const
         {
             new_mat.reset(r, c);
             
@@ -793,7 +793,7 @@ namespace pkm
         }
         
         // can be used to create an already declared matrix without a copy constructor
-        void reset(int r, int c, float val)
+        void reset(size_t r, size_t c, float val)
         {
             //            if (!bAllocated || r != rows || c != cols || bUserData) {
             
@@ -913,7 +913,7 @@ namespace pkm
             push_back(&m, 1);
         }
         
-        void push_back(const float *m, int size)
+        void push_back(const float *m, size_t size)
         {
 #ifdef DEBUG
             if(bUserData)
@@ -1033,7 +1033,7 @@ namespace pkm
             return bCircularInsertionFull;
         }
         
-        void removeRow(int i)
+        void removeRow(size_t i)
         {
 #ifdef DEBUG
             assert(i < rows);
@@ -1047,7 +1047,7 @@ namespace pkm
             }
             // we have to preserve the memory after the deleted row
             else {
-                int numRowsToCopy = rows - i - 1;
+                size_t numRowsToCopy = rows - i - 1;
                 float *temp_data = (float *)malloc(sizeof(float)*numRowsToCopy * cols);
                 cblas_scopy(numRowsToCopy * cols, row(i+1), 1, temp_data, 1);
                 rows--;
@@ -1061,7 +1061,7 @@ namespace pkm
         // inclusive of start, exclusive of end
         // can be a copy of the original matrix, or a way of editing the original
         // one by not copying the values (default)
-        inline Mat rowRange(int start, int end, bool withCopy = true)
+        inline Mat rowRange(size_t start, size_t end, bool withCopy = true)
         {
 #ifdef DEBUG
             assert(rows >= end);
@@ -1072,7 +1072,7 @@ namespace pkm
         }
         
         
-        inline Mat colRange(int start, int end, bool withCopy = true)
+        inline Mat colRange(size_t start, size_t end, bool withCopy = true)
         {
 #ifdef DEBUG
             assert(cols >= end);
@@ -1305,6 +1305,10 @@ namespace pkm
             vDSP_vsadd(data, 1, &rhs, data, 1, rows*cols);
         }
         
+        inline void dot(const Mat &rhs, Mat &result) const
+        {
+            GEMM(rhs, result);
+        }
         
         inline void GEMM(const Mat &rhs, Mat &result) const
         {
@@ -1320,6 +1324,11 @@ namespace pkm
             cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, result.rows, result.cols, cols, 1.0f, data, cols, rhs.data, rhs.cols, 0.0f, result.data, result.cols);
             //vDSP_mmul(data, 1, rhs.data, 1, result.data, 1, result.rows, result.cols, cols);
             
+        }
+        
+        inline Mat dot(const pkm::Mat &rhs) const
+        {
+            return GEMM(rhs);
         }
         
         inline Mat GEMM(const pkm::Mat &rhs) const
@@ -1382,7 +1391,7 @@ namespace pkm
             if((rows == 1 && cols > 1) || (cols == 1 && rows > 1))
             {
                 
-                int diagonal_elements = MAX(rows,cols);
+                size_t diagonal_elements = std::max<size_t>(rows,cols);
                 
                 // create a square matrix
                 float *temp_data = (float *)malloc(diagonal_elements*diagonal_elements*sizeof(float));
@@ -1391,7 +1400,7 @@ namespace pkm
                 vDSP_vclr(temp_data, 1, diagonal_elements*diagonal_elements);
                 
                 // set diagonal elements to the current vector in data
-                for (int i = 0; i < diagonal_elements; i++) {
+                for (size_t i = 0; i < diagonal_elements; i++) {
                     temp_data[i*diagonal_elements+i] = data[i];
                 }
                 
@@ -1447,6 +1456,9 @@ namespace pkm
         // get a new identity matrix of size dim x dim
         static Mat identity(size_t dim);
         
+        // get a new identity matrix of size dim x dim
+        static Mat eye(size_t dim);
+        
         static Mat zeros(size_t rows, size_t cols)
         {
             return Mat(rows, cols, true);
@@ -1462,13 +1474,13 @@ namespace pkm
         Mat sum(bool across_rows = true);
         
         // repeat a vector for size times
-        static Mat repeat(const Mat &m, int size)
+        static Mat repeat(const Mat &m, size_t size)
         {
             // repeat a column vector across cols
             if(m.rows > 1 && m.cols == 1 && size > 1)
             {
                 Mat repeated_matrix(size, m.rows);
-                for (int i = 0; i < size; i++) {
+                for (size_t i = 0; i < size; i++) {
                     cblas_scopy(m.rows, m.data, 1, repeated_matrix.data + (i*m.rows), 1);
                 }
                 repeated_matrix.setTranspose();
@@ -1478,7 +1490,7 @@ namespace pkm
             {
                 Mat repeated_matrix(size, m.cols, 5.0f);
                 
-                for (int i = 0; i < size; i++) {
+                for (size_t i = 0; i < size; i++) {
                     cblas_scopy(m.cols, m.data, 1, repeated_matrix.data + (i*m.cols), 1);
                 }
                 return repeated_matrix;
@@ -1492,7 +1504,7 @@ namespace pkm
         }
         
         // repeat a vector for size times
-        static void repeat(Mat &dst, const Mat &m, int size)
+        static void repeat(Mat &dst, const Mat &m, size_t size)
         {
             // repeat a column vector across cols
             if(m.rows > 1 && m.cols == 1 && size > 1)
@@ -1528,7 +1540,7 @@ namespace pkm
         
         static float l1norm(const float *buf1, const float *buf2, size_t size)
         {
-            int a = size;
+            size_t a = size;
             float diff = 0;
             const float *p1 = buf1, *p2 = buf2;
             while (a) {
@@ -1540,7 +1552,7 @@ namespace pkm
         
         static float sumOfAbsoluteDifferences(const float *buf1, const float *buf2, size_t size)
         {
-            int a = size;
+            size_t a = size;
             float diff = 0;
             const float *p1 = buf1, *p2 = buf2;
             while (a) {
@@ -1909,26 +1921,35 @@ namespace pkm
 #ifdef DEBUG
             assert(rows == cols);
 #endif
-            __CLPK_integer n = rows;
-            __CLPK_integer info = 0;
-            __CLPK_integer ipiv[rows];
-            __CLPK_real workspace[n];
-            
-            sgetrf_(&n, &n, data, &n, ipiv, &info);
-#ifdef DEBUG
-            if (info != 0)
-            {
-                printf("[pkmMatrix]: ERROR: Something went wrong factoring A\n");
-                return;
+            if (rows == 1 && cols == 1) {
+                data[0] = 1.0 / data[0];
             }
-#endif
-            
-            sgetri_(&n, data, &n, ipiv, workspace, &n, &info);
-#ifdef DEBUG
-            if (info != 0) {
-                printf("[pkmMatrix]: ERROR: Something went wrong w/ inverse A\n");
+            else if(rows == 2 && cols == 2) {
+                inv2x2();
             }
-#endif
+            else {
+                
+                __CLPK_integer n = rows;
+                __CLPK_integer info = 0;
+                __CLPK_integer ipiv[rows];
+                __CLPK_real workspace[n];
+                
+                sgetrf_(&n, &n, data, &n, ipiv, &info);
+    #ifdef DEBUG
+                if (info != 0)
+                {
+                    printf("[pkmMatrix]: ERROR: Something went wrong factoring A\n");
+                    return;
+                }
+    #endif
+                
+                sgetri_(&n, data, &n, ipiv, workspace, &n, &info);
+    #ifdef DEBUG
+                if (info != 0) {
+                    printf("[pkmMatrix]: ERROR: Something went wrong w/ inverse A\n");
+                }
+    #endif
+            }
             
         }
         
@@ -1941,27 +1962,38 @@ namespace pkm
             Mat m(rows, cols, 0.0f);
             memcpy(m.data, data, sizeof(float)*rows*cols);
             
-            __CLPK_integer n = rows;
-            __CLPK_integer info = 0;
-            __CLPK_integer ipiv[rows];
-            __CLPK_real workspace[n];
-            
-            sgetrf_(&n, &n, m.data, &n, ipiv, &info);
-#ifdef DEBUG
-            if (info != 0)
-            {
-                printf("[pkmMatrix]: ERROR: Something went wrong LU factorization A\n");
+            if (rows == 1 && cols == 1) {
+                m[0] = 1.0 / m[0];
+                return m;
             }
-#endif
-            sgetri_(&n, m.data, &n, ipiv, workspace, &n, &info);
-            
-#ifdef DEBUG
-            if (info != 0) {
-                printf("[pkmMatrix]: ERROR: Something went wrong w/ inverse A\n");
+            else if (rows == 2 && cols == 2) {
+                m.inv2x2();
+                return m;
             }
-#endif
-            
-            return m;
+            else {
+                
+                __CLPK_integer n = rows;
+                __CLPK_integer info = 0;
+                __CLPK_integer ipiv[rows];
+                __CLPK_real workspace[n];
+                
+                sgetrf_(&n, &n, m.data, &n, ipiv, &info);
+    #ifdef DEBUG
+                if (info != 0)
+                {
+                    printf("[pkmMatrix]: ERROR: Something went wrong LU factorization A\n");
+                }
+    #endif
+                sgetri_(&n, m.data, &n, ipiv, workspace, &n, &info);
+                
+    #ifdef DEBUG
+                if (info != 0) {
+                    printf("[pkmMatrix]: ERROR: Something went wrong w/ inverse A\n");
+                }
+    #endif
+                
+                return m;
+            }
         }
         
         
