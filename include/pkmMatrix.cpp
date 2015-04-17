@@ -5,7 +5,7 @@
  row-major floating point matrix utility class
  utilizes Apple Accelerate's vDSP functions for SSE optimizations
  
- Copyright (C) 2011 Parag K. Mital
+ Copyright (C) 2015 Parag K. Mital
  
  The Software is and remains the property of Parag K Mital
  ("pkmital") The Licensee will ensure that the Copyright Notice set

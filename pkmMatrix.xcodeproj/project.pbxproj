@@ -7,10 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		891D7B141346447A008B6915 /* pkmMatrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 891D7B131346447A008B6915 /* pkmMatrix.cpp */; };
 		891D7B191346453D008B6915 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 891D7B181346453D008B6915 /* Accelerate.framework */; };
-		8DD76F650486A84900D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
-		8DD76F6A0486A84900D96B5E /* pkmMatrix.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = C6859E8B029090EE04C91782 /* pkmMatrix.1 */; };
+		89E90B051AE0BCB800F7E57E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 89E90AF71AE0BCB800F7E57E /* main.cpp */; };
+		89E90B0A1AE0BCB800F7E57E /* pkmMatrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 89E90B011AE0BCB800F7E57E /* pkmMatrix.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -20,19 +19,17 @@
 			dstPath = /usr/share/man/man1/;
 			dstSubfolderSpec = 0;
 			files = (
-				8DD76F6A0486A84900D96B5E /* pkmMatrix.1 in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		891D7B121346447A008B6915 /* pkmMatrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pkmMatrix.h; sourceTree = "<group>"; };
-		891D7B131346447A008B6915 /* pkmMatrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pkmMatrix.cpp; sourceTree = "<group>"; };
 		891D7B181346453D008B6915 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		89E90AF71AE0BCB800F7E57E /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		89E90B011AE0BCB800F7E57E /* pkmMatrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pkmMatrix.cpp; sourceTree = "<group>"; };
+		89E90B021AE0BCB800F7E57E /* pkmMatrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pkmMatrix.h; sourceTree = "<group>"; };
 		8DD76F6C0486A84900D96B5E /* pkmMatrix */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pkmMatrix; sourceTree = BUILT_PRODUCTS_DIR; };
-		C6859E8B029090EE04C91782 /* pkmMatrix.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = pkmMatrix.1; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -50,22 +47,12 @@
 		08FB7794FE84155DC02AAC07 /* pkmMatrix */ = {
 			isa = PBXGroup;
 			children = (
-				08FB7795FE84155DC02AAC07 /* Source */,
-				C6859E8C029090F304C91782 /* Documentation */,
+				89E90AF61AE0BCB800F7E57E /* src */,
+				89E90AF81AE0BCB800F7E57E /* include */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 				891D7B181346453D008B6915 /* Accelerate.framework */,
 			);
 			name = pkmMatrix;
-			sourceTree = "<group>";
-		};
-		08FB7795FE84155DC02AAC07 /* Source */ = {
-			isa = PBXGroup;
-			children = (
-				08FB7796FE84155DC02AAC07 /* main.cpp */,
-				891D7B121346447A008B6915 /* pkmMatrix.h */,
-				891D7B131346447A008B6915 /* pkmMatrix.cpp */,
-			);
-			name = Source;
 			sourceTree = "<group>";
 		};
 		1AB674ADFE9D54B511CA2CBB /* Products */ = {
@@ -76,12 +63,21 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		C6859E8C029090F304C91782 /* Documentation */ = {
+		89E90AF61AE0BCB800F7E57E /* src */ = {
 			isa = PBXGroup;
 			children = (
-				C6859E8B029090EE04C91782 /* pkmMatrix.1 */,
+				89E90AF71AE0BCB800F7E57E /* main.cpp */,
 			);
-			name = Documentation;
+			path = src;
+			sourceTree = "<group>";
+		};
+		89E90AF81AE0BCB800F7E57E /* include */ = {
+			isa = PBXGroup;
+			children = (
+				89E90B011AE0BCB800F7E57E /* pkmMatrix.cpp */,
+				89E90B021AE0BCB800F7E57E /* pkmMatrix.h */,
+			);
+			path = include;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -136,8 +132,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8DD76F650486A84900D96B5E /* main.cpp in Sources */,
-				891D7B141346447A008B6915 /* pkmMatrix.cpp in Sources */,
+				89E90B0A1AE0BCB800F7E57E /* pkmMatrix.cpp in Sources */,
+				89E90B051AE0BCB800F7E57E /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

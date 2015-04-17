@@ -74,32 +74,6 @@
  interested in using the Software commercially, please contact pkmital to
  negotiate a licence. Contact details are: parag@pkmital.com
  
- int matrix_invert(int N, double *matrix) {
- 
- int error=0;
- int *pivot = malloc(N*N*sizeof(int));
- double *workspace = malloc(N*sizeof(double));
- 
- dgetrf_(&N, &N, matrix, &N, pivot, &error);
- 
- if (error != 0) {
- NSLog(@"Error 1");
- return error;
- }
- 
- dgetri_(&N, matrix, &N, pivot, workspace, &N, &error);
- 
- if (error != 0) {
- NSLog(@"Error 2");
- return error;
- }
- 
- free(pivot);
- free(workspace);
- return error;
- }
- 
- 
  *
  */
 
