@@ -639,7 +639,7 @@ Mat Mat::eye(size_t dim)
     
     // set diagonal elements to the current vector in data
     for (size_t i = 0; i < dim; i++) {
-        identityMatrix.data[i*dim+i] = 1;
+        identityMatrix.data[i*dim+i] = 1.0f;
     }
     
     return identityMatrix;
@@ -738,7 +738,7 @@ void Mat::divideEachVecByMaxVecElement(bool row_major)
 	}
 	else {
 		for (size_t c = 0; c < cols; c++) {
-			size_t idx = cblas_isamax(rows, data+c, cols);
+			size_t idx = cblas_isamax(rows, data+c, cols)*cols;
 			float val = *(data+c+idx);
 			if (val != 0.0f) {
 				vDSP_vsdiv(&(data[c]), cols, &val, &(data[c]), cols, rows);	

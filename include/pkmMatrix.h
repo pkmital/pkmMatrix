@@ -89,7 +89,7 @@
 #endif
 
 //#define DEBUG
-//#define HAVE_OPENCV
+#define HAVE_OPENCV
 
 #ifdef HAVE_OPENCV
 #include <opencv2/opencv.hpp>
