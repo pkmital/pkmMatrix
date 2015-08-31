@@ -102,7 +102,7 @@ public:
         bUseZNormalize = false;
         bUseCosineDistance = false;
         
-        range = 0.1;
+        range = 1.0;
 
         bestSoFar = INFINITY;
     }
@@ -161,6 +161,7 @@ public:
             vector<int> pathI, pathJ;
             Mat differenceMatrix, dtwDistance;
             Mat thisCandidate = candidates.rowRange(candidates_lut.row(i)[0], candidates_lut.row(i)[0] + candidates_lut.row(i)[1], false);
+            
             differenceMatrix = computeDifferenceMatrix(thisCandidate);
             float thisDistance = dtw(differenceMatrix, dtwDistance, pathI, pathJ);
 
@@ -195,7 +196,7 @@ public:
     
     
     // -------------------------------------------------------------------------
-    void getNearestCandidateEuclidean(const Mat &q, 
+    void getNearestCandidateEuclidean(const Mat &q,
                                       float &distance, 
                                       int &subscript) 
     {
@@ -293,7 +294,7 @@ protected:
         queryTransposed = query;
         queryTransposed.setTranspose();
         
-        Mat temp = query;
+        Mat temp = q;
         temp.sqr();
         queryNormalization = temp.sum(false);
         queryNormalization.sqrt();
@@ -334,7 +335,7 @@ protected:
             else
             {
                 int padding = query.rows * range;
-                differenceMatrix = Mat(candidate.rows, query.rows, HUGE_VALF);
+                differenceMatrix = Mat(candidate.rows, query.rows, 1.0f);
                 
                 Mat ssd(1, candidate.cols);
                 float size = ssd.size();
@@ -366,19 +367,20 @@ protected:
              vector<int> &pathJ)
     {
         // calculate the dtw distance matrix
+        int subscriptRange = differenceMatrix.cols * range;
         Mat traceBack(differenceMatrix.rows, differenceMatrix.cols);
         dtwDistance = differenceMatrix;
-        int subscriptRange = differenceMatrix.cols * range;
         float x, y, z;
         int i, j;
         for (i = 0; i < differenceMatrix.rows; i++) 
         {
+            
             float *dist = dtwDistance.row(i);
             float *tb = traceBack.row(i);
-            float minCost = INFINITY;
+            float minCost = 1.0;
             int k = max(0, subscriptRange - i);
-            for (j = max(0, i - subscriptRange); j < std::min<int>(i + subscriptRange - 1, differenceMatrix.cols); j++, k++)
-                //for (j = 0; j < differenceMatrix.cols; j++)
+//            for (j = max(0, i - subscriptRange); j < std::min<int>(i + subscriptRange - 1, differenceMatrix.cols); j++, k++)
+            for (j = 0; j < differenceMatrix.cols; j++)
             {
                 if (i == 0 && j == 0) {
                     *dist = *(dtwDistance.data);

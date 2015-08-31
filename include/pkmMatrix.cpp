@@ -249,7 +249,7 @@ Mat::Mat(size_t r, size_t c, float val)
 //		pkm::Mat a = rhs;
 //		pkm::Mat a(rhs);
 Mat::Mat(const Mat &rhs)
-{		
+{
 	if(rhs.bAllocated)
 	{
 		rows = rhs.rows;
@@ -259,7 +259,7 @@ Mat::Mat(const Mat &rhs)
         bUserData = false;
         
         data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
-        cblas_scopy(rows*cols, rhs.data, 1, data, 1);
+        memcpy(data, rhs.data, rows * cols * sizeof(float));
 		
 		bAllocated = true;
 
@@ -296,7 +296,7 @@ Mat & Mat::operator=(const Mat &rhs)
             cols = rhs.cols;
             
             data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
-            cblas_scopy(rows*cols, rhs.data, 1, data, 1);
+            memcpy(data, rhs.data, sizeof(float)*rows*cols);
 
         }
         
