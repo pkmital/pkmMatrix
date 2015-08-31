@@ -95,7 +95,6 @@
 #include <opencv2/opencv.hpp>
 #endif
 
-using namespace std;
 
 #ifndef EPSILON
 #define EPSILON 0.0000001
@@ -128,11 +127,11 @@ namespace pkm
         Mat();
         
         // destructor
-        ~Mat();
+        virtual ~Mat();
         
-        Mat(const vector<float> m);
+        Mat(const std::vector<float> m);
         
-        Mat(const vector<vector<float> > m);
+        Mat(const std::vector<std::vector<float> > m);
 #ifdef HAVE_OPENCV
         Mat(const cv::Mat &m);
 #endif
@@ -152,8 +151,8 @@ namespace pkm
         //		pkm::Mat a(rhs);
         Mat(const Mat &rhs);
         Mat & operator=(const Mat &rhs);
-        Mat & operator=(const vector<float> &rhs);
-        Mat & operator=(const vector<vector<float> > &rhs);
+        Mat & operator=(const std::vector<float> &rhs);
+        Mat & operator=(const std::vector<std::vector<float> > &rhs);
 #ifdef HAVE_OPENCV
         Mat & operator=(const cv::Mat &rhs);
         cv::Mat cvMat() const;
@@ -423,7 +422,7 @@ namespace pkm
             return data[idx];
         }
         
-        // return a vector composed on non-zero indices of logicalMat
+        // return a std::vector composed on non-zero indices of logicalMat
         inline Mat operator[](const Mat &rhs) const
         {
 #ifdef DEBUG
@@ -524,7 +523,7 @@ namespace pkm
         {
 #ifdef DEBUG
             if (bUserData) {
-                cout << "[WARNING]: Pointer to user data will be lost/leaked.  Up to user to free this memory!" << endl;
+                std::cout << "[WARNING]: Pointer to user data will be lost/leaked.  Up to user to free this memory!" << std::endl;
             }
 #endif
             if (bAllocated)
@@ -648,6 +647,27 @@ namespace pkm
             vDSP_vlint(data, interp_mat.data, 1, new_mat.data, 1, new_size, old_size);
         }
         
+        Mat max(bool row_major)
+        {
+            if (row_major) {
+                Mat newMat(rows, 1);
+                for (size_t r = 0; r < rows; r++) {
+                    size_t idx = cblas_isamax(cols, data+r*cols, 1);
+                    newMat.data[r] = *(data+r*cols+idx);
+                }
+                return newMat;
+            }
+            else {
+                Mat newMat(1, cols);
+                for (size_t c = 0; c < cols; c++) {
+                    size_t idx = cblas_isamax(rows, data+c, cols)*cols;
+                    newMat.data[c] = *(data+c+idx);
+                }
+                return newMat;
+            }
+        }
+
+        
         // like rescale, but 2D information preserved..
         void interpolate(size_t r, size_t c)
         {
@@ -663,43 +683,43 @@ namespace pkm
             }
             else if (err ==  kvImageRoiLargerThanInputBuffer)
             {
-                cout << "image roi larger than input buffer" << endl;
+                std::cout << "image roi larger than input buffer" << std::endl;
             }
             else if (err == kvImageInvalidKernelSize)
             {
-                cout << "image invalid kernel size" << endl;
+                std::cout << "image invalid kernel size" << std::endl;
             }
             else if (err == kvImageInvalidEdgeStyle)
             {
-                cout << "invalid edge style" << endl;
+                std::cout << "invalid edge style" << std::endl;
             }
             else if (err == kvImageInvalidOffset_X)
             {
-                cout << "invalid image offset x" << endl;
+                std::cout << "invalid image offset x" << std::endl;
             }
             else if (err == kvImageInvalidOffset_Y)
             {
-                cout << "invalid image offset y" << endl;
+                std::cout << "invalid image offset y" << std::endl;
             }
             else if (err == kvImageMemoryAllocationError)
             {
-                cout << "image memory allocation error" << endl;
+                std::cout << "image memory allocation error" << std::endl;
             }
             else if (err == kvImageNullPointerArgument)
             {
-                cout << "image null pointer argument error" << endl;
+                std::cout << "image null pointer argument error" << std::endl;
             }
             else if (err == kvImageInvalidParameter)
             {
-                cout << "image invalid parameter" << endl;
+                std::cout << "image invalid parameter" << std::endl;
             }
             else if (err == kvImageBufferSizeMismatch)
             {
-                cout << "image buffer size mismatch" << endl;
+                std::cout << "image buffer size mismatch" << std::endl;
             }
             else if (err == kvImageUnknownFlagsBit)
             {
-                cout << "unknown flag bit error" << endl;
+                std::cout << "unknown flag bit error" << std::endl;
             }
             
             free(data);
@@ -725,43 +745,43 @@ namespace pkm
             }
             else if (err ==  kvImageRoiLargerThanInputBuffer)
             {
-                cout << "image roi larger than input buffer" << endl;
+                std::cout << "image roi larger than input buffer" << std::endl;
             }
             else if (err == kvImageInvalidKernelSize)
             {
-                cout << "image invalid kernel size" << endl;
+                std::cout << "image invalid kernel size" << std::endl;
             }
             else if (err == kvImageInvalidEdgeStyle)
             {
-                cout << "invalid edge style" << endl;
+                std::cout << "invalid edge style" << std::endl;
             }
             else if (err == kvImageInvalidOffset_X)
             {
-                cout << "invalid image offset x" << endl;
+                std::cout << "invalid image offset x" << std::endl;
             }
             else if (err == kvImageInvalidOffset_Y)
             {
-                cout << "invalid image offset y" << endl;
+                std::cout << "invalid image offset y" << std::endl;
             }
             else if (err == kvImageMemoryAllocationError)
             {
-                cout << "image memory allocation error" << endl;
+                std::cout << "image memory allocation error" << std::endl;
             }
             else if (err == kvImageNullPointerArgument)
             {
-                cout << "image null pointer argument error" << endl;
+                std::cout << "image null pointer argument error" << std::endl;
             }
             else if (err == kvImageInvalidParameter)
             {
-                cout << "image invalid parameter" << endl;
+                std::cout << "image invalid parameter" << std::endl;
             }
             else if (err == kvImageBufferSizeMismatch)
             {
-                cout << "image buffer size mismatch" << endl;
+                std::cout << "image buffer size mismatch" << std::endl;
             }
             else if (err == kvImageUnknownFlagsBit)
             {
-                cout << "unknown flag bit error" << endl;
+                std::cout << "unknown flag bit error" << std::endl;
             }
             
         }
@@ -834,7 +854,7 @@ namespace pkm
 #ifdef DEBUG
             if(bUserData)
             {
-                cout << "[WARNING]: Pointer to user data will be resized.  Possible leak!" << endl;
+                std::cout << "[WARNING]: Pointer to user data will be resized.  Possible leak!" << std::endl;
             }
 #endif
             // we're not empty
@@ -892,14 +912,14 @@ namespace pkm
 #ifdef DEBUG
             if(bUserData)
             {
-                cout << "[WARNING]: Pointer to user data will be resized.  Possible leak!" << endl;
+                std::cout << "[WARNING]: Pointer to user data will be resized.  Possible leak!" << std::endl;
             }
 #endif
             if(size > 0)
             {
                 if (bAllocated && (rows > 0) && (cols > 0)) {
                     if (size != cols) {
-                        printf("[ERROR]: pkm::Mat push_back(float *m) requires same number of columns in Mat as length of vector!\n");
+                        printf("[ERROR]: pkm::Mat push_back(float *m) requires same number of columns in Mat as length of std::vector!\n");
                         return;
                     }
                     data = (float *)realloc(data, MULTIPLE_OF_4((rows+1)*cols)*sizeof(float));
@@ -916,17 +936,17 @@ namespace pkm
             }
         }
         
-        inline void push_back(const vector<float> &m)
+        inline void push_back(const std::vector<float> &m)
         {
 #ifdef DEBUG
             if(bUserData)
             {
-                cout << "[WARNING]: Pointer to user data will be resized.  Possible leak!" << endl;
+                std::cout << "[WARNING]: Pointer to user data will be resized.  Possible leak!" << std::endl;
             }
 #endif
             if (bAllocated && rows > 0 && cols > 0) {
                 if (m.size() != cols) {
-                    printf("[ERROR]: pkm::Mat push_back(vector<float> m) requires same number of columns in Mat as length of vector!\n");
+                    printf("[ERROR]: pkm::Mat push_back(std::vector<float> m) requires same number of columns in Mat as length of std::vector!\n");
                     return;
                 }
                 data = (float *)realloc(data, MULTIPLE_OF_4((rows+1)*cols)*sizeof(float));
@@ -939,17 +959,17 @@ namespace pkm
             
         }
         
-        inline void push_back(const vector<vector<float> > &m)
+        inline void push_back(const std::vector<std::vector<float> > &m)
         {
 #ifdef DEBUG
             if(bUserData)
             {
-                cout << "[WARNING]: Pointer to user data will be resized.  Possible leak!" << endl;
+                std::cout << "[WARNING]: Pointer to user data will be resized.  Possible leak!" << std::endl;
             }
 #endif
             if (rows > 0 && cols > 0) {
                 if (m[0].size() != cols) {
-                    printf("[ERROR]: pkm::Mat push_back(vector<vector<float> > m) requires same number of cols in Mat as length of each vector!\n");
+                    printf("[ERROR]: pkm::Mat push_back(std::vector<std::vector<float> > m) requires same number of cols in Mat as length of each std::vector!\n");
                     return;
                 }
                 data = (float *)realloc(data, MULTIPLE_OF_4((rows+m.size())*cols)*sizeof(float));
@@ -973,7 +993,7 @@ namespace pkm
             }
         }
         
-        inline void insertRowCircularly(const vector<float> &m)
+        inline void insertRowCircularly(const std::vector<float> &m)
         {
             insertRowCircularly(&(m[0]));
         }
@@ -1259,6 +1279,11 @@ namespace pkm
             
         }
         
+        inline void clip(float negativeClipAmt, float positiveClipAmt)
+        {
+            vDSP_vclip(data, 1, &negativeClipAmt, &positiveClipAmt, data, 1, rows*cols);
+        }
+        
         inline void subtract(const Mat &rhs)
         {
 #ifdef DEBUG
@@ -1351,15 +1376,15 @@ namespace pkm
         Mat getTranspose() const;
         
         
-        // diagonalize the vector into a square matrix with
-        // the current data vector along the diagonal
+        // diagonalize the std::vector into a square matrix with
+        // the current data std::vector along the diagonal
         inline void setDiagMat()
         {
 #ifdef DEBUG
             assert(data != NULL);
             if(bUserData)
             {
-                cout << "[WARNING] Pointer to user data will be resized and therefore possibly lost/leaked.  Up to the user to free this memory!" << endl;
+                std::cout << "[WARNING] Pointer to user data will be resized and therefore possibly lost/leaked.  Up to the user to free this memory!" << std::endl;
             }
 #endif
             if((rows == 1 && cols > 1) || (cols == 1 && rows > 1))
@@ -1373,7 +1398,7 @@ namespace pkm
                 // set values to 0
                 vDSP_vclr(temp_data, 1, diagonal_elements*diagonal_elements);
                 
-                // set diagonal elements to the current vector in data
+                // set diagonal elements to the current std::vector in data
                 for (size_t i = 0; i < diagonal_elements; i++) {
                     temp_data[i*diagonal_elements+i] = data[i];
                 }
@@ -1444,13 +1469,13 @@ namespace pkm
         // create a random matrix
         static Mat rand(size_t r, size_t c, float low = 0.0, float high = 1.0);
         
-        // sum across rows or columns creating a vector from a matrix, or a scalar from a vector
+        // sum across rows or columns creating a std::vector from a matrix, or a scalar from a std::vector
         Mat sum(bool across_rows = true);
         
-        // repeat a vector for size times
+        // repeat a std::vector for size times
         static Mat repeat(const Mat &m, size_t size)
         {
-            // repeat a column vector across cols
+            // repeat a column std::vector across cols
             if(m.rows > 1 && m.cols == 1 && size > 1)
             {
                 Mat repeated_matrix(size, m.rows);
@@ -1470,17 +1495,17 @@ namespace pkm
                 return repeated_matrix;
             }
             else {
-                printf("[ERROR]: repeat requires a vector and a size to repeat on.");
+                printf("[ERROR]: repeat requires a std::vector and a size to repeat on.");
                 Mat a;
                 return a;
             }
             
         }
         
-        // repeat a vector for size times
+        // repeat a std::vector for size times
         static void repeat(Mat &dst, const Mat &m, size_t size)
         {
-            // repeat a column vector across cols
+            // repeat a column std::vector across cols
             if(m.rows > 1 && m.cols == 1 && size > 1)
             {
                 dst.reset(size, m.rows);
@@ -1498,7 +1523,7 @@ namespace pkm
                 }
             }
             else {
-                printf("[ERROR]: repeat requires a vector and a size to repeat on.");
+                printf("[ERROR]: repeat requires a std::vector and a size to repeat on.");
                 
             }
             
@@ -1971,8 +1996,8 @@ namespace pkm
         }
         
         
-        // input is 1 x d dimensional vector
-        // mean is 1 x d dimensional vector
+        // input is 1 x d dimensional std::vector
+        // mean is 1 x d dimensional std::vector
         // sigma is d x d dimensional matrix
         static float gaussianPosterior(const Mat &input, Mat mean, Mat sigma)
         {
@@ -2192,6 +2217,7 @@ namespace pkm
             }
         }
         
+        
         void getIndexOfClosestRowL2(const pkm::Mat& row_vector, float &best_sum, size_t &best_idx)
         {
             best_sum = HUGE_VALF;
@@ -2207,6 +2233,26 @@ namespace pkm
                     best_idx = i;
                 }
             }
+        }
+        
+        void getIndexOfClosestRowL2(const pkm::Mat& row_vector, float &best_sum, size_t &best_idx, float &average_sum)
+        {
+            average_sum = 0;
+            best_sum = HUGE_VALF;
+            best_idx = 0;
+            pkm::Mat sub(1, cols);
+            for( size_t i = 0; i < rows; i++ )
+            {
+                rowRange(i, i+1, false).subtract(row_vector, sub);
+                sub.sqr();
+                float l1 = sub.sum().sum(false)[0];
+                average_sum += l1;
+                if (l1 < best_sum) {
+                    best_sum = l1;
+                    best_idx = i;
+                }
+            }
+            average_sum /= (float)rows;
         }
         
         inline int svd(Mat &U, Mat &S, Mat &V_t)
@@ -2268,7 +2314,7 @@ namespace pkm
             vDSP_vdpsp(ptr, 1, data, 1, size());
         }
         
-        bool save(string filename)
+        bool save(std::string filename)
         {
             FILE *fp;
             fp = fopen(filename.c_str(), "w");
@@ -2292,7 +2338,7 @@ namespace pkm
             }
         }
         
-        bool saveCSV(string filename)
+        bool saveCSV(std::string filename)
         {
             FILE *fp;
             fp = fopen(filename.c_str(), "w");
@@ -2316,7 +2362,7 @@ namespace pkm
             }
         }
         
-        bool load(string filename)
+        bool load(std::string filename)
         {
             if (bAllocated && !bUserData) {
                 free(data); data = NULL;
@@ -2344,7 +2390,7 @@ namespace pkm
             }
         }
         
-        bool load(string filename, int r, int c)
+        bool load(std::string filename, int r, int c)
         {
             if (bAllocated && !bUserData) {
                 free(data); data = NULL;
@@ -2389,7 +2435,7 @@ namespace pkm
         
         float *data;
         
-        bool bAllocated;
+        bool bAllocated = false;
         bool bUserData;
         
         

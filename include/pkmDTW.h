@@ -102,7 +102,7 @@ public:
         bUseZNormalize = false;
         bUseCosineDistance = false;
         
-        range = 0.5;
+        range = 0.1;
 
         bestSoFar = INFINITY;
     }
@@ -140,7 +140,7 @@ public:
     
     
     // -------------------------------------------------------------------------
-    void getNearestCandidate(Mat &q, 
+    void getNearestCandidate(const Mat &q,
                              float &distance, 
                              int &subscript, 
                              vector<int> &bestPathI,  // candidate's frame   (source)
@@ -279,7 +279,7 @@ protected:
     //  T is the number of frames or time-steps
     //  D is the dimension of each data point
     // -------------------------------------------------------------------------
-    void setQuery(Mat &q)
+    void setQuery(const Mat &q)
     {
         query = q;
         if(bUseZNormalize)
@@ -337,16 +337,17 @@ protected:
                 differenceMatrix = Mat(candidate.rows, query.rows, HUGE_VALF);
                 
                 Mat ssd(1, candidate.cols);
+                float size = ssd.size();
                 for (int i = 0; i < candidate.rows; i++)
                 {
                     Mat p1(1, candidate.cols, candidate.row(i), false);
-                    for (int j = max(0, i - padding); j < min(query.rows, i + padding - 1); j++)
+                    for (int j = max(0, i - padding); j < std::min<int>(query.rows, i + padding - 1); j++)
                     {
                         Mat p2(1, query.cols, query.row(j), false);
                         p1.subtract(p2, ssd);
                         ssd.sqr();
 
-                        differenceMatrix.data[query.rows*i + j] = ssd.sumAll() / ssd.size();
+                        differenceMatrix.data[query.rows*i + j] = ssd.sumAll() / size;
 
 //                        differenceMatrix.data[query.rows*i + j] = L1Norm(candidate.row(i), query.row(j), query.cols);
 
@@ -376,7 +377,7 @@ protected:
             float *tb = traceBack.row(i);
             float minCost = INFINITY;
             int k = max(0, subscriptRange - i);
-            for (j = max(0, i - subscriptRange); j < min(i + subscriptRange - 1, differenceMatrix.cols); j++, k++)
+            for (j = max(0, i - subscriptRange); j < std::min<int>(i + subscriptRange - 1, differenceMatrix.cols); j++, k++)
                 //for (j = 0; j < differenceMatrix.cols; j++)
             {
                 if (i == 0 && j == 0) {

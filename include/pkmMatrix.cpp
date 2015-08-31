@@ -106,7 +106,7 @@ Mat::~Mat()
     bUserData = false;
 }
 
-Mat::Mat(const vector<float> m)
+Mat::Mat(const std::vector<float> m)
 {
     rows = 1;
     cols = m.size();
@@ -119,7 +119,7 @@ Mat::Mat(const vector<float> m)
 	bAllocated = true;
 }
 
-Mat::Mat(const vector<vector<float> > m)
+Mat::Mat(const std::vector<std::vector<float> > m)
 {
     rows = m.size();
     cols = m[0].size();
@@ -256,14 +256,10 @@ Mat::Mat(const Mat &rhs)
 		cols = rhs.cols;
 		current_row = rhs.current_row;
 		bCircularInsertionFull = rhs.bCircularInsertionFull;
-		bUserData = rhs.bUserData;
-		
-        if (!bUserData) {
-            data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
-            cblas_scopy(rows*cols, rhs.data, 1, data, 1);
-        }
-        else
-            data = rhs.data;
+        bUserData = false;
+        
+        data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
+        cblas_scopy(rows*cols, rhs.data, 1, data, 1);
 		
 		bAllocated = true;
 
@@ -283,28 +279,33 @@ Mat::Mat(const Mat &rhs)
 Mat & Mat::operator=(const Mat &rhs)
 {	
 	
-	if(data == rhs.data)
-		return *this;
+//	if(data == rhs.data)
+//		return *this;
 	
 	if(rhs.bAllocated)
 	{
-        
-        releaseMemory();
+        if(size() == rhs.size())
+        {
+            memcpy(data, rhs.data, sizeof(float)*rows*cols);
+        }
+        else {
 
-        rows = rhs.rows;
-        cols = rhs.cols;
-        current_row = rhs.current_row;
-        bCircularInsertionFull = rhs.bCircularInsertionFull;
-        bUserData = rhs.bUserData;
+            releaseMemory();
+
+            rows = rhs.rows;
+            cols = rhs.cols;
+            current_row = rhs.current_row;
+            bCircularInsertionFull = rhs.bCircularInsertionFull;
             
-        if (!bUserData) {
+            bUserData = false;
+                
             data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
             cblas_scopy(rows*cols, rhs.data, 1, data, 1);
+            
+            bAllocated = true;
+            
         }
-        else
-            data = rhs.data;
         
-        bAllocated = true;
 
 		//memcpy(data, rhs.data, sizeof(float)*rows*cols);
 		
@@ -328,7 +329,7 @@ Mat & Mat::operator=(const Mat &rhs)
 }
 
 
-Mat & Mat::operator=(const vector<float> &rhs)
+Mat & Mat::operator=(const std::vector<float> &rhs)
 {	
 	
 	if(rhs.size() != 0)
@@ -372,7 +373,7 @@ Mat & Mat::operator=(const vector<float> &rhs)
 }
 
 
-Mat & Mat::operator=(const vector<vector<float> > &rhs)
+Mat & Mat::operator=(const std::vector<std::vector<float> > &rhs)
 {	
 	
 	if(rhs.size() != 0)
@@ -496,7 +497,7 @@ Mat Mat::getTranspose() const
 	return transposedMatrix;
 }
 
-// get the diagonalized vector of a matrix (non-destructive)
+// get the diagonalized std::vector of a matrix (non-destructive)
 Mat Mat::getDiag() const
 {
 #ifndef DEBUG
@@ -515,7 +516,7 @@ Mat Mat::getDiag() const
         // create a square matrix
         Mat diagonalMatrix(1, diagonal_elements, true);
         
-        // set diagonal elements to the current vector in data
+        // set diagonal elements to the current std::vector in data
         for (size_t i = 0; i < diagonal_elements; i++) {
             diagonalMatrix.data[i] = data[i*diagonal_elements+i];
         }
@@ -524,7 +525,7 @@ Mat Mat::getDiag() const
 }
 
 
-// get a diagonalized version of the current vector (non-destructive)
+// get a diagonalized version of the current std::vector (non-destructive)
 Mat Mat::getDiagMat() const
 {
 #ifndef DEBUG
@@ -537,7 +538,7 @@ Mat Mat::getDiagMat() const
 		// create a square matrix
 		Mat diagonalMatrix(diagonal_elements, diagonal_elements, true);
 		
-		// set diagonal elements to the current vector in data
+		// set diagonal elements to the current std::vector in data
 		for (size_t i = 0; i < diagonal_elements; i++) {
 			diagonalMatrix.data[i*diagonal_elements+i] = data[i];
 		}
@@ -563,7 +564,7 @@ Mat Mat::diagMat(const Mat &A)
 		// create a square matrix
 		Mat diagonalMatrix(diagonal_elements,diagonal_elements, true);
 		
-		// set diagonal elements to the current vector in data
+		// set diagonal elements to the current std::vector in data
 		for (size_t i = 0; i < diagonal_elements; i++) {
 			diagonalMatrix.data[i*diagonal_elements+i] = A.data[i];
 		}
@@ -637,7 +638,7 @@ Mat Mat::eye(size_t dim)
     // create a square matrix
     Mat identityMatrix(dim, dim, true);
     
-    // set diagonal elements to the current vector in data
+    // set diagonal elements to the current std::vector in data
     for (size_t i = 0; i < dim; i++) {
         identityMatrix.data[i*dim+i] = 1.0f;
     }
@@ -693,7 +694,7 @@ Mat Mat::sum(bool across_rows)
 	
 }
 
-// normalize the values for each row-vector
+// normalize the values for each row-std::vector
 void Mat::setNormalize(bool row_major)
 {
 	if (row_major) {
@@ -772,7 +773,7 @@ void Mat::divideEachVecBySum(bool row_major)
 void Mat::printAbbrev(bool row_major, char delimiter)
 {
 	
-    std::cout<< "r: " << rows << " c: " <<  cols << endl;
+    std::cout<< "r: " << rows << " c: " <<  cols << std::endl;
 	
 	if(row_major)
 	{
@@ -799,13 +800,13 @@ void Mat::printAbbrev(bool row_major, char delimiter)
 void Mat::print(bool row_major, char delimiter)
 {
     
-    std::cout<< "r: " << rows << " c: " <<  cols << endl;
+    std::cout<< "r: " << rows << " c: " <<  cols << std::endl;
     
 	if(row_major)
 	{
 		for (size_t r = 0; r < rows; r++) {
 			for (size_t c = 0; c < cols; c++) {
-				printf("%8.4f%c", data[r*cols + c], delimiter);
+				printf("%8.8f%c", data[r*cols + c], delimiter);
 			}
 			printf("\n");
 		}
@@ -814,7 +815,7 @@ void Mat::print(bool row_major, char delimiter)
 	else {
 		for (size_t r = 0; r < rows; r++) {
 			for (size_t c = 0; c < cols; c++) {
-				printf("%8.4f%c", data[c*rows + r], delimiter);
+				printf("%8.8f%c", data[c*rows + r], delimiter);
 			}
 			printf("\n");
 		}

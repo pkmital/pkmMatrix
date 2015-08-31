@@ -92,7 +92,7 @@ void pkmDTW::calculateBounds(Mat &input, Mat &upperBound, Mat &lowerBound)
     
     for (int i = 0; i < input.rows; i++) {
         int startRow = max(0, i - subscriptRange);
-        int endRow = min(i + subscriptRange, input.rows - 1);
+        int endRow = std::min<int>(i + subscriptRange, input.rows - 1);
         for (int j = 0; j < input.cols; j++) {
             vDSP_Length len = endRow - startRow + 1;
             vDSP_maxv(input.row(startRow) + j, input.cols, upperBound.row(i) + j, len);
