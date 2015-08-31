@@ -279,8 +279,8 @@ Mat::Mat(const Mat &rhs)
 Mat & Mat::operator=(const Mat &rhs)
 {	
 	
-//	if(data == rhs.data)
-//		return *this;
+	if(this == &rhs)
+		return *this;
 	
 	if(rhs.bAllocated)
 	{
@@ -294,20 +294,16 @@ Mat & Mat::operator=(const Mat &rhs)
 
             rows = rhs.rows;
             cols = rhs.cols;
-            current_row = rhs.current_row;
-            bCircularInsertionFull = rhs.bCircularInsertionFull;
             
-            bUserData = false;
-                
             data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
             cblas_scopy(rows*cols, rhs.data, 1, data, 1);
-            
-            bAllocated = true;
-            
+
         }
         
-
-		//memcpy(data, rhs.data, sizeof(float)*rows*cols);
+        current_row = rhs.current_row;
+        bCircularInsertionFull = rhs.bCircularInsertionFull;
+        bUserData = false;
+        bAllocated = true;
 		
 		return *this;
 	}
