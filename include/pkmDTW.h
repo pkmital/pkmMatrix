@@ -100,7 +100,7 @@ public:
         bSetQuery = false;
         bHaveCandidates = false;
         bUseZNormalize = false;
-        bUseCosineDistance = false;
+        bUseCosineDistance = true;
         
         range = 1.0;
 

@@ -214,15 +214,16 @@ Mat::Mat(size_t r, size_t c, float *existing_buffer, bool withCopy)
 		data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
 		
 		cblas_scopy(rows*cols, existing_buffer, 1, data, 1);
-		//memcpy(data, existing_buffer, sizeof(float)*r*c);
+        //memcpy(data, existing_buffer, sizeof(float)*r*c);
+        bAllocated = true;
 	}
 	else {
 		// user gave us data, don't free it.
-		bUserData = true;
+        bUserData = true;
+        bAllocated = false;
 		data = existing_buffer;
 	}
 	
-	bAllocated = true;
 }
 
 // set every element to a value
@@ -264,6 +265,16 @@ Mat::Mat(const Mat &rhs)
 		bAllocated = true;
 
 	}
+    else if(rhs.bUserData)
+    {
+        rows = rhs.rows;
+        cols = rhs.cols;
+        current_row = rhs.current_row;
+        bCircularInsertionFull = rhs.bCircularInsertionFull;
+        bUserData = rhs.bUserData;
+        bAllocated = rhs.bAllocated;
+        data = rhs.data;
+    }
 	else {
 		rows = 0;
 		cols = 0;
@@ -282,9 +293,9 @@ Mat & Mat::operator=(const Mat &rhs)
 	if(this == &rhs)
 		return *this;
 	
-	if(rhs.bAllocated)
+	if(rhs.size())
 	{
-        if(size() == rhs.size())
+        if(bAllocated && size() == rhs.size())
         {
             memcpy(data, rhs.data, sizeof(float)*rows*cols);
         }
@@ -297,13 +308,13 @@ Mat & Mat::operator=(const Mat &rhs)
             
             data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
             memcpy(data, rhs.data, sizeof(float)*rows*cols);
+            bAllocated = true;
 
         }
         
         current_row = rhs.current_row;
         bCircularInsertionFull = rhs.bCircularInsertionFull;
         bUserData = false;
-        bAllocated = true;
 		
 		return *this;
 	}
