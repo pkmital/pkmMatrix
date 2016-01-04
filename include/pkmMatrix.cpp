@@ -62,8 +62,8 @@
  
  You are not permitted under this Licence to use this Software
  commercially. Use for which any financial return is received shall be
- defined as commercial use, and includes (1) integration of all or part
- of the source code or the Software into a product for sale or license
+ defined as commercial use, and includes (1) longegration of all or part
+ of the source code or the Software longo a product for sale or license
  by or on behalf of Licensee to third parties or (2) use of the
  Software or any derivative of it for research with the final aim of
  developing software products for sale or license to a third party or
@@ -71,7 +71,7 @@
  final aim of developing non-software products for sale or license to a
  third party, or (4) use of the Software to provide any service to an
  external organisation for which payment is received. If you are
- interested in using the Software commercially, please contact pkmital to
+ longerested in using the Software commercially, please contact pkmital to
  negotiate a licence. Contact details are: parag@pkmital.com
  
  *
@@ -110,9 +110,11 @@ Mat::Mat(const std::vector<float> m)
 {
     rows = 1;
     cols = m.size();
-    data = (float *)malloc(sizeof(float)*MULTIPLE_OF_4(cols));
-    
-    cblas_scopy(cols, &m[0], 1, data, 1);
+    if(rows*cols > 0)
+    {
+        data = (float *)malloc(sizeof(float)*MULTIPLE_OF_4(cols));
+        cblas_scopy(cols, &m[0], 1, data, 1);
+    }
 	current_row = 0;
 	bCircularInsertionFull = false;
 	bUserData = false;
@@ -123,10 +125,13 @@ Mat::Mat(const std::vector<std::vector<float> > m)
 {
     rows = m.size();
     cols = m[0].size();
-    data = (float *)malloc(sizeof(float)*MULTIPLE_OF_4(rows*cols));
-    
-    for(size_t i = 0; i < rows; i++)
-        cblas_scopy(cols, &(m[i][0]), 1, data+i*cols, 1);
+    if(rows*cols > 0)
+    {
+        data = (float *)malloc(sizeof(float)*MULTIPLE_OF_4(rows*cols));
+        
+        for(size_t i = 0; i < rows; i++)
+            cblas_scopy(cols, &(m[i][0]), 1, data+i*cols, 1);
+    }
     
 	current_row = 0;
 	bCircularInsertionFull = false;
@@ -153,6 +158,11 @@ Mat::Mat(const cv::Mat &m)
 // allocate data
 Mat::Mat(size_t r, size_t c, bool clear)
 {
+#ifdef DEBUG
+    assert(r > 0);
+    assert(c > 0);
+#endif
+    
 	data = NULL;
 	
 	bUserData = false;
@@ -258,12 +268,12 @@ Mat::Mat(const Mat &rhs)
 		current_row = rhs.current_row;
 		bCircularInsertionFull = rhs.bCircularInsertionFull;
         bUserData = false;
-        
-        data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
-        memcpy(data, rhs.data, rows * cols * sizeof(float));
-		
+        if(rows * cols > 0)
+        {
+            data = (float *)malloc(MULTIPLE_OF_4(rows * cols) * sizeof(float));
+            memcpy(data, rhs.data, rows * cols * sizeof(float));
+        }
 		bAllocated = true;
-
 	}
     else if(rhs.bUserData)
     {
@@ -298,6 +308,9 @@ Mat & Mat::operator=(const Mat &rhs)
         if(bAllocated && size() == rhs.size())
         {
             memcpy(data, rhs.data, sizeof(float)*rows*cols);
+            
+            rows = rhs.rows;
+            cols = rhs.cols;
         }
         else {
 

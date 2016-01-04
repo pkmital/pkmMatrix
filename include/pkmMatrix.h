@@ -62,8 +62,8 @@
  
  You are not permitted under this Licence to use this Software
  commercially. Use for which any financial return is received shall be
- defined as commercial use, and includes (1) integration of all or part
- of the source code or the Software into a product for sale or license
+ defined as commercial use, and includes (1) longegration of all or part
+ of the source code or the Software longo a product for sale or license
  by or on behalf of Licensee to third parties or (2) use of the
  Software or any derivative of it for research with the final aim of
  developing software products for sale or license to a third party or
@@ -71,7 +71,7 @@
  final aim of developing non-software products for sale or license to a
  third party, or (4) use of the Software to provide any service to an
  external organisation for which payment is received. If you are
- interested in using the Software commercially, please contact pkmital to
+ longerested in using the Software commercially, please contact pkmital to
  negotiate a licence. Contact details are: parag@pkmital.com
  
  *
@@ -88,7 +88,7 @@
 #define HAVE_OPENCV
 #endif
 
-//#define DEBUG
+#define DEBUG
 //#define HAVE_OPENCV
 
 #ifdef HAVE_OPENCV
@@ -112,7 +112,7 @@
 //#define MULTIPLE_OF_4(x) ((x | 0x03) + 1)
 #define MULTIPLE_OF_4(x) x
 
-template <typename T> int signum(T val) {
+template <typename T> long signum(T val) {
     return (T(0) < val) - (val < T(0));
 }
 
@@ -272,7 +272,7 @@ namespace pkm
                    cols == rhs.cols);
 #endif
             Mat result(rows, cols);
-            for(int i = 0; i < rows*cols; i++)
+            for(long i = 0; i < rows*cols; i++)
                 result.data[i] = data[i] > rhs.data[i];
             return result;
         }
@@ -283,7 +283,7 @@ namespace pkm
             assert(data != NULL);
 #endif
             Mat result(rows, cols);
-            for(int i = 0; i < rows*cols; i++)
+            for(long i = 0; i < rows*cols; i++)
                 result.data[i] = data[i] > scalar;
             return result;
         }
@@ -297,7 +297,7 @@ namespace pkm
                    cols == rhs.cols);
 #endif
             Mat result(rows, cols);
-            for(int i = 0; i < rows*cols; i++)
+            for(long i = 0; i < rows*cols; i++)
                 result.data[i] = data[i] >= rhs.data[i];
             return result;
         }
@@ -308,7 +308,7 @@ namespace pkm
             assert(data != NULL);
 #endif
             Mat result(rows, cols);
-            for(int i = 0; i < rows*cols; i++)
+            for(long i = 0; i < rows*cols; i++)
                 result.data[i] = data[i] >= scalar;
             return result;
         }
@@ -322,7 +322,7 @@ namespace pkm
                    cols == rhs.cols);
 #endif
             Mat result(rows, cols);
-            for(int i = 0; i < rows*cols; i++)
+            for(long i = 0; i < rows*cols; i++)
                 result.data[i] = data[i] < rhs.data[i];
             return result;
         }
@@ -333,7 +333,7 @@ namespace pkm
             assert(data != NULL);
 #endif
             Mat result(rows, cols);
-            for(int i = 0; i < rows*cols; i++)
+            for(long i = 0; i < rows*cols; i++)
                 result.data[i] = data[i] < scalar;
             return result;
         }
@@ -347,7 +347,7 @@ namespace pkm
                    cols == rhs.cols);
 #endif
             Mat result(rows, cols);
-            for(int i = 0; i < rows*cols; i++)
+            for(long i = 0; i < rows*cols; i++)
                 result.data[i] = data[i] <= rhs.data[i];
             return result;
         }
@@ -358,7 +358,7 @@ namespace pkm
             assert(data != NULL);
 #endif
             Mat result(rows, cols);
-            for(int i = 0; i < rows*cols; i++)
+            for(long i = 0; i < rows*cols; i++)
                 result.data[i] = data[i] <= scalar;
             return result;
         }
@@ -372,7 +372,7 @@ namespace pkm
                    cols == rhs.cols);
 #endif
             Mat result(rows, cols);
-            for(int i = 0; i < rows*cols; i++)
+            for(long i = 0; i < rows*cols; i++)
                 result.data[i] = data[i] == rhs.data[i];
             return result;
         }
@@ -383,7 +383,7 @@ namespace pkm
             assert(data != NULL);
 #endif
             Mat result(rows, cols);
-            for(int i = 0; i < rows*cols; i++)
+            for(long i = 0; i < rows*cols; i++)
                 result.data[i] = data[i] == scalar;
             return result;
         }
@@ -397,7 +397,7 @@ namespace pkm
                    cols == rhs.cols);
 #endif
             Mat result(rows, cols);
-            for(int i = 0; i < rows*cols; i++)
+            for(long i = 0; i < rows*cols; i++)
                 result.data[i] = data[i] != rhs.data[i];
             return result;
         }
@@ -408,12 +408,12 @@ namespace pkm
             assert(data != NULL);
 #endif
             Mat result(rows, cols);
-            for(int i = 0; i < rows*cols; i++)
+            for(long i = 0; i < rows*cols; i++)
                 result.data[i] = data[i] != scalar;
             return result;
         }
         
-        inline float & operator[](int idx) const
+        inline float & operator[](long idx) const
         {
 #ifdef DEBUG
             assert(data != NULL);
@@ -432,7 +432,7 @@ namespace pkm
                    cols == rhs.cols);
 #endif
             std::vector<float> newMat;
-            for(int i = 0; i < rows*cols; i++)
+            for(long i = 0; i < rows*cols; i++)
             {
                 if (rhs.data[i] > 0) {
                     newMat.push_back(data[i]);
@@ -440,7 +440,7 @@ namespace pkm
             }
             if (newMat.size() > 0) {
                 Mat result(1,newMat.size());
-                for(int i = 0; i < newMat.size(); i++)
+                for(long i = 0; i < newMat.size(); i++)
                 {
                     result.data[i] = newMat[i];
                 }
@@ -488,7 +488,7 @@ namespace pkm
         
         bool isNaN()
         {
-            for(int i = 0; i < rows*cols; i++)
+            for(long i = 0; i < rows*cols; i++)
             {
                 if (isnan(data[i])) {
                     return true;
@@ -499,7 +499,7 @@ namespace pkm
         
         void setNaNsTo(float f)
         {
-            for(int i = 0; i < rows*cols; i++)
+            for(long i = 0; i < rows*cols; i++)
             {
                 if (isnan(data[i]) || isinf(data[i])) {
                     data[i] = f;
@@ -508,7 +508,7 @@ namespace pkm
         }
         
         // can be used to swap r and c, but without manipulating data... not sure when this would be useful
-        void reshape(int r, int c)
+        void reshape(long r, long c)
         {
             if ((r * c) == (rows * cols))
             {
@@ -517,7 +517,7 @@ namespace pkm
             }
         }
         
-        // attempt to resize to new dimensions without interpolating data, just keeping it...
+        // attempt to resize to new dimensions without longerpolating data, just keeping it...
         // could be more efficient to create new matrix and push_back, i haven't tested this method too much.
         void resize(size_t r, size_t c, bool clear = false)
         {
@@ -586,7 +586,7 @@ namespace pkm
         }
         
         // can be used to create an already declared matrix without a copy constructor
-        void reset(int r, int c, bool clear = false)
+        void reset(long r, long c, bool clear = false)
         {
             //            if (!(r == rows && c == cols && !bUserData)) {
             
@@ -610,20 +610,20 @@ namespace pkm
             }
         }
         
-        // interpolates data (row-major) to new size
-        void rescale(int r, int c)
+        // longerpolates data (row-major) to new size
+        void rescale(long r, long c)
         {
-            Mat interp_mat(r, c);
+            Mat longerp_mat(r, c);
             size_t old_size = rows*cols;
             size_t new_size = r*c;
             float factor = (float)std::max<size_t>(0, old_size - 1) / (float)std::max<size_t>(0, new_size - 1);
-            for (int i = 0; i < new_size; i++) {
-                interp_mat[i] = factor*i;
+            for (long i = 0; i < new_size; i++) {
+                longerp_mat[i] = factor*i;
             }
             
             float *new_data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4(new_size));
             
-            vDSP_vlint(data, interp_mat.data, 1, new_data, 1, new_size, old_size);
+            vDSP_vlint(data, longerp_mat.data, 1, new_data, 1, new_size, old_size);
             free(data);
             data = new_data;
             
@@ -631,20 +631,20 @@ namespace pkm
             cols = c;
         }
         
-        // interpolates data (row-major) to new size
-        void rescale(int r, int c, Mat &new_mat) const
+        // longerpolates data (row-major) to new size
+        void rescale(long r, long c, Mat &new_mat) const
         {
-            Mat interp_mat(r, c);
+            Mat longerp_mat(r, c);
             size_t old_size = rows*cols;
             size_t new_size = r*c;
             float factor = (float)std::max<size_t>(0, old_size - 1) / (float)std::max<size_t>(0, new_size - 1);
             for (float i = 0; i < new_size; i++) {
-                interp_mat[i] = factor * i;
+                longerp_mat[i] = factor * i;
             }
             
             new_mat = Mat(r, c);
             
-            vDSP_vlint(data, interp_mat.data, 1, new_mat.data, 1, new_size, old_size);
+            vDSP_vlint(data, longerp_mat.data, 1, new_mat.data, 1, new_size, old_size);
         }
         
         Mat max(bool row_major)
@@ -669,7 +669,7 @@ namespace pkm
 
         
         // like rescale, but 2D information preserved..
-        void interpolate(size_t r, size_t c)
+        void longerpolate(size_t r, size_t c)
         {
             float *new_data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4(r * c));
             
@@ -731,7 +731,7 @@ namespace pkm
         
         
         // like rescale, but 2D information preserved..
-        void interpolate(size_t r, size_t c, Mat &new_mat) const
+        void longerpolate(size_t r, size_t c, Mat &new_mat) const
         {
             new_mat.reset(r, c);
             
@@ -973,7 +973,7 @@ namespace pkm
                     return;
                 }
                 data = (float *)realloc(data, MULTIPLE_OF_4((rows+m.size())*cols)*sizeof(float));
-                for (int i = 0; i < m.size(); i++) {
+                for (long i = 0; i < m.size(); i++) {
                     cblas_scopy(cols, &(m[i][0]), 1, data + ((rows+i)*cols), 1);
                 }
                 rows+=m.size();
@@ -1006,12 +1006,12 @@ namespace pkm
         
         float * getLastCircularRow()
         {
-            unsigned int lastRow;
+            unsigned long lastRow;
             if (bCircularInsertionFull) {
-                lastRow = (int)(current_row - 1) >= 0 ? current_row - 1 : rows - 1;
+                lastRow = (long)(current_row - 1) >= 0 ? current_row - 1 : rows - 1;
             }
             else {
-                lastRow = (int)(current_row - 1) >= 0 ? current_row - 1 : 0;
+                lastRow = (long)(current_row - 1) >= 0 ? current_row - 1 : 0;
             }
             return row(lastRow);
         }
@@ -1025,6 +1025,46 @@ namespace pkm
         bool isCircularInsertionFull()
         {
             return bCircularInsertionFull;
+        }
+        
+        Mat getCircularAligned()
+        {
+            Mat aligned(rows, cols);
+            if (current_row == 0) {
+                cblas_scopy(size(), data, 1, aligned.data, 1);
+            }
+            else if(current_row < (size()-1)) {
+                // first part touching end of buffer
+                cblas_scopy(size()-current_row*cols, data+current_row*cols, 1, aligned.data, 1);
+                // second part in the beginning of the buffer
+                cblas_scopy(current_row*cols, data, 1, aligned.data+(size()-current_row*cols), 1);
+            }
+            else if(current_row == size()-1) {
+                // second part in the beginning of the buffer
+                cblas_scopy(current_row*cols, data, 1, aligned.data+(size()-current_row*cols), 1);
+            }
+            return aligned;
+        }
+        
+        void alignCircularly()
+        {
+            if (current_row == 0) {
+                return;
+            }
+            else {
+                Mat aligned(rows, cols);
+                if(current_row < (size()-1)) {
+                    // first part touching end of buffer
+                    cblas_scopy(size()-current_row*cols, data+current_row*cols, 1, aligned.data, 1);
+                    // second part in the beginning of the buffer
+                    cblas_scopy(current_row*cols, data, 1, aligned.data+(size()-current_row*cols), 1);
+                }
+                else if(current_row == size()-1) {
+                    // second part in the beginning of the buffer
+                    cblas_scopy(current_row*cols, data, 1, aligned.data+(size()-current_row*cols), 1);
+                }
+                cblas_scopy(size(), aligned.data, 1, data, 1);
+            }
         }
         
         void removeRow(size_t i)
@@ -1065,6 +1105,12 @@ namespace pkm
             return submat;
         }
         
+        inline Mat range(size_t start, size_t end, bool withCopy = true)
+        {
+            Mat submat(1, end-start, row(0), withCopy);
+            return submat;
+        }
+        
         
         inline Mat colRange(size_t start, size_t end, bool withCopy = true)
         {
@@ -1078,7 +1124,7 @@ namespace pkm
             return submat;
         }
         
-        // copy data into the matrix
+        // copy data longo the matrix
         void copy(const Mat rhs)
         {
 #ifdef DEBUG
@@ -1095,10 +1141,10 @@ namespace pkm
             assert(indx.rows == rows);
             assert(indx.cols == cols);
 #endif
-            int idx = 0;
-            for(int i = 0; i < rows; i++)
+            long idx = 0;
+            for(long i = 0; i < rows; i++)
             {
-                for(int j = 0; j < cols; j++)
+                for(long j = 0; j < cols; j++)
                 {
                     if (indx.data[i*cols + j]) {
                         data[i*cols + j] = rhs[idx];
@@ -1376,7 +1422,7 @@ namespace pkm
         Mat getTranspose() const;
         
         
-        // diagonalize the std::vector into a square matrix with
+        // diagonalize the std::vector longo a square matrix with
         // the current data std::vector along the diagonal
         inline void setDiagMat()
         {
@@ -1614,7 +1660,7 @@ namespace pkm
             return val;
         }
         
-        static float rms(const float *buf, int size)
+        static float rms(const float *buf, long size)
         {
             float val;
             vDSP_rmsqv(buf, 1, &val, size);
@@ -1696,7 +1742,7 @@ namespace pkm
                 }
                 Mat newMat(1, cols);
                 
-                for(int i = 0; i < cols; i++)
+                for(long i = 0; i < cols; i++)
                 {
                     newMat.data[i] = var(data + i, rows, cols);
                 }
@@ -1707,7 +1753,7 @@ namespace pkm
                     return *this;
                 }
                 Mat newMat(rows, 1);
-                for(int i = 0; i < rows; i++)
+                for(long i = 0; i < rows; i++)
                 {
                     newMat.data[i] = var(data + i*cols, cols, 1);
                 }
@@ -2029,10 +2075,11 @@ namespace pkm
             return newMat;
         }
         
-        void sqrt()
+        pkm::Mat& sqrt()
         {
             int size = rows*cols;
             vvsqrtf(data, data, &size);
+            return *this;
         }
         
         static Mat sqrt(const Mat &b)
@@ -2160,18 +2207,18 @@ namespace pkm
             Mat newMat(b.rows, b.cols);
             float *p = b.data;
             float *p2 = newMat.data;
-            for (int i = 0; i < b.rows*b.cols; i++) {
+            for (long i = 0; i < b.rows*b.cols; i++) {
                 *p2++ = signum<float>(*p++);
             }
             return newMat;
         }
         
-        static Mat resize(const Mat &a, int newSize)
+        static Mat resize(const Mat &a, long newSize)
         {
-            int originalSize = a.size();
+            long originalSize = a.size();
             Mat b(1, newSize);
             float factor = (float)((newSize - 1) / (float)(originalSize-1));
-            for (int i = 0; i < newSize; i++) {
+            for (long i = 0; i < newSize; i++) {
                 b[i] = i / factor;
             }
             Mat c(1, newSize);
@@ -2179,7 +2226,7 @@ namespace pkm
             return c;
         }
         
-        inline int size() const
+        inline long size() const
         {
             return rows * cols;
         }
@@ -2255,7 +2302,7 @@ namespace pkm
             average_sum /= (float)rows;
         }
         
-        inline int svd(Mat &U, Mat &S, Mat &V_t)
+        inline long svd(Mat &U, Mat &S, Mat &V_t)
         {
             //            print();
             
@@ -2287,7 +2334,7 @@ namespace pkm
             char job = 'A';
             sgesdd_(&job, &m, &n, data, &lda, S.data, U.data, &ldu, V_t.data, &ldv, &workSize, &lwork, iwork, &info);
             
-            lwork = (int)workSize;
+            lwork = (long)workSize;
             float work[lwork];
             
             // actual svd
@@ -2321,9 +2368,9 @@ namespace pkm
             if(fp)
             {
                 fprintf(fp, "%lu %lu\n", rows, cols);
-                for(int i = 0; i < rows; i++)
+                for(long i = 0; i < rows; i++)
                 {
-                    for(int j = 0; j < cols; j++)
+                    for(long j = 0; j < cols; j++)
                     {
                         fprintf(fp, "%f, ", data[i*cols + j]);
                     }
@@ -2345,9 +2392,9 @@ namespace pkm
             if(fp)
             {
                 //                fprintf(fp, "%d %d\n", rows, cols);
-                for(int i = 0; i < rows; i++)
+                for(long i = 0; i < rows; i++)
                 {
-                    for(int j = 0; j < cols; j++)
+                    for(long j = 0; j < cols; j++)
                     {
                         fprintf(fp, "%f, ", data[i*cols + j]);
                     }
@@ -2373,9 +2420,9 @@ namespace pkm
             if (fp) {
                 fscanf(fp, "%lu %lu\n", &rows, &cols);
                 data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4(rows * cols));
-                for(int i = 0; i < rows; i++)
+                for(long i = 0; i < rows; i++)
                 {
-                    for(int j = 0; j < cols; j++)
+                    for(long j = 0; j < cols; j++)
                     {
                         fscanf(fp, "%f, ", &(data[i*cols + j]));
                     }
@@ -2390,7 +2437,7 @@ namespace pkm
             }
         }
         
-        bool load(std::string filename, int r, int c)
+        bool load(std::string filename, long r, long c)
         {
             if (bAllocated && !bUserData) {
                 free(data); data = NULL;
@@ -2402,9 +2449,9 @@ namespace pkm
                 rows = r;
                 cols = c;
                 data = (float *)malloc(sizeof(float) * MULTIPLE_OF_4(rows * cols));
-                for(int i = 0; i < rows; i++)
+                for(long i = 0; i < rows; i++)
                 {
-                    for(int j = 0; j < cols; j++)
+                    for(long j = 0; j < cols; j++)
                     {
                         fscanf(fp, "%f, ", &(data[i*cols + j]));
                     }
@@ -2445,15 +2492,12 @@ namespace pkm
             if(bAllocated)
             {
                 if (!bUserData) {
-                    assert(data != 0);
+                    assert(data != NULL);
                     free(data);
                     data = NULL;
                     bAllocated = false;
                 }
             }
         }
-        
     };
-    
-    
 };
